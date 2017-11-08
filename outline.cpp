@@ -18,9 +18,11 @@ int main(int argc, char** argv)
         long value = strtol(line, NULL, 16);
         if(value > 15) //Hack
         {
-            if(strstr(line, "pc") != NULL)
+            char* rangeStart = strstr(line, "pc");
+            if(rangeStart != NULL)
             {
-                printf("%s", line);
+                char* range = strstr(rangeStart, "=");
+                printf("%s", ++range);
             }
         } 
     }
