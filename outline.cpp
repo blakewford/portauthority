@@ -4,14 +4,25 @@
 #include <stdlib.h>
 #include <algorithm>
 
-//readelf --debug-dump=frames
-//readelf -s 
-//objdump -d
-//output from a scripted run
 int main(int argc, char** argv)
 {
+    char buffer[1024];
+    memset(buffer, '\0', 1024);
+    sprintf(buffer, "readelf --debug-dump=frames %s > /tmp/frames", argv[1]);
+    system(buffer);
+    memset(buffer, '\0', 1024);
+    sprintf(buffer, "readelf -s %s > /tmp/symbols", argv[1]);
+    system(buffer);
+    memset(buffer, '\0', 1024);
+    sprintf(buffer, "objdump -d %s > /tmp/disasm", argv[1]);
+    system(buffer);
+    memset(buffer, '\0', 1024);
+//output from a scripted run
+    system("");
+    memset(buffer, '\0', 1024);
+
     char line[256];
-    FILE* input = fopen(argv[1], "r");
+    FILE* input = fopen("/tmp/frames", "r");
 
     while(fgets(line, sizeof(line), input))
     {
@@ -21,14 +32,18 @@ int main(int argc, char** argv)
             char* rangeStart = strstr(line, "pc");
             if(rangeStart != NULL)
             {
+                char temp[17];
                 char* range = strstr(rangeStart, "=");
-                printf("%s", ++range);
+                memcpy(temp, ++range, 16);
+                temp[16] = '\0';
+                printf("%s ", temp);
+                printf("%s", strchr(range, '.')+2);
             }
         } 
     }
 
     fclose(input);
-    input = fopen(argv[2], "r");
+    input = fopen("/tmp/symbols", "r");
 
     long highestAddress = 0;
     while(fgets(line, sizeof(line), input))
@@ -39,22 +54,25 @@ int main(int argc, char** argv)
             if(address != 0)
             {
                 highestAddress = std::max(highestAddress, address);
-                printf("%s", line);
+                printf("%s", line+59);
             }
         } 
     }
 
     fclose(input);
-    input = fopen(argv[3], "r");
+    input = fopen("/tmp/disasm", "r");
 
     while (fgets(line, sizeof(line), input))
     {
         if(isspace(line[0]) && strlen(line) > 1)
         {
-            printf("%s", line);
+            char temp[6];
+            memcpy(temp, line+32, 5);
+            temp[5] = '\0';
+            printf("%s\n", temp);
         }
     }
-
+/*
     fclose(input);
     input = fopen(argv[4], "r");
 
@@ -70,5 +88,6 @@ int main(int argc, char** argv)
     }    
     
     fclose(input);
+*/
     return 0;
 }
