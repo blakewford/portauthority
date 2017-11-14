@@ -6,6 +6,8 @@
 #include <algorithm>
 #include <pthread.h>
 
+#include "rapidxml/rapidxml.hpp"
+
 void* runProgram(void*)
 {
     system("( cat ) | gdb /tmp/stripped -ex \"break main\" -ex \"run\"");
@@ -137,6 +139,51 @@ int main(int argc, char** argv)
     
     fclose(input);
     remove("gdb.txt");
+
+    char* binary = NULL;
+    FILE* executable = fopen("x86reference.xml","rb");
+    if(executable)
+    {
+        fseek(executable, 0, SEEK_END);
+        int32_t size = ftell(executable);
+        rewind(executable);
+        binary = (char*)malloc(size);
+        size_t read = fread(binary, 1, size, executable);
+        if(read != size) return -1;
+        fclose(executable);
+    }
+
+    rapidxml::xml_document<> doc;
+    doc.parse<0>(binary);
+
+    rapidxml::xml_node<>* root = doc.first_node()->first_node();
+
+    rapidxml::xml_node<>* current = root->first_node();
+    while(current != NULL)
+    {
+        rapidxml::xml_node<>* sub = current->first_node()->first_node();
+        while(sub != NULL && strcmp(sub->name(), "syntax"))
+            sub = sub->next_sibling();
+        while(sub != NULL && strcmp(sub->name(), "mnem"))
+            sub = sub->first_node();
+        //printf("%s\n", sub != NULL ? sub->value(): "");
+        current = current->next_sibling();
+    }
+
+    root = doc.first_node()->first_node()->next_sibling();
+    current = current = root->first_node();
+    while(current != NULL)
+    {
+        rapidxml::xml_node<>* sub = current->first_node()->first_node();
+        while(sub != NULL && strcmp(sub->name(), "syntax"))
+            sub = sub->next_sibling();
+        while(sub != NULL && strcmp(sub->name(), "mnem"))
+            sub = sub->first_node();
+        //printf("%s\n", sub != NULL ? sub->value(): "");
+        current = current->next_sibling();
+    }
+
+    free(binary);
 
     return 0;
 }
