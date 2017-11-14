@@ -1,12 +1,22 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <cstring>
+#include <stdint.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <algorithm>
 #include <pthread.h>
 
+#include <map>
+#include <string>
+#include <vector>
 #include "rapidxml/rapidxml.hpp"
+
+typedef std::pair<uint64_t, uint64_t> Range;
+
+std::vector<Range> gRanges;
+std::map<uint64_t, std::string> gSymbols;
+std::map<uint64_t, std::string> gDisassembly;
 
 void* runProgram(void*)
 {
@@ -45,8 +55,7 @@ int main(int argc, char** argv)
                 char* range = strstr(rangeStart, "=");
                 memcpy(temp, ++range, 16);
                 temp[16] = '\0';
-                //printf("%s ", temp);
-                //printf("%s", strchr(range, '.')+2);
+                gRanges.push_back(Range(strtol(temp, NULL, 16), strtol(strchr(range, '.')+2, NULL, 16)));
             }
         } 
     }
@@ -63,7 +72,7 @@ int main(int argc, char** argv)
             if(address != 0)
             {
                 highestAddress = std::max(highestAddress, address);
-                //printf("%s", line+59);
+                gSymbols[address] = line+59;
             }
         } 
     }
@@ -78,7 +87,11 @@ int main(int argc, char** argv)
             char temp[6];
             memcpy(temp, line+32, 5);
             temp[5] = '\0';
-            //printf("%s\n", temp);
+            long address = strtol(line, NULL, 16);
+            if(address != 0)
+            {
+                gDisassembly[address] = temp;
+            }
         }
     }
 
@@ -130,9 +143,10 @@ int main(int argc, char** argv)
     {
         if(strstr(line, "(gdb) 0x") != NULL)
         {
-            if(strtol(strstr(line, "0x"), NULL, 16) < highestAddress)
+            long address =strtol(strstr(line, "0x"), NULL, 16);
+            if(address < highestAddress)
             {
-                //printf("%s", line);
+                printf("%lx %s\n", address, gDisassembly[address].c_str());
             }
         }
     }    
