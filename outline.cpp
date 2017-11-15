@@ -13,14 +13,34 @@
 #include "rapidxml/rapidxml.hpp"
 
 typedef std::pair<uint64_t, uint64_t> Range;
+typedef std::pair<std::string, std::string> Groups;
 
 std::vector<Range> gRanges;
 std::map<uint64_t, std::string> gSymbols;
 std::map<uint64_t, std::string> gDisassembly;
+std::map<std::string, Groups> gGroups;
+
+const char* gCategories[] =
+{"datamov", "stack", "conver", "arith", "binary", "decimal", "logical", "shftrot", "bit", "branch", "cond", "break", "string", "inout", "flgctrl", "segreg", "control"};
+
+int32_t gCategoryCount[sizeof(gCategories)/sizeof(const char*)];
 
 void* runProgram(void*)
 {
     system("( cat ) | gdb /tmp/stripped -ex \"break main\" -ex \"run\"");
+}
+
+void updateCategoryCount(const char* category)
+{
+    int32_t count = sizeof(gCategories)/sizeof(const char*);
+    while(count--)
+    {
+        if(!strcmp(category, gCategories[count]))
+        {
+            gCategoryCount[count]++;
+            break;
+        }
+    }
 }
 
 int main(int argc, char** argv)
@@ -84,9 +104,18 @@ int main(int argc, char** argv)
     {
         if(isspace(line[0]) && strlen(line) > 1)
         {
-            char temp[6];
-            memcpy(temp, line+32, 5);
-            temp[5] = '\0';
+            int8_t count = 6;
+            char temp[count];
+            memset(temp, '\0', count);
+            char* mnem = line+32;
+            int8_t i = 0;
+            while(count--)
+            {
+                char c = *(mnem+i);
+                if(!isspace(c))
+                    temp[i] = c;
+                i++;
+            }
             long address = strtol(line, NULL, 16);
             if(address != 0)
             {
@@ -102,6 +131,7 @@ int main(int argc, char** argv)
     while(pid == 0)
     {
         char pidString[6];
+        memset(pidString, '\0', 6);
         FILE *cmd = popen("pidof stripped", "r");
         fgets(pidString, 6, cmd);
         pid = strtoul(pidString, NULL, 10);
@@ -137,22 +167,6 @@ int main(int argc, char** argv)
     printf("\n");
 
     fclose(input);
-    input = fopen("gdb.txt", "r");
-
-    while (fgets(line, sizeof(line), input))
-    {
-        if(strstr(line, "(gdb) 0x") != NULL)
-        {
-            long address =strtol(strstr(line, "0x"), NULL, 16);
-            if(address < highestAddress)
-            {
-                printf("%lx %s\n", address, gDisassembly[address].c_str());
-            }
-        }
-    }    
-    
-    fclose(input);
-    remove("gdb.txt");
 
     char* binary = NULL;
     FILE* executable = fopen("x86reference.xml","rb");
@@ -173,6 +187,10 @@ int main(int argc, char** argv)
     rapidxml::xml_node<>* root = doc.first_node()->first_node();
 
     rapidxml::xml_node<>* current = root->first_node();
+
+    std::string mnem;
+    std::string group1;
+    std::string group2;
     while(current != NULL)
     {
         rapidxml::xml_node<>* sub = current->first_node()->first_node();
@@ -180,7 +198,20 @@ int main(int argc, char** argv)
             sub = sub->next_sibling();
         while(sub != NULL && strcmp(sub->name(), "mnem"))
             sub = sub->first_node();
-        //printf("%s\n", sub != NULL ? sub->value(): "");
+        mnem = sub != NULL ? sub->value(): "";
+
+        sub = current->first_node()->first_node();
+        while(sub != NULL && strcmp(sub->name(), "grp1"))
+            sub = sub->next_sibling();
+        group1 = sub != NULL ? sub->value(): "";
+
+        sub = current->first_node()->first_node();
+        while(sub != NULL && strcmp(sub->name(), "grp2"))
+            sub = sub->next_sibling();
+        group2 = sub != NULL ? sub->value(): "";
+
+        gGroups[mnem] = std::pair<std::string, std::string>(group1, group2);
+
         current = current->next_sibling();
     }
 
@@ -193,11 +224,51 @@ int main(int argc, char** argv)
             sub = sub->next_sibling();
         while(sub != NULL && strcmp(sub->name(), "mnem"))
             sub = sub->first_node();
-        //printf("%s\n", sub != NULL ? sub->value(): "");
+        mnem = sub != NULL ? sub->value(): "";
+
+        sub = current->first_node()->first_node();
+        while(sub != NULL && strcmp(sub->name(), "grp1"))
+            sub = sub->next_sibling();
+        group1 = sub != NULL ? sub->value(): "";
+
+        sub = current->first_node()->first_node();
+        while(sub != NULL && strcmp(sub->name(), "grp2"))
+            sub = sub->next_sibling();
+        group2 = sub != NULL ? sub->value(): "";
+
+        auto value = gGroups.find(mnem);
+        if(value == gGroups.end())
+            gGroups[mnem] = std::pair<std::string, std::string>(group1, group2);
+
         current = current->next_sibling();
     }
 
     free(binary);
+
+    input = fopen("gdb.txt", "r");
+
+    while (fgets(line, sizeof(line), input))
+    {
+        if(strstr(line, "(gdb) 0x") != NULL)
+        {
+            long address =strtol(strstr(line, "0x"), NULL, 16);
+            if(address < highestAddress)
+            {
+                std::string& str = gDisassembly[address];
+                std::transform(str.begin(), str.end(),str.begin(), ::toupper);
+                updateCategoryCount(gGroups[str].second.c_str());
+            }
+        }
+    }
+
+    fclose(input);
+    remove("gdb.txt");
+
+    count = sizeof(gCategoryCount)/sizeof(int32_t);
+    while(count--)
+    {
+        //printf("%d\n", gCategoryCount[count]);
+    }
 
     return 0;
 }

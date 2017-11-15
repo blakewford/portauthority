@@ -6,7 +6,7 @@ cluster-profile: $(SRC)
 	$(CC) $(SRC) $(DEBUG) -o $@ -lelf
 
 outline: outline.cpp
-	$(CC) $< $(DEBUG) -o $@ -lpthread
+	g++ -std=c++11 $< $(DEBUG) -o $@ -lpthread
 
 clean:
 	-@rm cluster-profile
