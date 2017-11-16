@@ -270,5 +270,7 @@ int main(int argc, char** argv)
         //printf("%d\n", gCategoryCount[count]);
     }
 
+    // printf("radius = 0.5;module dot(){sphere(radius);}translate([1,1,0]){dot();}\n");
+
     return 0;
 }
