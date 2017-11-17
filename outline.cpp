@@ -77,7 +77,7 @@ int main(int argc, char** argv)
                 temp[16] = '\0';
                 gRanges.push_back(Range(strtol(temp, NULL, 16), strtol(strchr(range, '.')+2, NULL, 16)));
             }
-        } 
+        }
     }
 
     fclose(input);
@@ -94,7 +94,7 @@ int main(int argc, char** argv)
                 highestAddress = std::max(highestAddress, address);
                 gSymbols[address] = line+59;
             }
-        } 
+        }
     }
 
     fclose(input);
@@ -264,11 +264,20 @@ int main(int argc, char** argv)
     fclose(input);
     remove("gdb.txt");
 
+
     count = sizeof(gCategoryCount)/sizeof(int32_t);
     while(count--)
     {
-        //printf("%d\n", gCategoryCount[count]);
+        //printf("%s ", gCategories[count]);
     }
+    //printf("\n");
+
+    count = sizeof(gCategoryCount)/sizeof(int32_t);
+    while(count--)
+    {
+        printf("%d ", gCategoryCount[count]);
+    }
+    printf("\n");
 
     // printf("radius = 0.5;module dot(){sphere(radius);}translate([1,1,0]){dot();}\n");
 
