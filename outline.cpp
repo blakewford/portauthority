@@ -21,8 +21,13 @@ std::map<uint64_t, std::string> gSymbols;
 std::map<uint64_t, std::string> gDisassembly;
 std::map<std::string, Groups> gGroups;
 
+#ifndef SIMAVR
 const char* gCategories[] =
 {"datamov", "stack", "conver", "arith", "binary", "decimal", "logical", "shftrot", "bit", "branch", "cond", "break", "string", "inout", "flgctrl", "segreg", "control"};
+#else
+const char* gCategories[] =
+{"datamov", "arith","logical", "bit", "branch", "control"};
+#endif
 
 int32_t gCategoryCount[sizeof(gCategories)/sizeof(const char*)];
 
@@ -207,9 +212,13 @@ int main(int argc, char** argv)
 
     fclose(input);
 
-#ifndef SIMAVR
     char* binary = NULL;
-    FILE* executable = fopen("x86reference.xml","rb");
+    FILE* executable;
+#ifndef SIMAVR
+    executable = fopen("x86reference.xml","rb");
+#else
+    executable = fopen("avrReference.xml","rb");
+#endif
     if(executable)
     {
         fseek(executable, 0, SEEK_END);
@@ -255,6 +264,7 @@ int main(int argc, char** argv)
         current = current->next_sibling();
     }
 
+#ifndef SIMAVR
     root = doc.first_node()->first_node()->next_sibling();
     current = current = root->first_node();
     while(current != NULL)
@@ -282,9 +292,8 @@ int main(int argc, char** argv)
 
         current = current->next_sibling();
     }
-
-    free(binary);
 #endif
+    free(binary);
 
     input = fopen("gdb.txt", "r");
 
@@ -292,7 +301,7 @@ int main(int argc, char** argv)
     {
         if(strstr(line, "(gdb) 0x") != NULL)
         {
-            long address =strtol(strstr(line, "0x"), NULL, 16);
+            long address = strtol(strstr(line, "0x"), NULL, 16);
             if(address < highestAddress)
             {
                 std::string& str = gDisassembly[address];

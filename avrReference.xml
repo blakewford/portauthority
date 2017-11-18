@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<avrReference version="1.0">
+  <two-byte xml:id="two-byte">
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>ADC</mnem></syntax>
+        <grp1>gen</grp1><grp2>arith</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>AND</mnem></syntax>
+        <grp1>gen</grp1><grp2>logical</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>RJMP</mnem></syntax>
+        <grp1>gen</grp1><grp2>branch</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>MOV</mnem></syntax>
+        <grp1>gen</grp1><grp2>datamov</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>BREAK</mnem></syntax>
+        <grp1>gen</grp1><grp2>control</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>LSL</mnem></syntax>
+        <grp1>gen</grp1><grp2>bit</grp2>
+      </entry>
+    </pri_opcd>
+
+  </two-byte>
+</avrReference>
