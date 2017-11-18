@@ -26,7 +26,7 @@ const char* gCategories[] =
 {"datamov", "stack", "conver", "arith", "binary", "decimal", "logical", "shftrot", "bit", "branch", "cond", "break", "string", "inout", "flgctrl", "segreg", "control"};
 #else
 const char* gCategories[] =
-{"datamov", "arith","logical", "bit", "branch", "control"};
+{"datamov", "arith", "logical", "bit", "branch", "control"};
 #endif
 
 int32_t gCategoryCount[sizeof(gCategories)/sizeof(const char*)];
@@ -131,10 +131,20 @@ int main(int argc, char** argv)
     {
         if(isspace(line[0]) && strlen(line) > 1)
         {
-            int8_t count = 6;
+            int8_t count;
+#ifndef SIMAVR
+            count = 6;
+#else
+            count = 4;
+#endif
             char temp[count];
             memset(temp, '\0', count);
-            char* mnem = line+32;
+            char* mnem;
+#ifndef SIMAVR
+            mnem = line+32;
+#else
+            mnem = line+23;
+#endif
             int8_t i = 0;
             while(count--)
             {
