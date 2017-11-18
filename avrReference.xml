@@ -4,7 +4,140 @@
 
     <pri_opcd value="">
       <entry>
+	<syntax><mnem>ADD</mnem></syntax>
+        <grp1>gen</grp1><grp2>arith</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
 	<syntax><mnem>ADC</mnem></syntax>
+        <grp1>gen</grp1><grp2>arith</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>ADIW</mnem></syntax>
+        <grp1>gen</grp1><grp2>arith</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>SUB</mnem></syntax>
+        <grp1>gen</grp1><grp2>arith</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>SUBI</mnem></syntax>
+        <grp1>gen</grp1><grp2>arith</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>SBC</mnem></syntax>
+        <grp1>gen</grp1><grp2>arith</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>SBCI</mnem></syntax>
+        <grp1>gen</grp1><grp2>arith</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>SBIW</mnem></syntax>
+        <grp1>gen</grp1><grp2>arith</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>INC</mnem></syntax>
+        <grp1>gen</grp1><grp2>arith</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>TST</mnem></syntax>
+        <grp1>gen</grp1><grp2>arith</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>CLR</mnem></syntax>
+        <grp1>gen</grp1><grp2>arith</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>SER</mnem></syntax>
+        <grp1>gen</grp1><grp2>arith</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>MUL</mnem></syntax>
+        <grp1>gen</grp1><grp2>arith</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>MULS</mnem></syntax>
+        <grp1>gen</grp1><grp2>arith</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>MULSU</mnem></syntax>
+        <grp1>gen</grp1><grp2>arith</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>FMUL</mnem></syntax>
+        <grp1>gen</grp1><grp2>arith</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>FMULS</mnem></syntax>
+        <grp1>gen</grp1><grp2>arith</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>FMULSU</mnem></syntax>
+        <grp1>gen</grp1><grp2>arith</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>DES</mnem></syntax>
+        <grp1>gen</grp1><grp2>arith</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>DEC</mnem></syntax>
         <grp1>gen</grp1><grp2>arith</grp2>
       </entry>
     </pri_opcd>
@@ -18,7 +151,308 @@
 
     <pri_opcd value="">
       <entry>
+	<syntax><mnem>ANDI</mnem></syntax>
+        <grp1>gen</grp1><grp2>logical</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>OR</mnem></syntax>
+        <grp1>gen</grp1><grp2>logical</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>ORI</mnem></syntax>
+        <grp1>gen</grp1><grp2>logical</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>EOR</mnem></syntax>
+        <grp1>gen</grp1><grp2>logical</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>COM</mnem></syntax>
+        <grp1>gen</grp1><grp2>logical</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>NEG</mnem></syntax>
+        <grp1>gen</grp1><grp2>logical</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>SBR</mnem></syntax>
+        <grp1>gen</grp1><grp2>logical</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>CBR</mnem></syntax>
+        <grp1>gen</grp1><grp2>logical</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
 	<syntax><mnem>RJMP</mnem></syntax>
+        <grp1>gen</grp1><grp2>branch</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>IJMP</mnem></syntax>
+        <grp1>gen</grp1><grp2>branch</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>EIJMP</mnem></syntax>
+        <grp1>gen</grp1><grp2>branch</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>JMP</mnem></syntax>
+        <grp1>gen</grp1><grp2>branch</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>RCALL</mnem></syntax>
+        <grp1>gen</grp1><grp2>branch</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>ICALL</mnem></syntax>
+        <grp1>gen</grp1><grp2>branch</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>EICALL</mnem></syntax>
+        <grp1>gen</grp1><grp2>branch</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>CALL</mnem></syntax>
+        <grp1>gen</grp1><grp2>branch</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>RET</mnem></syntax>
+        <grp1>gen</grp1><grp2>branch</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>RETI</mnem></syntax>
+        <grp1>gen</grp1><grp2>branch</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>CPSE</mnem></syntax>
+        <grp1>gen</grp1><grp2>branch</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>CP</mnem></syntax>
+        <grp1>gen</grp1><grp2>branch</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>CPI</mnem></syntax>
+        <grp1>gen</grp1><grp2>branch</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>SBRC</mnem></syntax>
+        <grp1>gen</grp1><grp2>branch</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>SBRS</mnem></syntax>
+        <grp1>gen</grp1><grp2>branch</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>SBIC</mnem></syntax>
+        <grp1>gen</grp1><grp2>branch</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>SBIS</mnem></syntax>
+        <grp1>gen</grp1><grp2>branch</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>BRBS</mnem></syntax>
+        <grp1>gen</grp1><grp2>branch</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>BRBC</mnem></syntax>
+        <grp1>gen</grp1><grp2>branch</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>BREQ</mnem></syntax>
+        <grp1>gen</grp1><grp2>branch</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>BRCS</mnem></syntax>
+        <grp1>gen</grp1><grp2>branch</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>BRCC</mnem></syntax>
+        <grp1>gen</grp1><grp2>branch</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>BRSH</mnem></syntax>
+        <grp1>gen</grp1><grp2>branch</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>BRLO</mnem></syntax>
+        <grp1>gen</grp1><grp2>branch</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>BRMI</mnem></syntax>
+        <grp1>gen</grp1><grp2>branch</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>BRPL</mnem></syntax>
+        <grp1>gen</grp1><grp2>branch</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>BRGE</mnem></syntax>
+        <grp1>gen</grp1><grp2>branch</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>BRLT</mnem></syntax>
+        <grp1>gen</grp1><grp2>branch</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>BRHS</mnem></syntax>
+        <grp1>gen</grp1><grp2>branch</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>BRHC</mnem></syntax>
+        <grp1>gen</grp1><grp2>branch</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>BRTS</mnem></syntax>
+        <grp1>gen</grp1><grp2>branch</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>BRTC</mnem></syntax>
+        <grp1>gen</grp1><grp2>branch</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>BRVS</mnem></syntax>
+        <grp1>gen</grp1><grp2>branch</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>BRVC</mnem></syntax>
+        <grp1>gen</grp1><grp2>branch</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>BRIE</mnem></syntax>
+        <grp1>gen</grp1><grp2>branch</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>BRID</mnem></syntax>
         <grp1>gen</grp1><grp2>branch</grp2>
       </entry>
     </pri_opcd>
@@ -32,6 +466,13 @@
 
     <pri_opcd value="">
       <entry>
+	<syntax><mnem>LSL</mnem></syntax>
+        <grp1>gen</grp1><grp2>bit</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
 	<syntax><mnem>BREAK</mnem></syntax>
         <grp1>gen</grp1><grp2>control</grp2>
       </entry>
@@ -39,8 +480,22 @@
 
     <pri_opcd value="">
       <entry>
-	<syntax><mnem>LSL</mnem></syntax>
-        <grp1>gen</grp1><grp2>bit</grp2>
+	<syntax><mnem>NOP</mnem></syntax>
+        <grp1>gen</grp1><grp2>control</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>SLEEP</mnem></syntax>
+        <grp1>gen</grp1><grp2>control</grp2>
+      </entry>
+    </pri_opcd>
+
+    <pri_opcd value="">
+      <entry>
+	<syntax><mnem>WDR</mnem></syntax>
+        <grp1>gen</grp1><grp2>control</grp2>
       </entry>
     </pri_opcd>
 
