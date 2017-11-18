@@ -171,7 +171,16 @@ int main(int argc, char** argv)
 #ifndef SIMAVR
             mnem = line+32;
 #else
-            mnem = line+23;
+            int padding = 0;
+            if(highestAddress >= 4096)
+            {
+                padding += 2;
+            }
+            if(highestAddress >= 65536)
+            {
+                padding += 2;
+            }
+            mnem = line+19+padding;
 #endif
             int8_t i = 0;
             while(count--)
