@@ -7,6 +7,7 @@ cluster-profile: $(SRC)
 
 outline: outline.cpp
 	g++ -std=c++11 $< $(DEBUG) -o $@ -lpthread
+#	g++ -std=c++11 $< $(DEBUG) -o $@ -lpthread -DSIMAVR
 
 clean:
 	-@rm cluster-profile

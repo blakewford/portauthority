@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <signal.h>
 #include <algorithm>
 #include <pthread.h>
 
@@ -25,9 +26,18 @@ const char* gCategories[] =
 
 int32_t gCategoryCount[sizeof(gCategories)/sizeof(const char*)];
 
+void* runRemoteGDB(void*)
+{
+    system("~/simavr/simavr/run_avr -f 16000000 -m atmega1284 /tmp/stripped --gdb");
+}
+
 void* runProgram(void*)
 {
+#ifndef SIMAVR
     system("( cat ) | gdb /tmp/stripped -ex \"break main\" -ex \"run\"");
+#else
+    system("( cat ) | avr-gdb /tmp/stripped -ex \"target remote :1234\" -ex \"break main\" -ex \"c\"");
+#endif
 }
 
 void updateCategoryCount(const char* category)
@@ -47,16 +57,28 @@ int main(int argc, char** argv)
 {
     char buffer[1024];
     memset(buffer, '\0', 1024);
+#ifndef SIMAVR
     sprintf(buffer, "objcopy -g -Ielf64-x86-64 -Oelf64-x86-64 %s /tmp/stripped", argv[1]);
+#else
+    sprintf(buffer, "avr-objcopy -g -Ielf32-avr -Oelf32-avr %s /tmp/stripped", argv[1]);
+#endif
+
+    system(buffer);
+
+#ifndef SIMAVR
+    const char* prefix = "";
+#else
+    const char* prefix = "avr-";
+#endif
+
+    memset(buffer, '\0', 1024);
+    sprintf(buffer, "%sreadelf --debug-dump=frames %s > /tmp/frames", prefix, argv[1]);
     system(buffer);
     memset(buffer, '\0', 1024);
-    sprintf(buffer, "readelf --debug-dump=frames %s > /tmp/frames", argv[1]);
+    sprintf(buffer, "%sreadelf -s %s > /tmp/symbols", prefix, argv[1]);
     system(buffer);
     memset(buffer, '\0', 1024);
-    sprintf(buffer, "readelf -s %s > /tmp/symbols", argv[1]);
-    system(buffer);
-    memset(buffer, '\0', 1024);
-    sprintf(buffer, "objdump -d %s > /tmp/disasm", argv[1]);
+    sprintf(buffer, "%sobjdump -d %s > /tmp/disasm", prefix, argv[1]);
     system(buffer);
     memset(buffer, '\0', 1024);
 
@@ -124,15 +146,32 @@ int main(int argc, char** argv)
         }
     }
 
+#ifdef SIMAVR
+    pthread_t remoteThread;
+    pthread_create(&remoteThread, NULL, runRemoteGDB, NULL);
+
+    usleep( 3000 );
+#endif
+
     pthread_t programThread;
     pthread_create(&programThread, NULL, runProgram, NULL);
 
     pid_t pid = 0;
+    int32_t rounds = 0;
     while(pid == 0)
     {
         char pidString[6];
         memset(pidString, '\0', 6);
-        FILE *cmd = popen("pidof stripped", "r");
+        FILE *cmd;
+        if(rounds % 2 == 0)
+        {
+            cmd = popen("pidof gdb", "r");
+        }
+        else
+        {
+            cmd = popen("pidof avr-gdb", "r");
+        }
+        rounds++;
         fgets(pidString, 6, cmd);
         pid = strtoul(pidString, NULL, 10);
         pclose(cmd);
@@ -168,6 +207,7 @@ int main(int argc, char** argv)
 
     fclose(input);
 
+#ifndef SIMAVR
     char* binary = NULL;
     FILE* executable = fopen("x86reference.xml","rb");
     if(executable)
@@ -244,6 +284,7 @@ int main(int argc, char** argv)
     }
 
     free(binary);
+#endif
 
     input = fopen("gdb.txt", "r");
 
@@ -264,7 +305,6 @@ int main(int argc, char** argv)
     fclose(input);
     remove("gdb.txt");
 
-
     count = sizeof(gCategoryCount)/sizeof(int32_t);
     while(count--)
     {
@@ -280,6 +320,23 @@ int main(int argc, char** argv)
     printf("\n");
 
     // printf("radius = 0.5;module dot(){sphere(radius);}translate([1,1,0]){dot();}\n");
+
+
+#ifdef SIMAVR
+    pid = 0;
+    while(pid == 0)
+    {
+        char pidString[6];
+        memset(pidString, '\0', 6);
+        FILE *cmd = popen("pidof run_avr", "r");
+        fgets(pidString, 6, cmd);
+        pid = strtoul(pidString, NULL, 10);
+        pclose(cmd);
+        usleep(0);
+    }
+
+    kill( pid, SIGKILL );
+#endif
 
     return 0;
 }
