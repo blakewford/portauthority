@@ -20,6 +20,7 @@
       <entry>
 	<syntax><mnem>ADIW</mnem></syntax>
         <grp1>gen</grp1><grp2>arith</grp2>
+        <cycles>2</cycles>
       </entry>
     </pri_opcd>
 
@@ -55,6 +56,7 @@
       <entry>
 	<syntax><mnem>SBIW</mnem></syntax>
         <grp1>gen</grp1><grp2>arith</grp2>
+        <cycles>2</cycles>
       </entry>
     </pri_opcd>
 
@@ -90,6 +92,7 @@
       <entry>
 	<syntax><mnem>MUL</mnem></syntax>
         <grp1>gen</grp1><grp2>arith</grp2>
+        <cycles>2</cycles>
       </entry>
     </pri_opcd>
 
@@ -97,6 +100,7 @@
       <entry>
 	<syntax><mnem>MULS</mnem></syntax>
         <grp1>gen</grp1><grp2>arith</grp2>
+        <cycles>2</cycles>
       </entry>
     </pri_opcd>
 
@@ -104,6 +108,7 @@
       <entry>
 	<syntax><mnem>MULSU</mnem></syntax>
         <grp1>gen</grp1><grp2>arith</grp2>
+        <cycles>2</cycles>
       </entry>
     </pri_opcd>
 
@@ -111,6 +116,7 @@
       <entry>
 	<syntax><mnem>FMUL</mnem></syntax>
         <grp1>gen</grp1><grp2>arith</grp2>
+        <cycles>2</cycles>
       </entry>
     </pri_opcd>
 
@@ -118,6 +124,7 @@
       <entry>
 	<syntax><mnem>FMULS</mnem></syntax>
         <grp1>gen</grp1><grp2>arith</grp2>
+        <cycles>2</cycles>
       </entry>
     </pri_opcd>
 
@@ -125,6 +132,7 @@
       <entry>
 	<syntax><mnem>FMULSU</mnem></syntax>
         <grp1>gen</grp1><grp2>arith</grp2>
+        <cycles>2</cycles>
       </entry>
     </pri_opcd>
 
@@ -209,6 +217,7 @@
       <entry>
 	<syntax><mnem>RJMP</mnem></syntax>
         <grp1>gen</grp1><grp2>branch</grp2>
+        <cycles>2</cycles>
       </entry>
     </pri_opcd>
 
@@ -216,6 +225,7 @@
       <entry>
 	<syntax><mnem>IJMP</mnem></syntax>
         <grp1>gen</grp1><grp2>branch</grp2>
+        <cycles>2</cycles>
       </entry>
     </pri_opcd>
 
@@ -223,6 +233,7 @@
       <entry>
 	<syntax><mnem>EIJMP</mnem></syntax>
         <grp1>gen</grp1><grp2>branch</grp2>
+        <cycles>2</cycles>
       </entry>
     </pri_opcd>
 
@@ -230,6 +241,7 @@
       <entry>
 	<syntax><mnem>JMP</mnem></syntax>
         <grp1>gen</grp1><grp2>branch</grp2>
+        <cycles>3</cycles>
       </entry>
     </pri_opcd>
 
@@ -237,6 +249,7 @@
       <entry>
 	<syntax><mnem>RCALL</mnem></syntax>
         <grp1>gen</grp1><grp2>branch</grp2>
+        <cycles>3</cycles>
       </entry>
     </pri_opcd>
 
@@ -244,6 +257,7 @@
       <entry>
 	<syntax><mnem>ICALL</mnem></syntax>
         <grp1>gen</grp1><grp2>branch</grp2>
+        <cycles>3</cycles>
       </entry>
     </pri_opcd>
 
@@ -251,6 +265,7 @@
       <entry>
 	<syntax><mnem>EICALL</mnem></syntax>
         <grp1>gen</grp1><grp2>branch</grp2>
+        <cycles>4</cycles>
       </entry>
     </pri_opcd>
 
@@ -258,6 +273,7 @@
       <entry>
 	<syntax><mnem>CALL</mnem></syntax>
         <grp1>gen</grp1><grp2>branch</grp2>
+        <cycles>4</cycles>
       </entry>
     </pri_opcd>
 
@@ -265,6 +281,7 @@
       <entry>
 	<syntax><mnem>RET</mnem></syntax>
         <grp1>gen</grp1><grp2>branch</grp2>
+        <cycles>4</cycles>
       </entry>
     </pri_opcd>
 
@@ -272,6 +289,7 @@
       <entry>
 	<syntax><mnem>RETI</mnem></syntax>
         <grp1>gen</grp1><grp2>branch</grp2>
+        <cycles>4</cycles>
       </entry>
     </pri_opcd>
 
@@ -482,6 +500,7 @@
       <entry>
 	<syntax><mnem>LDS</mnem></syntax>
         <grp1>gen</grp1><grp2>datamov</grp2>
+        <cycles>2</cycles>
       </entry>
     </pri_opcd>
 
@@ -489,6 +508,7 @@
       <entry>
 	<syntax><mnem>LD</mnem></syntax>
         <grp1>gen</grp1><grp2>datamov</grp2>
+        <cycles>2</cycles>
       </entry>
     </pri_opcd>
 
@@ -496,6 +516,7 @@
       <entry>
 	<syntax><mnem>LDD</mnem></syntax>
         <grp1>gen</grp1><grp2>datamov</grp2>
+        <cycles>2</cycles>
       </entry>
     </pri_opcd>
 
@@ -503,6 +524,7 @@
       <entry>
 	<syntax><mnem>STS</mnem></syntax>
         <grp1>gen</grp1><grp2>datamov</grp2>
+        <cycles>2</cycles>
       </entry>
     </pri_opcd>
 
@@ -510,6 +532,7 @@
       <entry>
 	<syntax><mnem>ST</mnem></syntax>
         <grp1>gen</grp1><grp2>datamov</grp2>
+        <cycles>2</cycles>
       </entry>
     </pri_opcd>
 
@@ -517,6 +540,7 @@
       <entry>
 	<syntax><mnem>STD</mnem></syntax>
         <grp1>gen</grp1><grp2>datamov</grp2>
+        <cycles>2</cycles>
       </entry>
     </pri_opcd>
 
@@ -524,6 +548,7 @@
       <entry>
 	<syntax><mnem>LPM</mnem></syntax>
         <grp1>gen</grp1><grp2>datamov</grp2>
+        <cycles>3</cycles>
       </entry>
     </pri_opcd>
 
@@ -531,6 +556,7 @@
       <entry>
 	<syntax><mnem>ELPM</mnem></syntax>
         <grp1>gen</grp1><grp2>datamov</grp2>
+        <cycles>3</cycles>
       </entry>
     </pri_opcd>
 
@@ -538,6 +564,7 @@
       <entry>
 	<syntax><mnem>SPM</mnem></syntax>
         <grp1>gen</grp1><grp2>datamov</grp2>
+        <cycles>4</cycles>
       </entry>
     </pri_opcd>
 
@@ -559,6 +586,7 @@
       <entry>
 	<syntax><mnem>PUSH</mnem></syntax>
         <grp1>gen</grp1><grp2>datamov</grp2>
+        <cycles>2</cycles>
       </entry>
     </pri_opcd>
 
@@ -566,6 +594,7 @@
       <entry>
 	<syntax><mnem>POP</mnem></syntax>
         <grp1>gen</grp1><grp2>datamov</grp2>
+        <cycles>2</cycles>
       </entry>
     </pri_opcd>
 
@@ -643,6 +672,7 @@
       <entry>
 	<syntax><mnem>SBI</mnem></syntax>
         <grp1>gen</grp1><grp2>bit</grp2>
+        <cycles>2</cycles>
       </entry>
     </pri_opcd>
 
@@ -650,6 +680,7 @@
       <entry>
 	<syntax><mnem>CBI</mnem></syntax>
         <grp1>gen</grp1><grp2>bit</grp2>
+        <cycles>2</cycles>
       </entry>
     </pri_opcd>
 

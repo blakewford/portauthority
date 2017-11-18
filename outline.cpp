@@ -289,6 +289,7 @@ int main(int argc, char** argv)
     std::string mnem;
     std::string group1;
     std::string group2;
+    std::string cycles;
     while(current != NULL)
     {
         rapidxml::xml_node<>* sub = current->first_node()->first_node();
@@ -308,7 +309,15 @@ int main(int argc, char** argv)
             sub = sub->next_sibling();
         group2 = sub != NULL ? sub->value(): "";
 
+#ifndef SIMAVR
         gGroups[mnem] = std::pair<std::string, std::string>(group1, group2);
+#else
+        sub = current->first_node()->first_node();
+        while(sub != NULL && strcmp(sub->name(), "cycles"))
+            sub = sub->next_sibling();
+        cycles = sub != NULL ? sub->value(): "1";
+        gGroups[mnem] = std::pair<std::string, std::string>(cycles, group2);
+#endif
 
         current = current->next_sibling();
     }
@@ -346,6 +355,7 @@ int main(int argc, char** argv)
 
     input = fopen("gdb.txt", "r");
 
+    int cycleCount = 0;
     int instructionCount = 0;
     while (fgets(line, sizeof(line), input))
     {
@@ -358,6 +368,10 @@ int main(int argc, char** argv)
                 std::transform(str.begin(), str.end(),str.begin(), ::toupper);
                 updateCategoryCount(gGroups[str].second.c_str());
                 instructionCount++;
+#ifdef SIMAVR
+                int cycles = atoi(gGroups[str].first.c_str());
+                cycleCount += cycles > 0 ? cycles: 1;
+#endif
             }
         }
         if(strstr(line, "__stop_program") != NULL)
@@ -402,6 +416,8 @@ int main(int argc, char** argv)
 
     kill( pid, SIGKILL );
 #endif
+
+    printf("Instructions %d, Cycles %d\n", instructionCount, cycleCount);
 
     return 0;
 }
