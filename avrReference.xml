@@ -492,12 +492,12 @@
       </entry>
     </pri_opcd>
 
-    <pri_opcd value="">
+    <!--pri_opcd value="">
       <entry>
 	<syntax><mnem>WDR</mnem></syntax>
         <grp1>gen</grp1><grp2>control</grp2>
       </entry>
-    </pri_opcd>
+    </pri_opcd-->
 
   </two-byte>
 </avrReference>
