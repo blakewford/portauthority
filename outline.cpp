@@ -190,7 +190,7 @@ int main(int argc, char** argv)
     sprintf(buffer, "echo set logging redirect on > /proc/%d/fd/0", pid);
     system(buffer);
 
-    int32_t count = 10;
+    int32_t count = 256000;
     sprintf(buffer, "echo si > /proc/%d/fd/0", pid);
     while(count--)
     {
@@ -299,6 +299,11 @@ int main(int argc, char** argv)
                 std::transform(str.begin(), str.end(),str.begin(), ::toupper);
                 updateCategoryCount(gGroups[str].second.c_str());
             }
+        }
+        if(strstr(line, "__stop_program") != NULL)
+        {
+            printf("AVR exit()\n");
+            break;
         }
     }
 
