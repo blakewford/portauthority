@@ -13,6 +13,10 @@
 #include <vector>
 #include "rapidxml/rapidxml.hpp"
 
+int32_t cachedArgc = 0;
+char argvStorage[1024];
+char* cachedArgv[64];
+
 typedef std::pair<uint64_t, uint64_t> Range;
 typedef std::pair<std::string, std::string> Groups;
 
@@ -20,6 +24,8 @@ std::vector<Range> gRanges;
 std::map<uint64_t, std::string> gSymbols;
 std::map<uint64_t, std::string> gDisassembly;
 std::map<std::string, Groups> gGroups;
+
+bool gTimeout = false;
 
 #ifndef SIMAVR
 const char* gCategories[] =
@@ -31,17 +37,28 @@ const char* gCategories[] =
 
 int32_t gCategoryCount[sizeof(gCategories)/sizeof(const char*)];
 
+void* startTimer(void*)
+{
+    int count = cachedArgc > 2 ? atoi(cachedArgv[2]): 60;
+    while(count--)
+    {
+        usleep(1000*1000);
+    }
+
+    gTimeout = true;
+}
+
 void* runRemoteGDB(void*)
 {
-    system("~/simavr/simavr/run_avr -f 16000000 -m atmega1284 /tmp/stripped --gdb");
+    int error = system("~/simavr/simavr/run_avr -f 16000000 -m atmega1284 /tmp/stripped --gdb");
 }
 
 void* runProgram(void*)
 {
 #ifndef SIMAVR
-    system("( cat ) | gdb /tmp/stripped -ex \"break main\" -ex \"run\"");
+    int error = system("( cat ) | gdb /tmp/stripped -ex \"break main\" -ex \"run\"");
 #else
-    system("( cat ) | avr-gdb /tmp/stripped -ex \"target remote :1234\" -ex \"break main\" -ex \"c\"");
+    int error = system("( cat ) | avr-gdb /tmp/stripped -ex \"target remote :1234\" -ex \"break main\" -ex \"c\""); //TODO: Start from arbitrary symbol
 #endif
 }
 
@@ -60,6 +77,17 @@ void updateCategoryCount(const char* category)
 
 int main(int argc, char** argv)
 {
+
+    cachedArgc = argc;
+    char* storagePointer = argvStorage;
+    while(argc--)
+    {
+        cachedArgv[argc] = storagePointer;
+        int32_t length = strlen(argv[argc]);
+        strcat(storagePointer, argv[argc]);
+        storagePointer+=(length+1);
+    }
+
     char buffer[1024];
     memset(buffer, '\0', 1024);
 #ifndef SIMAVR
@@ -68,7 +96,7 @@ int main(int argc, char** argv)
     sprintf(buffer, "avr-objcopy -g -Ielf32-avr -Oelf32-avr %s /tmp/stripped", argv[1]);
 #endif
 
-    system(buffer);
+    int error = system(buffer);
 
 #ifndef SIMAVR
     const char* prefix = "";
@@ -78,13 +106,13 @@ int main(int argc, char** argv)
 
     memset(buffer, '\0', 1024);
     sprintf(buffer, "%sreadelf --debug-dump=frames %s > /tmp/frames", prefix, argv[1]);
-    system(buffer);
+    error = system(buffer);
     memset(buffer, '\0', 1024);
     sprintf(buffer, "%sreadelf -s %s > /tmp/symbols", prefix, argv[1]);
-    system(buffer);
+    error = system(buffer);
     memset(buffer, '\0', 1024);
     sprintf(buffer, "%sobjdump -d %s > /tmp/disasm", prefix, argv[1]);
-    system(buffer);
+    error = system(buffer);
     memset(buffer, '\0', 1024);
 
     char line[256];
@@ -187,7 +215,7 @@ int main(int argc, char** argv)
             cmd = popen("pidof avr-gdb", "r");
         }
         rounds++;
-        fgets(pidString, 6, cmd);
+        char* value = fgets(pidString, 6, cmd);
         pid = strtoul(pidString, NULL, 10);
         pclose(cmd);
         usleep(0);
@@ -195,28 +223,30 @@ int main(int argc, char** argv)
 
     memset(buffer, '\0', 1024);
     sprintf(buffer, "echo set confirm off > /proc/%d/fd/0", pid);
-    system(buffer);
+    error = system(buffer);
 
     memset(buffer, '\0', 1024);
     sprintf(buffer, "echo set logging on > /proc/%d/fd/0", pid);
-    system(buffer);
+    error = system(buffer);
 
     memset(buffer, '\0', 1024);
     sprintf(buffer, "echo set logging redirect on > /proc/%d/fd/0", pid);
-    system(buffer);
+    error = system(buffer);
 
-    int32_t count = 256000;
     sprintf(buffer, "echo si > /proc/%d/fd/0", pid);
-    while(count--)
+
+    pthread_t timerThread;
+    pthread_create(&timerThread, NULL, startTimer, NULL);
+    while(!gTimeout)
     {
-        system(buffer);
+        error = system(buffer);
     }
 
     usleep(1*1000*1000);
 
     memset(buffer, '\0', 1024);
     sprintf(buffer, "echo quit > /proc/%d/fd/0", pid);
-    system(buffer);
+    error = system(buffer);
 
     printf("\n");
 
@@ -307,6 +337,7 @@ int main(int argc, char** argv)
 
     input = fopen("gdb.txt", "r");
 
+    int instructionCount = 0;
     while (fgets(line, sizeof(line), input))
     {
         if(strstr(line, "(gdb) 0x") != NULL)
@@ -317,6 +348,7 @@ int main(int argc, char** argv)
                 std::string& str = gDisassembly[address];
                 std::transform(str.begin(), str.end(),str.begin(), ::toupper);
                 updateCategoryCount(gGroups[str].second.c_str());
+                instructionCount++;
             }
         }
         if(strstr(line, "__stop_program") != NULL)
@@ -329,7 +361,7 @@ int main(int argc, char** argv)
     fclose(input);
     remove("gdb.txt");
 
-    count = sizeof(gCategoryCount)/sizeof(int32_t);
+    int count = sizeof(gCategoryCount)/sizeof(int32_t);
     while(count--)
     {
         //printf("%s ", gCategories[count]);
