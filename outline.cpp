@@ -29,7 +29,7 @@ bool gTimeout = false;
 
 #ifndef SIMAVR
 const char* gCategories[] =
-{"datamov", "stack", "conver", "arith", "binary", "decimal", "logical", "shftrot", "bit", "branch", "cond", "break", "string", "inout", "flgctrl", "segreg", "control"};
+{"datamov", "arith", "logical", "bit", "branch", "control",  "stack", "conver", "binary", "decimal", "shftrot", "cond", "break", "string", "inout", "flgctrl", "segreg"};
 #else
 const char* gCategories[] =
 {"datamov", "arith", "logical", "bit", "branch", "control"};
@@ -174,11 +174,7 @@ int main(int argc, char** argv)
             int padding = 0;
             if(highestAddress >= 4096)
             {
-                padding += 2;
-            }
-            if(highestAddress >= 65536)
-            {
-                padding += 2;
+                padding += 4;
             }
             mnem = line+19+padding;
 #endif
