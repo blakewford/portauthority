@@ -1,5 +1,5 @@
 #~/Desktop/Tests/
 for file in $1*
 do
-  ./outline $file
+  ./outline $file 5
 done
