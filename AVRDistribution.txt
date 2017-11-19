@@ -1,4 +1,4 @@
-arith logical branch datamov control bit
+control branch bit logical arith datamov
 0 2 0 7 0 48 
 0 1 6 9 15 66 
 0 5 7 0 2 129 
