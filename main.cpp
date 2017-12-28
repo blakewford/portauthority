@@ -11,6 +11,52 @@ int32_t cachedArgc = 0;
 char argvStorage[1024];
 char* cachedArgv[64];
 
+struct sectionInfo
+{
+    uint32_t type;
+    uint32_t index;
+    uint64_t address;
+    uint64_t offset;
+    uint64_t size;
+};
+
+struct sections
+{
+    uint32_t numSections;
+    sectionInfo* si;
+};
+
+int32_t getIndexForString(uint8_t* binary, sectionInfo& info, const char* search)
+{
+    char stringBuffer[info.size];
+    memcpy(stringBuffer, &binary[info.offset], info.size);
+
+    char nameBuffer[64];
+    memset(nameBuffer, '\0', 64);
+
+    int32_t ndx = 0;
+    int32_t cursor = 0;
+    uint32_t length = info.size;
+    while(length--)
+    {
+        nameBuffer[cursor] = stringBuffer[ndx];
+        if(nameBuffer[cursor] == '\0')
+        {
+            if(!strcmp(nameBuffer, search))
+                return ndx - strlen(nameBuffer);
+            memset(nameBuffer, '\0', 64);
+            cursor = 0;
+        }
+        else
+        {
+            cursor++;
+        }
+        ndx++;
+    }
+
+    return -1;
+}
+
 int main(int argc, char** argv)
 {
     cachedArgc = argc;
@@ -55,21 +101,6 @@ int main(int argc, char** argv)
             stringsIndex = header->e_shstrndx;
         }
 
-        struct sectionInfo
-        {
-            uint32_t type;
-            uint32_t index;
-            uint64_t address;
-            uint64_t offset;
-            uint64_t size;
-        };
-
-        struct sections
-        {
-            uint32_t numSections;
-            sectionInfo* si;
-        };
-
         sections sect;
         int32_t ndx = 0;
         sect.si = (sectionInfo*)malloc(sizeof(sectionInfo)*numHeaders);
@@ -98,33 +129,7 @@ int main(int argc, char** argv)
             ndx++;
         }
 
-        char stringBuffer[sect.si[stringsIndex].size];
-        memcpy(stringBuffer, &binary[sect.si[stringsIndex].offset], sect.si[stringsIndex].size);
-
-        char nameBuffer[64];
-        memset(nameBuffer, '\0', 64);
-
-        ndx = 0;
-        int32_t cursor = 0;
-        uint32_t length = sect.si[stringsIndex].size;
-        printf("0 ");
-        while(length--)
-        {
-            nameBuffer[cursor] = stringBuffer[ndx++];
-            if(nameBuffer[cursor] == '\0')
-            {
-                printf("%s\n", nameBuffer);
-                memset(nameBuffer, '\0', 64);
-                cursor = 0;
-                if(ndx != sect.si[stringsIndex].size)
-                    printf("%x ", ndx);
-            }
-            else
-            {
-                cursor++;
-            }
-        }
-
+        printf("%d\n", getIndexForString(binary, sect.si[stringsIndex], ".symtab"));
 
         free(sect.si);
         free(binary);
