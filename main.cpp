@@ -18,6 +18,8 @@ struct sectionInfo
     uint64_t address;
     uint64_t offset;
     uint64_t size;
+    bool symbols;
+    bool stringTable;
 };
 
 struct sections
@@ -55,6 +57,21 @@ int32_t getIndexForString(uint8_t* binary, sectionInfo& info, const char* search
     }
 
     return -1;
+}
+
+void getStringForIndex(uint8_t* binary, sectionInfo& info, int32_t index, char* buffer, int32_t bufferSize)
+{
+    char stringBuffer[info.size];
+    memcpy(stringBuffer, &binary[info.offset], info.size);
+
+    memset(buffer, '\0', bufferSize);
+
+    int32_t cursor = 0;
+    while(stringBuffer[index + cursor] != '\0')
+    {
+        buffer[cursor] = stringBuffer[index + cursor];
+        cursor++;
+    }
 }
 
 int main(int argc, char** argv)
@@ -103,6 +120,7 @@ int main(int argc, char** argv)
 
         sections sect;
         int32_t ndx = 0;
+        const int16_t totalHeaders = numHeaders;
         sect.si = (sectionInfo*)malloc(sizeof(sectionInfo)*numHeaders);
         while(numHeaders--)
         {
@@ -129,7 +147,55 @@ int main(int argc, char** argv)
             ndx++;
         }
 
-        printf("%d\n", getIndexForString(binary, sect.si[stringsIndex], ".symtab"));
+        int32_t symbolsIndex = 0;
+        int32_t stringTableIndex = 0;
+
+        ndx = 0;
+        numHeaders = totalHeaders;
+        int32_t symbolTable = getIndexForString(binary, sect.si[stringsIndex], ".symtab");
+        int32_t stringTable = getIndexForString(binary, sect.si[stringsIndex], ".strtab");
+        while(numHeaders--)
+        {
+            sect.si[ndx].symbols = sect.si[ndx].index == symbolTable;
+            sect.si[ndx].stringTable = sect.si[ndx].index == stringTable;
+            if(sect.si[ndx].symbols)
+                symbolsIndex = ndx;
+            if(sect.si[ndx].stringTable)
+                stringTableIndex = ndx;
+            ndx++;
+        }
+
+        ndx = 0;
+
+        uint8_t type;
+        uint32_t name;
+        char buffer[256];
+        uint64_t address;
+        int32_t symbols = sect.si[symbolsIndex].size / (headerSize == sizeof(Elf64_Shdr) ? sizeof(Elf64_Sym): sizeof(Elf32_Sym));
+        while(symbols--)
+        {
+            if(headerSize == sizeof(Elf64_Shdr))
+            {
+                Elf64_Sym* symbols = (Elf64_Sym*)(binary + sect.si[symbolsIndex].offset);
+                type = ELF64_ST_TYPE(symbols[ndx].st_info);
+                name = symbols[ndx].st_name;
+                address = symbols[ndx].st_value;
+            }
+            else
+            {
+                Elf32_Sym* symbols = (Elf32_Sym*)(binary + sect.si[symbolsIndex].offset);
+                type = ELF32_ST_TYPE(symbols[ndx].st_info);
+                name = symbols[ndx].st_name;
+                address = symbols[ndx].st_value;
+            }
+
+            if(type == 2) //function
+            {
+                getStringForIndex(binary, sect.si[stringTableIndex], name, buffer, 256);
+                printf("%s 0x%lx\n", buffer, address);
+            }
+            ndx++;
+        }
 
         free(sect.si);
         free(binary);
