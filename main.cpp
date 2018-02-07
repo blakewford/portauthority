@@ -268,7 +268,7 @@ int main(int argc, char** argv)
                     while(bytes--)
                     {
                         printf("%02lx ", value&0xFF);
-                        value >>= 8
+                        value >>= 8;
                     }
                     printf("\n");
                 }
