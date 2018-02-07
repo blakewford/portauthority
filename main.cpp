@@ -5,11 +5,19 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
+
+#include <sys/user.h>
+#include <sys/wait.h>
+#include <sys/ptrace.h>
+
 #include <libelf.h>
+#include <byteswap.h>
 
 int32_t cachedArgc = 0;
 char argvStorage[1024];
 char* cachedArgv[64];
+
+#define BREAK 0xCC00000000000000 //x86 breakpoint instruction
 
 struct sectionInfo
 {
@@ -85,6 +93,10 @@ int main(int argc, char** argv)
         strcat(storagePointer, argv[argc]);
         storagePointer+=(length+1);
     }
+
+    uint64_t moduleBound = 0;
+    uint64_t profilerAddress = 0;
+    const char* FUNCTION_NAME = "main";
 
     FILE* executable = 0;
     if(cachedArgc > 1) executable = fopen(cachedArgv[1], "r");
@@ -167,11 +179,13 @@ int main(int argc, char** argv)
 
         ndx = 0;
 
-        uint8_t type;
-        uint32_t name;
-        char buffer[256];
-        uint64_t address;
+        uint8_t type = 0;
+        uint32_t name = 0;
+        uint64_t address = 0;
+        uint64_t highestAddress = 0;
         int32_t symbols = sect.si[symbolsIndex].size / (headerSize == sizeof(Elf64_Shdr) ? sizeof(Elf64_Sym): sizeof(Elf32_Sym));
+
+        char buffer[256];
         while(symbols--)
         {
             if(headerSize == sizeof(Elf64_Shdr))
@@ -191,14 +205,78 @@ int main(int argc, char** argv)
 
             if(type == 2) //function
             {
+                highestAddress = highestAddress < address ? address: highestAddress;
                 getStringForIndex(binary, sect.si[stringTableIndex], name, buffer, 256);
-                printf("%s 0x%lx\n", buffer, address);
+                if(!strcmp(FUNCTION_NAME, buffer))
+                {
+                    profilerAddress = address;
+                }
             }
             ndx++;
         }
 
+        moduleBound = highestAddress;
+
         free(sect.si);
         free(binary);
+    }
+
+    if(profilerAddress != 0)
+    {
+        int32_t status = 0;
+        user_regs_struct registers;
+
+        char buffer[256];
+        memset(buffer, '\0', 256);
+        sprintf(buffer, "pgrep -fn %s", strrchr(cachedArgv[1], '/')+1);
+
+        FILE* process = popen(cachedArgv[1], "r");
+        FILE* find = popen(buffer, "r");
+
+        char pidString[6];
+        memset(pidString, '\0', 6);
+
+        if(fgets(pidString, 6, find) != NULL)
+        {
+            pid_t pid = strtol(pidString, NULL, 10);
+            ptrace(PTRACE_ATTACH, pid, NULL, NULL);
+            waitpid(pid, &status, WSTOPPED);
+
+            //profilerAddress -= sizeof(uint64_t); //TODO fix breakpoint
+            //profilerAddress++;
+            profilerAddress = 0x40059b;
+            long data = ptrace(PTRACE_PEEKDATA, pid, profilerAddress, NULL);
+
+            //run to break
+            //ptrace(PTRACE_POKEDATA, pid, profilerAddress, (data&0x00FFFFFFFFFFFFFF) | BREAK);
+            ptrace(PTRACE_POKEDATA, pid, profilerAddress, BREAK);
+            ptrace(PTRACE_CONT, pid, NULL, NULL);
+            waitpid(pid, &status, WSTOPPED);
+
+            ptrace(PTRACE_POKEDATA, pid, profilerAddress, data);
+
+            while(WIFSTOPPED(status))
+            {
+                ptrace(PTRACE_SINGLESTEP, pid, NULL, NULL);
+                waitpid(pid, &status, WSTOPPED);
+                ptrace(PTRACE_GETREGS, pid, NULL, &registers);
+                if(registers.rip < moduleBound)
+                {
+                    uint64_t value = ptrace(PTRACE_PEEKDATA, pid, registers.rip, NULL);
+                    printf("%llx ", registers.rip);
+                    int32_t bytes = 7; //max instruction length
+                    while(bytes--)
+                    {
+                        printf("%02lx ", value&0xFF);
+                        value >>= 8
+                    }
+                    printf("\n");
+                }
+            }
+            kill(pid, SIGKILL);
+        }
+
+        pclose(find);
     }
 
     printf("Clustering.\n");
