@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <spawn.h>
 
 #include <sys/user.h>
 #include <sys/wait.h>
@@ -226,57 +227,56 @@ int main(int argc, char** argv)
         int32_t status = 0;
         user_regs_struct registers;
 
-        char buffer[256];
-        memset(buffer, '\0', 256);
-        sprintf(buffer, "pgrep -fn %s", strrchr(cachedArgv[1], '/')+1);
+        pid_t pid;
+        posix_spawn(&pid, cachedArgv[1], NULL, NULL, NULL, NULL);
 
-        FILE* process = popen(cachedArgv[1], "r");
-        FILE* find = popen(buffer, "r");
+        ptrace(PTRACE_ATTACH, pid, NULL, NULL);
+        waitpid(pid, &status, WSTOPPED);
 
-        char pidString[6];
-        memset(pidString, '\0', 6);
+        profilerAddress -= (sizeof(uint64_t));
+        profilerAddress++;
+        long data = ptrace(PTRACE_PEEKDATA, pid, profilerAddress, NULL);
 
-        if(fgets(pidString, 6, find) != NULL)
+        //set our starting breakpoint
+        ptrace(PTRACE_POKEDATA, pid, profilerAddress, (data&0x00FFFFFFFFFFFFFF) | BREAK);
+        ptrace(PTRACE_CONT, pid, NULL, NULL);
+
+        //_start causes the process to stop
+        waitpid(pid, &status, WSTOPPED);
+
+        //run to break
+        ptrace(PTRACE_CONT, pid, NULL, NULL);
+        waitpid(pid, &status, WSTOPPED);
+
+        //replace instruction
+        ptrace(PTRACE_POKEDATA, pid, profilerAddress, data);
+
+        while(WIFSTOPPED(status))
         {
-            pid_t pid = strtol(pidString, NULL, 10);
-            ptrace(PTRACE_ATTACH, pid, NULL, NULL);
+            ptrace(PTRACE_SINGLESTEP, pid, NULL, NULL);
             waitpid(pid, &status, WSTOPPED);
 
-            //profilerAddress -= sizeof(uint64_t); //TODO fix breakpoint
-            //profilerAddress++;
-            profilerAddress = 0x40059b;
-            long data = ptrace(PTRACE_PEEKDATA, pid, profilerAddress, NULL);
-
-            //run to break
-            //ptrace(PTRACE_POKEDATA, pid, profilerAddress, (data&0x00FFFFFFFFFFFFFF) | BREAK);
-            ptrace(PTRACE_POKEDATA, pid, profilerAddress, BREAK);
-            ptrace(PTRACE_CONT, pid, NULL, NULL);
-            waitpid(pid, &status, WSTOPPED);
-
-            ptrace(PTRACE_POKEDATA, pid, profilerAddress, data);
-
-            while(WIFSTOPPED(status))
+            ptrace(PTRACE_GETREGS, pid, NULL, &registers);
+            if(registers.rip == 0)
             {
-                ptrace(PTRACE_SINGLESTEP, pid, NULL, NULL);
-                waitpid(pid, &status, WSTOPPED);
-                ptrace(PTRACE_GETREGS, pid, NULL, &registers);
-                if(registers.rip < moduleBound)
-                {
-                    uint64_t value = ptrace(PTRACE_PEEKDATA, pid, registers.rip, NULL);
-                    printf("%llx ", registers.rip);
-                    int32_t bytes = 7; //max instruction length
-                    while(bytes--)
-                    {
-                        printf("%02lx ", value&0xFF);
-                        value >>= 8;
-                    }
-                    printf("\n");
-                }
+                //natural program termination
+                break;
             }
-            kill(pid, SIGKILL);
-        }
 
-        pclose(find);
+            if(registers.rip < moduleBound)
+            {
+                uint64_t value = ptrace(PTRACE_PEEKDATA, pid, registers.rip, NULL);
+                printf("%llx ", registers.rip);
+                int32_t bytes = 7; //max instruction length
+                while(bytes--)
+                {
+                    printf("%02lx ", value&0xFF);
+                    value >>= 8;
+                }
+                printf("\n");
+            }
+        }
+        kill(pid, SIGKILL);
     }
 
     printf("Clustering.\n");
