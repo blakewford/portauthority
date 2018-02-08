@@ -12,7 +12,9 @@
 #include <sys/ptrace.h>
 
 #include <libelf.h>
-#include <byteswap.h>
+//#include <byteswap.h>
+
+#include "parser.cpp"
 
 int32_t cachedArgc = 0;
 char argvStorage[1024];
@@ -36,6 +38,11 @@ struct sections
     uint32_t numSections;
     sectionInfo* si;
 };
+
+extern "C"
+{
+    void parse(const char* json, isa_instr* instr);
+}
 
 int32_t getIndexForString(uint8_t* binary, sectionInfo& info, const char* search)
 {
@@ -278,6 +285,13 @@ int main(int argc, char** argv)
         }
         kill(pid, SIGKILL);
     }
+
+    const char* json = "{\"name\":\"x86\",\"parameters\":{\"opcode\":204,\"mnemonic\":\"INT\"}}";
+
+    x86_instr instruction;
+    parse(json, &instruction);
+
+    printf("\n%s 0x%lX\n", instruction.get_mnemonic(), instruction.get_opcode());
 
     printf("Clustering.\n");
     fclose(executable);
