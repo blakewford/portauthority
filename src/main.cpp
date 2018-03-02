@@ -14,6 +14,7 @@
 #include <libelf.h>
 //#include <byteswap.h>
 
+#include <udis86.h>
 #include "parser.cpp"
 
 int32_t cachedArgc = 0;
@@ -102,6 +103,7 @@ int main(int argc, char** argv)
         storagePointer+=(length+1);
     }
 
+    bool amd64 = false;
     uint64_t moduleBound = 0;
     uint64_t profilerAddress = 0;
     const char* FUNCTION_NAME = "main";
@@ -117,11 +119,13 @@ int main(int argc, char** argv)
         size_t read = fread(binary, 1, size, executable);
         if(read != size) return -1;
 
+        amd64 = binary[4] == 0x2;
+
         uint64_t offset = 0;
         uint16_t headerSize = 0;
         uint16_t numHeaders = 0;
         uint16_t stringsIndex = 0;
-        if(binary[4] == 0x2)
+        if(amd64)
         {
             Elf64_Ehdr* header = (Elf64_Ehdr*)binary;
             headerSize = header->e_shentsize;
@@ -258,11 +262,15 @@ int main(int argc, char** argv)
         //replace instruction
         ptrace(PTRACE_POKEDATA, pid, profilerAddress, data);
 
+        const int32_t INSTRUCTION_LENGTH_MAX = 7;
+        uint8_t instructions[INSTRUCTION_LENGTH_MAX];
+
+        ud_t u;
+        ud_init(&u);
+        ud_set_mode(&u, amd64 ? 64: 32);
+        ud_set_syntax(&u, UD_SYN_ATT);
         while(WIFSTOPPED(status))
         {
-            ptrace(PTRACE_SINGLESTEP, pid, NULL, NULL);
-            waitpid(pid, &status, WSTOPPED);
-
             ptrace(PTRACE_GETREGS, pid, NULL, &registers);
             if(registers.rip == 0)
             {
@@ -274,14 +282,25 @@ int main(int argc, char** argv)
             {
                 uint64_t value = ptrace(PTRACE_PEEKDATA, pid, registers.rip, NULL);
                 printf("%llx ", registers.rip);
-                int32_t bytes = 7; //max instruction length
-                while(bytes--)
+                for(int32_t i = 0; i < INSTRUCTION_LENGTH_MAX; i++)
                 {
-                    printf("%02lx ", value&0xFF);
+                    instructions[i] = value&0xFF;
                     value >>= 8;
                 }
-                printf("\n");
+
+                int byte = 0;
+                bool invalid = true;
+                while(invalid && (byte <= INSTRUCTION_LENGTH_MAX))
+                {
+                    byte++;
+                    ud_set_input_buffer(&u, instructions, byte);
+                    ud_disassemble(&u);
+                    invalid = strcmp(ud_insn_asm(&u), "invalid ") == 0;
+                }
+                printf("%s\n", ud_insn_asm(&u));
             }
+            ptrace(PTRACE_SINGLESTEP, pid, NULL, NULL);
+            waitpid(pid, &status, WSTOPPED);
         }
         kill(pid, SIGKILL);
     }
