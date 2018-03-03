@@ -305,7 +305,7 @@ int main(int argc, char** argv)
         kill(pid, SIGKILL);
     }
 
-    const char* json = "{\"name\":\"x86\",\"parameters\":{\"opcode\":204,\"mnemonic\":\"INT\"}}";
+    const char* json = "{\"name\":\"x86\",\"parameters\":[{\"opcode\":204,\"mnemonic\":\"INT\",\"group\":\"datamov\",\"subgroup\":\"\"}, {\"opcode\":204,\"mnemonic\":\"INT\",\"group\":\"datamov\",\"subgroup\":\"\"}]}";
 
     x86_instr instruction;
     parse(json, &instruction);

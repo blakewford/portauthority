@@ -127,6 +127,7 @@ enum parse_state
 
 extern "C" {
 
+#ifndef USE_RAPID
 void parse(const char* json, isa_instr* instr)
 {
     int i = 0;
@@ -246,5 +247,13 @@ void parse(const char* json, isa_instr* instr)
     assert(object_stack.size() == 0);
 
 }
+#else
+void parse(const char* json, isa_instr* instr)
+{
+    Reader reader;
+    StringStream ss(json);
+    reader.Parse(ss, *instr);
+}
+#endif
 
 }

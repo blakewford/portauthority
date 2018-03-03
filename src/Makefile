@@ -3,7 +3,7 @@ SRC:= main.cpp
 DEBUG:=
 
 cluster-profile: $(SRC)
-	$(CC) $(SRC) $(DEBUG) -o $@ -lelf -ludis86 -L/usr/local/lib -I.
+	$(CC) $(SRC) $(DEBUG) -o $@ -lelf -ludis86 -L/usr/local/lib -I. -Irapidjson/include
 
 clean:
 	-@rm cluster-profile
