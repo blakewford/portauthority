@@ -42,7 +42,7 @@ struct sections
 
 extern "C"
 {
-    void parse(const char* json, isa_instr* instr);
+    void parse(const char* json, isa* instr);
 }
 
 int32_t getIndexForString(uint8_t* binary, sectionInfo& info, const char* search)
@@ -102,6 +102,19 @@ int main(int argc, char** argv)
         strcat(storagePointer, argv[argc]);
         storagePointer+=(length+1);
     }
+
+    const char* json = "{\"name\":\"x86\",\"parameters\":[{\"opcode\":204,\"mnemonic\":\"INT\",\"group\":\"datamov\",\"subgroup\":\"\"}, {\"opcode\":204,\"mnemonic\":\"INT\",\"group\":\"datamov\",\"subgroup\":\"\"}]}";
+
+    x86_isa instructions;
+    parse(json, &instructions);
+
+    int32_t ndx = instructions.size();
+    while(ndx--)
+    {
+        printf("%s %s 0x%lX %s %s\n", instructions.get_name(), instructions.get_mnemonic(ndx), instructions.get_opcode(ndx), instructions.get_group(ndx),instructions.get_subgroup(ndx));
+    }
+
+    printf("\n");
 
     bool amd64 = false;
     uint64_t moduleBound = 0;
@@ -305,14 +318,7 @@ int main(int argc, char** argv)
         kill(pid, SIGKILL);
     }
 
-    const char* json = "{\"name\":\"x86\",\"parameters\":[{\"opcode\":204,\"mnemonic\":\"INT\",\"group\":\"datamov\",\"subgroup\":\"\"}, {\"opcode\":204,\"mnemonic\":\"INT\",\"group\":\"datamov\",\"subgroup\":\"\"}]}";
-
-    x86_instr instruction;
-    parse(json, &instruction);
-
-    printf("\n%s 0x%lX\n", instruction.get_mnemonic(), instruction.get_opcode());
-
-    printf("Clustering.\n");
+    printf("\nClustering.\n");
     fclose(executable);
 
 }

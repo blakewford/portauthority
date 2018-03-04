@@ -1,3 +1,4 @@
+#include <deque>
 #include <string.h>
 #include "rapidjson/reader.h"
 using namespace rapidjson;
@@ -7,6 +8,15 @@ class container_object;
 
 #define MAX_BUFFER_SIZE 64
 #define USE_RAPID 1
+
+struct isa_instr
+{
+    public:
+        long m_opcode;
+        char m_mnem[MAX_BUFFER_SIZE];
+        char m_group[MAX_BUFFER_SIZE];
+        char m_subgroup[MAX_BUFFER_SIZE];
+};
 
 #ifndef USE_RAPID
 class isa_instr
@@ -37,95 +47,126 @@ class x86_instr: public isa_instr
         char m_mnem[MAX_BUFFER_SIZE];
 };
 #else
-struct isa_instr
+struct isa
 {
-    bool Null()
+    isa()
     {
-        return true;
+        m_create = false;
     }
 
-    bool Bool(bool b)
+    bool String(const char* string, SizeType length, bool copy)
     {
-        return true;
-    }
+        if(m_buffer != NULL)
+        {
+            strcpy(m_buffer, string);
+            m_buffer = NULL;
+        }
 
-    bool Int(int i)
-    {
-        return true;
-    }
-
-    bool Uint(unsigned u)
-    {
-        return true;
-    }
-
-    bool Int64(int64_t i)
-    {
-        return true;
-    }
-
-    bool Uint64(uint64_t u)
-    {
-        return true;
-    }
-
-    bool Double(double d)
-    {
-        return true;
-    }
-
-    bool RawNumber(const char* str, SizeType length, bool copy)
-    {
-        return true;
-    }
-
-    bool String(const char* str, SizeType length, bool copy)
-    {
         return true;
     }
 
     bool StartObject()
     {
+        if(m_create)
+        {
+            m_instr.push_back(new isa_instr());
+        }
+
         return true;
     }
 
-    bool Key(const char* str, SizeType length, bool copy)
+    virtual bool Key(const char* key, SizeType length, bool copy)
     {
-        return true;
-    }
+        if(!strcmp(key, "name"))
+        {
+            m_buffer = m_name;
+        }
 
-    bool EndObject(SizeType memberCount)
-    {
         return true;
     }
 
     bool StartArray()
     {
+        m_create = true;
         return true;
     }
 
     bool EndArray(SizeType elementCount)
     {
+        m_create = false;
         return true;
     }
+
+            bool Null(){ return true; }
+    virtual bool Bool(bool value) = 0;
+    virtual bool Int(int value) = 0;
+    virtual bool Uint(unsigned value) = 0;
+    virtual bool Int64(int64_t value) = 0;
+    virtual bool Uint64(uint64_t value) = 0;
+    virtual bool Double(double value) = 0;
+    virtual bool RawNumber(const char* string, SizeType length, bool copy) = 0;
+            bool EndObject(SizeType memberCount){ return true; }
 
     void populate(container_object* obj);
     const char* get_name(){ return m_name; }
     virtual void populate_specific(container_object* obj) = 0;
 
+    protected:
+        char* m_buffer = NULL;
+        std::deque<isa_instr*> m_instr;
+
     private:
+        bool m_create;
         char m_name[MAX_BUFFER_SIZE];
 
 };
 
-struct x86_instr: public isa_instr
+struct x86_isa: public isa
 {
-    void populate_specific(container_object* obj);
-    long get_opcode(){ return m_opcode; };
-    const char* get_mnemonic(){ return m_mnem; };
+    virtual bool Uint(unsigned value)
+    {
+        m_instr.back()->m_opcode = value;
+        return true;
+    }
 
-    private:
-        long m_opcode;
-        char m_mnem[MAX_BUFFER_SIZE];
+    virtual bool Key(const char* key, SizeType length, bool copy)
+    {
+        if(!strcmp(key, "opcode"))
+        {
+            //Do nothing!
+        }
+        else if(!strcmp(key, "mnemonic"))
+        {
+            m_buffer = m_instr.back()->m_mnem;
+        }
+        else if(!strcmp(key, "group"))
+        {
+            m_buffer = m_instr.back()->m_group;
+        }
+        else if(!strcmp(key, "subgroup"))
+        {
+            m_buffer = m_instr.back()->m_subgroup;
+        }
+        else
+        {
+            isa::Key(key, length, copy);
+        }
+
+        return true;
+    }
+
+    virtual bool Bool(bool value){ return true; }
+    virtual bool Int(int value){ return true; }
+    virtual bool Int64(int64_t value){ return true; }
+    virtual bool Uint64(uint64_t value){ return true; }
+    virtual bool Double(double value){ return true; }
+    virtual bool RawNumber(const char* string, SizeType length, bool copy){ return true; }
+
+    long size(){ return m_instr.size(); }
+    void populate_specific(container_object* obj);
+    long get_opcode(int32_t ndx){ return m_instr.at(ndx)->m_opcode; };
+    const char* get_mnemonic(int32_t ndx){ return m_instr.at(ndx)->m_mnem; };
+    const char* get_group(int32_t ndx){ return m_instr.at(ndx)->m_group; };
+    const char* get_subgroup(int32_t ndx){ return m_instr.at(ndx)->m_subgroup; };
 };
 #endif

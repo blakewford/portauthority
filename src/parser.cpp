@@ -74,7 +74,7 @@ class container_object: public object
         std::vector<object*> m_objects;
 };
 
-void isa_instr::populate(container_object* obj)
+void isa::populate(container_object* obj)
 {
     for(int i = 0; i < obj->child_count(); i++)
     {
@@ -95,7 +95,7 @@ void isa_instr::populate(container_object* obj)
     }
 }
 
-void x86_instr::populate_specific(container_object* obj)
+void x86_isa::populate_specific(container_object* obj)
 {
     assert(!strcmp("parameters", obj->get_name()));
     container_object* container = (container_object*)obj;
@@ -105,11 +105,11 @@ void x86_instr::populate_specific(container_object* obj)
         const char* name = param->get_name();
         if(!strcmp(name, "opcode"))
         {
-            m_opcode = param->get_long_value();
+            m_instr.back()->m_opcode = param->get_long_value();
         }
         else if(!strcmp(name, "mnemonic"))
         {
-            memcpy(m_mnem, param->get_string_value(), strlen(param->get_string_value()));
+            memcpy(m_instr.back()->m_mnem, param->get_string_value(), strlen(param->get_string_value()));
         }
         else
         {
@@ -128,7 +128,7 @@ enum parse_state
 extern "C" {
 
 #ifndef USE_RAPID
-void parse(const char* json, isa_instr* instr)
+void parse(const char* json, isa* set)
 {
     int i = 0;
     object* temp = NULL;
@@ -169,7 +169,7 @@ void parse(const char* json, isa_instr* instr)
             }
             else
             {
-                instr->populate(obj);
+                set->populate(obj);
             }
         }
         else if(current == ':')
@@ -248,11 +248,11 @@ void parse(const char* json, isa_instr* instr)
 
 }
 #else
-void parse(const char* json, isa_instr* instr)
+void parse(const char* json, isa* set)
 {
     Reader reader;
     StringStream ss(json);
-    reader.Parse(ss, *instr);
+    reader.Parse(ss, *set);
 }
 #endif
 
