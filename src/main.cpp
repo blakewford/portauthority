@@ -329,7 +329,7 @@ int main(int argc, char** argv)
                 long ndx = instructionSet.find(mnem);
                 if(ndx != -1)
                 {
-                    printf("%s %s\n", instructionSet.get_group(ndx), instructionSet.get_subgroup(ndx));
+                    printf("%lX %s %s %s\n", instructionSet.get_opcode(ndx), mnem, instructionSet.get_group(ndx), instructionSet.get_subgroup(ndx));
                 }
                 else
                 {
