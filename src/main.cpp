@@ -103,16 +103,21 @@ int main(int argc, char** argv)
         storagePointer+=(length+1);
     }
 
-    const char* json = "{\"name\":\"x86\",\"parameters\":[{\"opcode\":204,\"mnemonic\":\"INT\",\"group\":\"datamov\",\"subgroup\":\"\"}, {\"opcode\":204,\"mnemonic\":\"INT\",\"group\":\"datamov\",\"subgroup\":\"\"}]}";
-
-    x86_isa instructions;
-    parse(json, &instructions);
-
-    int32_t ndx = instructions.size();
-    while(ndx--)
+    char* json = NULL;
+    FILE* x86 = fopen("x86.json", "r");
+    if(x86)
     {
-        printf("%s %s 0x%lX %s %s\n", instructions.get_name(), instructions.get_mnemonic(ndx), instructions.get_opcode(ndx), instructions.get_group(ndx),instructions.get_subgroup(ndx));
+        fseek(x86, 0, SEEK_END);
+        int32_t size = ftell(x86);
+        rewind(x86);
+        json = (char*)malloc(size);
+        size_t read = fread(json, 1, size, x86);
+        if(read != size) return -1;
     }
+
+    x86_isa instructionSet;
+    parse(json, &instructionSet);
+    free(json);
 
     printf("\n");
 
@@ -310,7 +315,26 @@ int main(int argc, char** argv)
                     ud_disassemble(&u);
                     invalid = strcmp(ud_insn_asm(&u), "invalid ") == 0;
                 }
-                printf("%s\n", ud_insn_asm(&u));
+                char mnem[16];
+                memset(mnem, '\0', 16);
+                const char* disasm = ud_insn_asm(&u);
+
+                byte = 0;
+                char c = disasm[0];
+                while(c != '\0' && c != ' ')
+                {
+                    mnem[byte++] = c;
+                    c = disasm[byte];
+                }
+                long ndx = instructionSet.find(mnem);
+                if(ndx != -1)
+                {
+                    printf("%s %s\n", instructionSet.get_group(ndx), instructionSet.get_subgroup(ndx));
+                }
+                else
+                {
+                    printf("Not found: %s\n", mnem);
+                }
             }
             ptrace(PTRACE_SINGLESTEP, pid, NULL, NULL);
             waitpid(pid, &status, WSTOPPED);

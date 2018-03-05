@@ -163,6 +163,21 @@ struct x86_isa: public isa
     virtual bool RawNumber(const char* string, SizeType length, bool copy){ return true; }
 
     long size(){ return m_instr.size(); }
+    long find(const char* mnemonic)
+    {
+        int32_t ndx = -1;
+        int32_t count = size();
+        while(count--)
+        {
+            if(!strcmp(get_mnemonic(count), mnemonic))
+            {
+                ndx = count;
+                break;
+            }
+        }
+
+        return ndx;
+    };
     void populate_specific(container_object* obj);
     long get_opcode(int32_t ndx){ return m_instr.at(ndx)->m_opcode; };
     const char* get_mnemonic(int32_t ndx){ return m_instr.at(ndx)->m_mnem; };
