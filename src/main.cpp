@@ -23,6 +23,29 @@ char* cachedArgv[64];
 
 #define BREAK 0xCC00000000000000 //x86 breakpoint instruction
 
+const char* gCategories[] =
+{
+    "datamov",
+    "arith",
+    "logical",
+    "bit",
+    "branch",
+    "control",
+    "stack",
+    "conver",
+    "binary",
+    "decimal",
+    "shftrot",
+    "cond",
+    "break",
+    "string",
+    "inout",
+    "flgctrl",
+    "segreg"
+};
+
+uint64_t gCategoryCount[sizeof(gCategories)/sizeof(const char*)];
+
 struct sectionInfo
 {
     uint32_t type;
@@ -257,7 +280,7 @@ int main(int argc, char** argv)
         user_regs_struct registers;
 
         pid_t pid;
-        posix_spawn(&pid, cachedArgv[1], NULL, NULL, NULL, NULL);
+        posix_spawn(&pid, cachedArgv[1], NULL, NULL, &cachedArgv[2], NULL);
 
         ptrace(PTRACE_ATTACH, pid, NULL, NULL);
         waitpid(pid, &status, WSTOPPED);
@@ -299,7 +322,7 @@ int main(int argc, char** argv)
             if(registers.rip < moduleBound)
             {
                 uint64_t value = ptrace(PTRACE_PEEKDATA, pid, registers.rip, NULL);
-                printf("%llx ", registers.rip);
+                //printf("%llx ", registers.rip);
                 for(int32_t i = 0; i < INSTRUCTION_LENGTH_MAX; i++)
                 {
                     instructions[i] = value&0xFF;
@@ -329,11 +352,20 @@ int main(int argc, char** argv)
                 long ndx = instructionSet.find(mnem);
                 if(ndx != -1)
                 {
-                    printf("%lX %s %s %s\n", instructionSet.get_opcode(ndx), mnem, instructionSet.get_group(ndx), instructionSet.get_subgroup(ndx));
+                    //printf("%lX %s %s %s\n", instructionSet.get_opcode(ndx), mnem, instructionSet.get_group(ndx), instructionSet.get_subgroup(ndx));
+                    int32_t count = sizeof(gCategories)/sizeof(const char*);
+                    while(count--)
+                    {
+                        if(!strcmp(instructionSet.get_subgroup(ndx), gCategories[count]))
+                        {
+                            gCategoryCount[count]++;
+                            break;
+                        }
+                    }
                 }
                 else
                 {
-                    printf("Not found: %s\n", mnem);
+                    //printf("Not found: %s\n", mnem);
                 }
             }
             ptrace(PTRACE_SINGLESTEP, pid, NULL, NULL);
@@ -341,6 +373,31 @@ int main(int argc, char** argv)
         }
         kill(pid, SIGKILL);
     }
+
+    uint64_t total = 0;
+    int32_t count = sizeof(gCategories)/sizeof(const char*);
+    while(count--)
+    {
+        total += gCategoryCount[count];
+    }
+
+    printf("addRange(%.0f, \"red\");\n",     (gCategoryCount[0]/(double)total) * 100);
+    printf("addRange(%.0f, \"orange\");\n",  (gCategoryCount[1]/(double)total) * 100);
+    printf("addRange(%.0f, \"yellow\");\n",  (gCategoryCount[2]/(double)total) * 100);
+    printf("addRange(%.0f, \"green\");\n",   (gCategoryCount[3]/(double)total) * 100);
+    printf("addRange(%.0f, \"blue\");\n",    (gCategoryCount[4]/(double)total) * 100);
+    printf("addRange(%.0f, \"indigo\");\n",  (gCategoryCount[5]/(double)total) * 100);
+    printf("addRange(%.0f, \"violet\");\n",  (gCategoryCount[6]/(double)total) * 100);
+    printf("addRange(%.0f, \"white\");\n",   (gCategoryCount[7]/(double)total) * 100);
+    printf("addRange(%.0f, \"silver\");\n",  (gCategoryCount[8]/(double)total) * 100);
+    printf("addRange(%.0f, \"gray\");\n",    (gCategoryCount[9]/(double)total) * 100);
+    printf("addRange(%.0f, \"black\");\n",   (gCategoryCount[10]/(double)total) * 100);
+    printf("addRange(%.0f, \"maroon\");\n",  (gCategoryCount[11]/(double)total) * 100);
+    printf("addRange(%.0f, \"olive\");\n",   (gCategoryCount[12]/(double)total) * 100);
+    printf("addRange(%.0f, \"lime\");\n",    (gCategoryCount[13]/(double)total) * 100);
+    printf("addRange(%.0f, \"aqua\");\n",    (gCategoryCount[14]/(double)total) * 100);
+    printf("addRange(%.0f, \"fuchsia\");\n", (gCategoryCount[15]/(double)total) * 100);
+    printf("addRange(%.0f, \"purple\");\n",  (gCategoryCount[16]/(double)total) * 100);
 
     printf("\nClustering.\n");
     fclose(executable);
