@@ -3,6 +3,8 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Web.Script.Serialization;
+using System.Diagnostics;
+using System.Threading;
 
 using PortAuthority;
 
@@ -23,28 +25,43 @@ public partial class MainWindow : Gtk.Window
 
     protected void OnRunClicked(object sender, EventArgs e)
     {
-        try
+        Process native = null;
+        string path = Environment.GetEnvironmentVariable("AUTHORITY");
+
+        byte[] receiveBuffer = new byte[1024];
+        byte[] sendBuffer = Encoding.ASCII.GetBytes("{}");
+
+        IPHostEntry info = Dns.GetHostEntry(Dns.GetHostName());
+        IPAddress address = info.AddressList[0];
+        IPEndPoint endpoint = new IPEndPoint(address, GUI_PORT);
+
+        Socket socket = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+
+        bool connected = false;
+        while(!connected)
         {
-            byte[] receiveBuffer = new byte[1024];            
-            byte[] sendBuffer = Encoding.ASCII.GetBytes("{}");
+            if(native == null || native.HasExited)
+                native = Process.Start(path + "cluster-profile");
 
-            IPHostEntry info = Dns.GetHostEntry(Dns.GetHostName());  
-            IPAddress address = info.AddressList[0];  
-            IPEndPoint endpoint = new IPEndPoint(address, GUI_PORT);
+            try
+            {
+                socket.Connect(endpoint);
+                connected = true;
 
-            Socket socket = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-            socket.Connect(endpoint);
-            int sent = socket.Send(sendBuffer);
-            int received = socket.Receive(receiveBuffer);  
-            string json = Encoding.ASCII.GetString(receiveBuffer, 0, received);
+            }catch(Exception)
+            {
+            }
+        }
 
-            new JavaScriptSerializer().Deserialize<Response>(json);
+        int sent = socket.Send(sendBuffer);
+        int received = socket.Receive(receiveBuffer);
+        string json = Encoding.ASCII.GetString(receiveBuffer, 0, received);
+
+        new JavaScriptSerializer().Deserialize<Response>(json);
                                 
-            socket.Shutdown(SocketShutdown.Both);  
-            socket.Close();
+        socket.Shutdown(SocketShutdown.Both);
+        socket.Close();
 
-        }catch(Exception)
-        {  
-        }  
+        native.WaitForExit();
     }
 }
