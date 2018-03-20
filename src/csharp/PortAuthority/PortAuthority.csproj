@@ -48,6 +48,8 @@
     </Reference>
     <Reference Include="Mono.Posix" />
     <Reference Include="System.Web.Extensions" />
+    <Reference Include="Mono.Cairo" />
+    <Reference Include="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="gtk-gui\gui.stetic">

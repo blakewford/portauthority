@@ -5,6 +5,8 @@ public partial class MainWindow
 {
 	private global::Gtk.VBox LinearLayout;
 
+	private global::Gtk.DrawingArea Graph;
+
 	private global::Gtk.Button Run;
 
 	protected virtual void Build()
@@ -19,16 +21,22 @@ public partial class MainWindow
 		this.LinearLayout.Name = "LinearLayout";
 		this.LinearLayout.Spacing = 6;
 		// Container child LinearLayout.Gtk.Box+BoxChild
+		this.Graph = new global::Gtk.DrawingArea();
+		this.Graph.Name = "Graph";
+		this.LinearLayout.Add(this.Graph);
+		global::Gtk.Box.BoxChild w1 = ((global::Gtk.Box.BoxChild)(this.LinearLayout[this.Graph]));
+		w1.Position = 0;
+		// Container child LinearLayout.Gtk.Box+BoxChild
 		this.Run = new global::Gtk.Button();
 		this.Run.CanFocus = true;
 		this.Run.Name = "Run";
 		this.Run.UseUnderline = true;
 		this.Run.Label = global::Mono.Unix.Catalog.GetString("Run");
 		this.LinearLayout.Add(this.Run);
-		global::Gtk.Box.BoxChild w1 = ((global::Gtk.Box.BoxChild)(this.LinearLayout[this.Run]));
-		w1.Position = 1;
-		w1.Expand = false;
-		w1.Fill = false;
+		global::Gtk.Box.BoxChild w2 = ((global::Gtk.Box.BoxChild)(this.LinearLayout[this.Run]));
+		w2.Position = 1;
+		w2.Expand = false;
+		w2.Fill = false;
 		this.Add(this.LinearLayout);
 		if ((this.Child != null))
 		{
