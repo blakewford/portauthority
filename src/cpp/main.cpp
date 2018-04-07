@@ -146,13 +146,32 @@ int main(int argc, char** argv)
 
     printf("\n");
 
+    int32_t argument = 1;
+    if(cachedArgc > 1 && !strcmp(cachedArgv[1], "--remote"))
+    {
+        serve();
+        return 0;
+    }
+
+    if(cachedArgc > 1 && !strcmp(cachedArgv[1], "--temp"))
+    {
+        FILE* temp = fopen("/tmp/cluster-profile", "w");
+        if(temp)
+        {
+            const char* response = "{}";
+            fwrite(response, strlen(response), 1, temp);
+            fclose(temp);
+            argument++;
+        }
+    }
+
     bool amd64 = false;
     uint64_t moduleBound = 0;
     uint64_t profilerAddress = 0;
     const char* FUNCTION_NAME = "main";
 
     FILE* executable = 0;
-    if(cachedArgc > 1) executable = fopen(cachedArgv[1], "r");
+    if(cachedArgc > 1) executable = fopen(cachedArgv[argument], "r");
     if(executable)
     {
         fseek(executable, 0, SEEK_END);
@@ -282,7 +301,7 @@ int main(int argc, char** argv)
         user_regs_struct registers;
 
         pid_t pid;
-        posix_spawn(&pid, cachedArgv[1], NULL, NULL, &cachedArgv[2], NULL);
+        posix_spawn(&pid, cachedArgv[argument], NULL, NULL, &cachedArgv[argument+1], NULL);
 
         ptrace(PTRACE_ATTACH, pid, NULL, NULL);
         waitpid(pid, &status, WSTOPPED);
@@ -414,7 +433,7 @@ int main(int argc, char** argv)
 
 void serve()
 {
-    int fd, sock;
+    int32_t fd, sock;
     struct sockaddr_in address;
       
     fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -431,13 +450,27 @@ void serve()
     if(listen(fd, 1) == -1)
         return;
 
-    int length = sizeof(address);
+    int32_t length = sizeof(address);
     if((sock = accept(fd, (struct sockaddr *)&address, (socklen_t*)&length)) == -1)
         return;
 
-    read(sock, argvStorage, 1024);
+    char c;
+    int argc;
+    read(sock, &c, 1);
+    argc = atoi(&c);
+    cachedArgc = argc;
+
+    char* storagePointer = argvStorage;
+    while(argc--)
+    {
+        cachedArgv[argc] = storagePointer;
+        int32_t length = read(sock, &cachedArgv[argc], 1024);
+        storagePointer+=(length+1);
+    }
 
     const char* response = "{}";
     write(sock, response, strlen(response));
+    close(sock);
+    close(fd);
 }
 

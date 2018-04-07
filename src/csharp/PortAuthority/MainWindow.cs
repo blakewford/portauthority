@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Web.Script.Serialization;
+using System.Threading;
 
 using PortAuthority;
 
@@ -24,20 +25,47 @@ public partial class MainWindow : Gtk.Window
         a.RetVal = true;
     }
 
-    private const int GUI_PORT = 0xBFF;
     private const double ADJUSTMENT = Math.PI/50;
 
     private bool Initialized = false;
 
     private Dictionary<int, string> Ranges = new Dictionary<int, string>();
+/*
+    protected void OnRunClicked(object sender, EventArgs e)
+    {
+        string path = Environment.GetEnvironmentVariable("AUTHORITY");
+
+        string profile = System.IO.Path.GetTempPath()+"cluster-profile";
+        if(System.IO.File.Exists(profile))
+        {
+            System.IO.File.Delete(profile);
+        }
+
+        ProcessStartInfo Info = new ProcessStartInfo();
+        Info.WorkingDirectory = path;
+        Info.FileName = path + "cluster-profile";
+        Info.Arguments = "--temp ~/Desktop/test";
+        Process native = new Process();
+        native.StartInfo = Info;
+        native.Start();
+        native.WaitForExit();
+        Response response = new JavaScriptSerializer().Deserialize<Response>(System.IO.File.ReadAllText(profile));
+        Graph.QueueDraw();
+    }
+*/
+
+    private const int GUI_PORT = 0xBFF;
+
+    protected void Send(Socket socket, byte[] buffer)
+    {
+        int sent = socket.Send(buffer);
+        Thread.Sleep(10);
+    }
 
     protected void OnRunClicked(object sender, EventArgs e)
     {
         Process native = null;
         string path = Environment.GetEnvironmentVariable("AUTHORITY");
-
-        byte[] receiveBuffer = new byte[1024];
-        byte[] sendBuffer = Encoding.ASCII.GetBytes("{}");
 
         IPHostEntry info = Dns.GetHostEntry(Dns.GetHostName());
         IPAddress address = info.AddressList[0];
@@ -49,7 +77,15 @@ public partial class MainWindow : Gtk.Window
         while(!connected)
         {
             if(native == null || native.HasExited)
-                native = Process.Start(path + "cluster-profile");
+            {
+                native = new Process();
+                ProcessStartInfo Info = new ProcessStartInfo();
+                Info.WorkingDirectory = path;
+                Info.FileName = path + "cluster-profile";
+                Info.Arguments = "--remote";
+                native.StartInfo = Info;
+                native.Start();
+            }
 
             try
             {
@@ -61,12 +97,19 @@ public partial class MainWindow : Gtk.Window
             }
         }
 
-        int sent = socket.Send(sendBuffer);
+        byte[] receiveBuffer = new byte[1024];
+        byte[] sendBuffer = Encoding.ASCII.GetBytes("2");
+        Send(socket, sendBuffer);
+        sendBuffer = Encoding.ASCII.GetBytes("~/Desktop/test");
+        Send(socket, sendBuffer);
+        sendBuffer = Encoding.ASCII.GetBytes("cluster-profile");
+        Send(socket, sendBuffer);
+
         int received = socket.Receive(receiveBuffer);
         string json = Encoding.ASCII.GetString(receiveBuffer, 0, received);
 
         new JavaScriptSerializer().Deserialize<Response>(json);
-                                
+
         socket.Shutdown(SocketShutdown.Both);
         socket.Close();
 
@@ -83,8 +126,10 @@ public partial class MainWindow : Gtk.Window
         }
 
         Wipe();
-        AddRange(8, "red");
-        AddRange(50, "blue");
+        Random random = new Random();
+        AddRange(random.Next()%10, "red");
+        AddRange(random.Next()%50, "blue");
+        AddRange(random.Next()%25, "green");
     }
 
     private void Initialize()
