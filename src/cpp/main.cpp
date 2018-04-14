@@ -144,9 +144,8 @@ int main(int argc, char** argv)
     parse(json, &instructionSet);
     free(json);
 
-    printf("\n");
-
     int32_t argument = 1;
+    bool createReport = false;
     if(cachedArgc > 1 && !strcmp(cachedArgv[1], "--remote"))
     {
         serve();
@@ -163,6 +162,12 @@ int main(int argc, char** argv)
             fclose(temp);
             argument++;
         }
+    }
+
+    if(cachedArgc > 1 && !strcmp(cachedArgv[1], "--report"))
+    {
+        createReport = true;
+        argument++;
     }
 
     bool amd64 = false;
@@ -402,25 +407,53 @@ int main(int argc, char** argv)
         total += gCategoryCount[count];
     }
 
-    printf("addRange(%.0f, \"red\");\n",     (gCategoryCount[0]/(double)total) * 100);
-    printf("addRange(%.0f, \"orange\");\n",  (gCategoryCount[1]/(double)total) * 100);
-    printf("addRange(%.0f, \"yellow\");\n",  (gCategoryCount[2]/(double)total) * 100);
-    printf("addRange(%.0f, \"green\");\n",   (gCategoryCount[3]/(double)total) * 100);
-    printf("addRange(%.0f, \"blue\");\n",    (gCategoryCount[4]/(double)total) * 100);
-    printf("addRange(%.0f, \"indigo\");\n",  (gCategoryCount[5]/(double)total) * 100);
-    printf("addRange(%.0f, \"violet\");\n",  (gCategoryCount[6]/(double)total) * 100);
-    printf("addRange(%.0f, \"white\");\n",   (gCategoryCount[7]/(double)total) * 100);
-    printf("addRange(%.0f, \"silver\");\n",  (gCategoryCount[8]/(double)total) * 100);
-    printf("addRange(%.0f, \"gray\");\n",    (gCategoryCount[9]/(double)total) * 100);
-    printf("addRange(%.0f, \"black\");\n",   (gCategoryCount[10]/(double)total) * 100);
-    printf("addRange(%.0f, \"maroon\");\n",  (gCategoryCount[11]/(double)total) * 100);
-    printf("addRange(%.0f, \"olive\");\n",   (gCategoryCount[12]/(double)total) * 100);
-    printf("addRange(%.0f, \"lime\");\n",    (gCategoryCount[13]/(double)total) * 100);
-    printf("addRange(%.0f, \"aqua\");\n",    (gCategoryCount[14]/(double)total) * 100);
-    printf("addRange(%.0f, \"fuchsia\");\n", (gCategoryCount[15]/(double)total) * 100);
-    printf("addRange(%.0f, \"purple\");\n",  (gCategoryCount[16]/(double)total) * 100);
+    if(createReport)
+    {
+        printf("addRange(%.0f, \"red\");\n",     (gCategoryCount[0]/(double)total) * 100);
+        printf("addRange(%.0f, \"orange\");\n",  (gCategoryCount[1]/(double)total) * 100);
+        printf("addRange(%.0f, \"yellow\");\n",  (gCategoryCount[2]/(double)total) * 100);
+        printf("addRange(%.0f, \"green\");\n",   (gCategoryCount[3]/(double)total) * 100);
+        printf("addRange(%.0f, \"blue\");\n",    (gCategoryCount[4]/(double)total) * 100);
+        printf("addRange(%.0f, \"indigo\");\n",  (gCategoryCount[5]/(double)total) * 100);
+        printf("addRange(%.0f, \"violet\");\n",  (gCategoryCount[6]/(double)total) * 100);
+        printf("addRange(%.0f, \"white\");\n",   (gCategoryCount[7]/(double)total) * 100);
+        printf("addRange(%.0f, \"silver\");\n",  (gCategoryCount[8]/(double)total) * 100);
+        printf("addRange(%.0f, \"gray\");\n",    (gCategoryCount[9]/(double)total) * 100);
+        printf("addRange(%.0f, \"black\");\n",   (gCategoryCount[10]/(double)total) * 100);
+        printf("addRange(%.0f, \"maroon\");\n",  (gCategoryCount[11]/(double)total) * 100);
+        printf("addRange(%.0f, \"olive\");\n",   (gCategoryCount[12]/(double)total) * 100);
+        printf("addRange(%.0f, \"lime\");\n",    (gCategoryCount[13]/(double)total) * 100);
+        printf("addRange(%.0f, \"aqua\");\n",    (gCategoryCount[14]/(double)total) * 100);
+        printf("addRange(%.0f, \"fuchsia\");\n", (gCategoryCount[15]/(double)total) * 100);
+        printf("addRange(%.0f, \"purple\");\n",  (gCategoryCount[16]/(double)total) * 100);
 
-    printf("\nClustering.\n");
+        printf("\n");
+
+        //key
+        printf("<font color=\"red\">%s</font></br>\n",     gCategories[0]);
+        printf("<font color=\"orange\">%s</font></br>\n",  gCategories[1]);
+        printf("<font color=\"yellow\">%s</font></br>\n",  gCategories[2]);
+        printf("<font color=\"green\">%s</font></br>\n",   gCategories[3]);
+        printf("<font color=\"blue\">%s</font></br>\n",    gCategories[4]);
+        printf("<font color=\"indigo\">%s</font></br>\n",  gCategories[5]);
+        printf("<font color=\"violet\">%s</font></br>\n",  gCategories[6]);
+        printf("<font color=\"white\">%s</font></br>\n",   gCategories[7]);
+        printf("<font color=\"silver\">%s</font></br>\n",  gCategories[8]);
+        printf("<font color=\"gray\">%s</font></br>\n",    gCategories[9]);
+        printf("<font color=\"black\">%s</font></br>\n",   gCategories[10]);
+        printf("<font color=\"maroon\">%s</font></br>\n",  gCategories[11]);
+        printf("<font color=\"olive\">%s</font></br>\n",   gCategories[12]);
+        printf("<font color=\"lime\">%s</font></br>\n",    gCategories[13]);
+        printf("<font color=\"aqua\">%s</font></br>\n",    gCategories[14]);
+        printf("<font color=\"fuchsia\">%s</font></br>\n", gCategories[15]);
+        printf("<font color=\"purple\">%s</font></br>\n",  gCategories[16]);
+
+    }
+    else
+    {
+        printf("\e[1mmain.cpp:126:36: \e[95mwarning:\e[0m energy inefficiency detected\n"); //<-- VS Code output format
+    }
+
     fclose(executable);
 
 }
