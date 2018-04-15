@@ -54,6 +54,7 @@ struct sectionInfo
     uint64_t offset;
     uint64_t size;
     bool symbols;
+    bool debugLine;
     bool stringTable;
 };
 
@@ -62,6 +63,23 @@ struct sections
     uint32_t numSections;
     sectionInfo* si;
 };
+
+#pragma pack(push)
+#pragma pack(1)
+struct lineInfo
+{
+    uint32_t size;
+    uint16_t version;
+    uint32_t headerLength;
+    uint8_t  minInstrLength;
+    uint8_t  maxInstrLength;
+    uint8_t  isStatement;
+    int8_t   lineBase;
+    uint8_t  lineRange;
+    uint8_t  opBase;
+    uint8_t  opLength[11];     
+};
+#pragma pack(pop)
 
 extern "C"
 {
@@ -239,22 +257,44 @@ int main(int argc, char** argv)
         }
 
         int32_t symbolsIndex = 0;
+        int32_t debugLineIndex = 0;
         int32_t stringTableIndex = 0;
 
         ndx = 0;
         numHeaders = totalHeaders;
+        int32_t debugLine   = getIndexForString(binary, sect.si[stringsIndex], ".debug_line");
         int32_t symbolTable = getIndexForString(binary, sect.si[stringsIndex], ".symtab");
         int32_t stringTable = getIndexForString(binary, sect.si[stringsIndex], ".strtab");
         while(numHeaders--)
         {
-            sect.si[ndx].symbols = sect.si[ndx].index == symbolTable;
+            sect.si[ndx].debugLine   = sect.si[ndx].index == debugLine;
+            sect.si[ndx].symbols     = sect.si[ndx].index == symbolTable;
             sect.si[ndx].stringTable = sect.si[ndx].index == stringTable;
             if(sect.si[ndx].symbols)
                 symbolsIndex = ndx;
             if(sect.si[ndx].stringTable)
                 stringTableIndex = ndx;
+            if(sect.si[ndx].debugLine)
+                debugLineIndex = ndx;
             ndx++;
         }
+
+        void* lineData = (binary + sect.si[debugLineIndex].offset);
+        lineInfo* lines = (lineInfo*)lineData;
+        char* includePaths = ((char*)lineData) + sizeof(lineInfo);
+
+        while(*includePaths != '\0')
+        {
+            while(*includePaths != '\0')
+                includePaths++;
+            //add include
+            includePaths++;
+        }
+
+        char* files = ++includePaths;
+//        uleb128 directory
+//        uleb128 modTime;
+//        uleb128 fileSize;
 
         ndx = 0;
 
