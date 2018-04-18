@@ -132,6 +132,23 @@ void getStringForIndex(uint8_t* binary, sectionInfo& info, int32_t index, char* 
     }
 }
 
+int32_t readULEB(char*& binary)
+{
+    int32_t shift = 0;
+    int32_t value = 0;
+    while(true)
+    {
+        uint8_t byte = *binary;
+        value |= (byte & 0x7F) << shift;
+        binary++;
+        if((byte & 0x80) == 0)
+            break;
+        shift += 7;
+    }
+
+    return value;
+}
+
 void serve();
 
 int main(int argc, char** argv)
@@ -292,9 +309,16 @@ int main(int argc, char** argv)
         }
 
         char* files = ++includePaths;
-//        uleb128 directory
-//        uleb128 modTime;
-//        uleb128 fileSize;
+        while(*files != '\0')
+        {
+            files += strlen(files)+1;
+            //directory
+            int32_t value = readULEB(files);
+            //modification time        
+            value = readULEB(files);
+            //file size        
+            value = readULEB(files);
+        }
 
         ndx = 0;
 
