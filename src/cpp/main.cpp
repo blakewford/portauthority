@@ -17,6 +17,10 @@
 #include <udis86.h>
 #include "parser.cpp"
 
+#include <map>
+#include <fstream>
+#include <sstream>
+
 int32_t cachedArgc = 0;
 char argvStorage[1024];
 char* cachedArgv[64];
@@ -66,7 +70,7 @@ struct sections
 
 #pragma pack(push)
 #pragma pack(1)
-struct lineInfo
+struct lineInfoHeader
 {
     uint32_t size;
     uint16_t version;
@@ -80,6 +84,14 @@ struct lineInfo
     uint8_t  opLength[11];     
 };
 #pragma pack(pop)
+
+struct lineInfo
+{
+    char fileName[256];    
+    int32_t lineNumber;
+};
+
+std::map<uint64_t, lineInfo*> gAddressToLineTable;
 
 extern "C"
 {
@@ -132,13 +144,13 @@ void getStringForIndex(uint8_t* binary, sectionInfo& info, int32_t index, char* 
     }
 }
 
-int32_t readULEB(char*& binary)
+int32_t readULEB(uint8_t*& binary)
 {
     int32_t shift = 0;
     int32_t value = 0;
     while(true)
     {
-        uint8_t byte = *binary;
+        uint8_t byte = *binary;        
         value |= (byte & 0x7F) << shift;
         binary++;
         if((byte & 0x80) == 0)
@@ -147,6 +159,98 @@ int32_t readULEB(char*& binary)
     }
 
     return value;
+}
+
+void runLineNumberProgram(uint8_t*& binary, const sectionInfo& debugLine, int32_t argument)
+{
+    void* lineData = (binary + debugLine.offset);
+    lineInfoHeader* lines = (lineInfoHeader*)lineData;
+    char* includePaths = ((char*)lineData) + sizeof(lineInfoHeader);
+
+    while(*includePaths != '\0')
+    {
+        while(*includePaths != '\0')
+            includePaths++;
+        //add include
+        includePaths++;
+    }
+    int32_t value = 0;
+    char* files = ++includePaths;
+    uint8_t* values = (uint8_t*)files;
+    while(*values != '\0')
+    { 
+        values += strlen(files)+1;
+        //directory
+        value = readULEB(values);
+        //modification time        
+        value = readULEB(values);
+        //file size        
+        value = readULEB(values);
+    } 
+    int32_t line = 1;
+    uint8_t* previous;
+    uint64_t lineAddress = 0;
+    uint8_t* program = (uint8_t*)++values; 
+    uint8_t opcode = program[0];
+ /*         
+    while(true)
+    {
+        uint64_t offset = 0;
+        switch(opcode)
+        {
+            case 0:
+               value = readULEB(++program);
+               switch(readULEB(program))
+               {
+                   case 2:
+                       lineAddress = *(uint64_t*)program;
+                       break;
+                   default:
+                       assert(0); 
+               }
+               program += (value-1); 
+               break;
+           case 5:
+               value = readULEB(++program);
+               break;
+           default:
+               ++program;
+               break;
+       }
+       opcode = program[0];
+    }
+*/
+    char command[256];
+    memset(command, '\0', 256);    
+    sprintf(command, "readelf --debug-dump=decodedline %s > /tmp/decodedline", cachedArgv[argument]);
+    int32_t error = system(command );
+
+    std::string l;
+    std::ifstream decodedLine;
+    decodedLine.open("/tmp/decodedline");
+    std::getline(decodedLine, l);
+    std::getline(decodedLine, l);
+    std::getline(decodedLine, l);
+    std::getline(decodedLine, l);
+
+    std::string token;
+    while(std::getline(decodedLine, l))
+    {
+        stringstream stream(l);
+        while(stream >> token)
+        {
+            lineInfo* pInfo = new lineInfo();
+            memset(pInfo->fileName, '\0', 256);
+            strcpy(pInfo->fileName, token.c_str());
+            stream >> pInfo->lineNumber;
+            stream >> token;
+            lineAddress = (int32_t)strtol(token.c_str(), NULL, 0);
+            if(lineAddress != 0)
+            {
+                gAddressToLineTable.insert(std::make_pair(lineAddress, pInfo)); 
+            }               
+        }
+    }
 }
 
 void serve();
@@ -296,29 +400,7 @@ int main(int argc, char** argv)
             ndx++;
         }
 
-        void* lineData = (binary + sect.si[debugLineIndex].offset);
-        lineInfo* lines = (lineInfo*)lineData;
-        char* includePaths = ((char*)lineData) + sizeof(lineInfo);
-
-        while(*includePaths != '\0')
-        {
-            while(*includePaths != '\0')
-                includePaths++;
-            //add include
-            includePaths++;
-        }
-
-        char* files = ++includePaths;
-        while(*files != '\0')
-        {
-            files += strlen(files)+1;
-            //directory
-            int32_t value = readULEB(files);
-            //modification time        
-            value = readULEB(files);
-            //file size        
-            value = readULEB(files);
-        }
+        runLineNumberProgram(binary, sect.si[debugLineIndex], argument);
 
         ndx = 0;
 
