@@ -16,6 +16,8 @@
 
 #include <udis86.h>
 #include "parser.cpp"
+#include "categoryAnalyzer.cpp"
+#include "energyAnalyzer.cpp"
 
 #include <map>
 #include <fstream>
@@ -26,29 +28,6 @@ char argvStorage[1024];
 char* cachedArgv[64];
 
 #define BREAK 0xCC00000000000000 //x86 breakpoint instruction
-
-const char* gCategories[] =
-{
-    "datamov",
-    "arith",
-    "logical",
-    "bit",
-    "branch",
-    "control",
-    "stack",
-    "conver",
-    "binary",
-    "decimal",
-    "shftrot",
-    "cond",
-    "break",
-    "string",
-    "inout",
-    "flgctrl",
-    "segreg"
-};
-
-uint64_t gCategoryCount[sizeof(gCategories)/sizeof(const char*)];
 
 struct sectionInfo
 {
@@ -446,6 +425,8 @@ int main(int argc, char** argv)
         free(binary);
     }
 
+    energyAnalyzer energy;
+    categoryAnalyzer division;    
     if(profilerAddress != 0)
     {
         int32_t status = 0;
@@ -524,16 +505,9 @@ int main(int argc, char** argv)
                 long ndx = instructionSet.find(mnem);
                 if(ndx != -1)
                 {
-                    //printf("%lX %s %s %s\n", instructionSet.get_opcode(ndx), mnem, instructionSet.get_group(ndx), instructionSet.get_subgroup(ndx));
-                    int32_t count = sizeof(gCategories)/sizeof(const char*);
-                    while(count--)
-                    {
-                        if(!strcmp(instructionSet.get_subgroup(ndx), gCategories[count]))
-                        {
-                            gCategoryCount[count]++;
-                            break;
-                        }
-                    }
+                    const isa_instr* instruction = instructionSet.get_instr(ndx);
+                    energy.analyze(instruction);
+                    division.analyze(instruction);
                 }
                 else
                 {
@@ -546,58 +520,15 @@ int main(int argc, char** argv)
         kill(pid, SIGKILL);
     }
 
-    uint64_t total = 0;
-    int32_t count = sizeof(gCategories)/sizeof(const char*);
-    while(count--)
-    {
-        total += gCategoryCount[count];
-    }
-
     if(createReport)
     {
-        printf("addRange(%.0f, \"red\");\n",     (gCategoryCount[0]/(double)total) * 100);
-        printf("addRange(%.0f, \"orange\");\n",  (gCategoryCount[1]/(double)total) * 100);
-        printf("addRange(%.0f, \"yellow\");\n",  (gCategoryCount[2]/(double)total) * 100);
-        printf("addRange(%.0f, \"green\");\n",   (gCategoryCount[3]/(double)total) * 100);
-        printf("addRange(%.0f, \"blue\");\n",    (gCategoryCount[4]/(double)total) * 100);
-        printf("addRange(%.0f, \"indigo\");\n",  (gCategoryCount[5]/(double)total) * 100);
-        printf("addRange(%.0f, \"violet\");\n",  (gCategoryCount[6]/(double)total) * 100);
-        printf("addRange(%.0f, \"white\");\n",   (gCategoryCount[7]/(double)total) * 100);
-        printf("addRange(%.0f, \"silver\");\n",  (gCategoryCount[8]/(double)total) * 100);
-        printf("addRange(%.0f, \"gray\");\n",    (gCategoryCount[9]/(double)total) * 100);
-        printf("addRange(%.0f, \"black\");\n",   (gCategoryCount[10]/(double)total) * 100);
-        printf("addRange(%.0f, \"maroon\");\n",  (gCategoryCount[11]/(double)total) * 100);
-        printf("addRange(%.0f, \"olive\");\n",   (gCategoryCount[12]/(double)total) * 100);
-        printf("addRange(%.0f, \"lime\");\n",    (gCategoryCount[13]/(double)total) * 100);
-        printf("addRange(%.0f, \"aqua\");\n",    (gCategoryCount[14]/(double)total) * 100);
-        printf("addRange(%.0f, \"fuchsia\");\n", (gCategoryCount[15]/(double)total) * 100);
-        printf("addRange(%.0f, \"purple\");\n",  (gCategoryCount[16]/(double)total) * 100);
-
-        printf("\n");
-
-        //key
-        printf("<font color=\"red\">%s</font></br>\n",     gCategories[0]);
-        printf("<font color=\"orange\">%s</font></br>\n",  gCategories[1]);
-        printf("<font color=\"yellow\">%s</font></br>\n",  gCategories[2]);
-        printf("<font color=\"green\">%s</font></br>\n",   gCategories[3]);
-        printf("<font color=\"blue\">%s</font></br>\n",    gCategories[4]);
-        printf("<font color=\"indigo\">%s</font></br>\n",  gCategories[5]);
-        printf("<font color=\"violet\">%s</font></br>\n",  gCategories[6]);
-        printf("<font color=\"white\">%s</font></br>\n",   gCategories[7]);
-        printf("<font color=\"silver\">%s</font></br>\n",  gCategories[8]);
-        printf("<font color=\"gray\">%s</font></br>\n",    gCategories[9]);
-        printf("<font color=\"black\">%s</font></br>\n",   gCategories[10]);
-        printf("<font color=\"maroon\">%s</font></br>\n",  gCategories[11]);
-        printf("<font color=\"olive\">%s</font></br>\n",   gCategories[12]);
-        printf("<font color=\"lime\">%s</font></br>\n",    gCategories[13]);
-        printf("<font color=\"aqua\">%s</font></br>\n",    gCategories[14]);
-        printf("<font color=\"fuchsia\">%s</font></br>\n", gCategories[15]);
-        printf("<font color=\"purple\">%s</font></br>\n",  gCategories[16]);
-
+        energy.report();
+        division.report();
     }
     else
     {
-        printf("\e[1mmain.cpp:126:36: \e[95mwarning:\e[0m energy inefficiency detected\n"); //<-- VS Code output format
+        energy.console();
+        division.console();       
     }
 
     fclose(executable);

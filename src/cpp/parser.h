@@ -1,3 +1,5 @@
+#pragma once
+
 #include <deque>
 #include <string.h>
 #include "rapidjson/reader.h"
@@ -180,8 +182,9 @@ struct x86_isa: public isa
     };
     void populate_specific(container_object* obj);
     long get_opcode(int32_t ndx){ return m_instr.at(ndx)->m_opcode; };
-    const char* get_mnemonic(int32_t ndx){ return m_instr.at(ndx)->m_mnem; };
-    const char* get_group(int32_t ndx){ return m_instr.at(ndx)->m_group; };
-    const char* get_subgroup(int32_t ndx){ return m_instr.at(ndx)->m_subgroup; };
+    const  char* get_mnemonic(int32_t ndx){ return m_instr.at(ndx)->m_mnem; };
+    const  char* get_group(int32_t ndx){ return m_instr.at(ndx)->m_group; };
+    const  char* get_subgroup(int32_t ndx){ return m_instr.at(ndx)->m_subgroup; };
+const isa_instr* get_instr(int32_t ndx){ return m_instr.at(ndx); };
 };
 #endif
