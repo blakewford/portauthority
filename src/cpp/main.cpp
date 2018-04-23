@@ -17,7 +17,6 @@
 #include <udis86.h>
 #include "parser.cpp"
 #include "categoryAnalyzer.cpp"
-#include "energyAnalyzer.cpp"
 
 #include <map>
 #include <fstream>
@@ -71,6 +70,7 @@ struct lineInfo
 };
 
 std::map<uint64_t, lineInfo*> gAddressToLineTable;
+#include "energyAnalyzer.cpp"
 
 extern "C"
 {
@@ -517,8 +517,8 @@ int main(int argc, char** argv)
                 if(ndx != -1)
                 {
                     const isa_instr* instruction = instructionSet.get_instr(ndx);
-                    energy.analyze(instruction);
-                    division.analyze(instruction);
+                    energy.analyze(registers.rip, instruction);
+                    division.analyze(registers.rip, instruction);
                 }
                 else
                 {
@@ -535,18 +535,27 @@ int main(int argc, char** argv)
         free(binary);   
         std::string opcode;
         std::string mnemonic;
-        std::string category;
-        std::string subcategory;      
+        std::string group;
+        std::string subgroup;
         std::ifstream replay;
         replay.open(cachedArgv[argument]);
 
-        //A8 push gen stack
         while(!replay.eof())
         {
+            isa_instr instruction;
             replay >> opcode;
             replay >> mnemonic;
-            replay >> category;
-            replay >> subcategory;
+            replay >> group;
+            replay >> subgroup;
+
+            //A8 push gen stack
+            instruction.m_opcode = strtol(opcode.c_str(), nullptr, 16);
+            strcpy(instruction.m_mnem, mnemonic.c_str());
+            strcpy(instruction.m_group, group.c_str());
+            strcpy(instruction.m_subgroup, subgroup.c_str());
+               
+            energy.analyze(0, &instruction);
+            division.analyze(0, &instruction);
         }
         replay.close();
     }

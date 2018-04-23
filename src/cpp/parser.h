@@ -14,6 +14,7 @@ class container_object;
 struct isa_instr
 {
     public:
+        uint64_t m_address;
         long m_opcode;
         char m_mnem[MAX_BUFFER_SIZE];
         char m_group[MAX_BUFFER_SIZE];

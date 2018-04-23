@@ -79,7 +79,7 @@ public:
     {
     }
 
-    virtual void analyze(const isa_instr* instruction)
+    virtual void analyze(uint64_t address, const isa_instr* instruction)
     {
         int32_t count = sizeof(gCategories)/sizeof(const char*);
         while(count--)
