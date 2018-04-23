@@ -301,140 +301,139 @@ int main(int argc, char** argv)
     const char* FUNCTION_NAME = "main";
 
     FILE* executable = 0;
-    uint8_t* binary = nullptr;
+    if(replay)
+    {
+        argument++;
+    }
     if(cachedArgc > 1) executable = fopen(cachedArgv[argument], "r");
     if(executable)
     {
         fseek(executable, 0, SEEK_END);
         int32_t size = ftell(executable);
         rewind(executable);
-        binary = (uint8_t*)malloc(size);
+        uint8_t* binary = (uint8_t*)malloc(size);
         size_t read = fread(binary, 1, size, executable);
         if(read != size) return -1;
 
-        if(!replay)
+        amd64 = binary[4] == 0x2;
+        uint64_t offset = 0;
+        uint16_t headerSize = 0;
+        uint16_t numHeaders = 0;
+        uint16_t stringsIndex = 0;
+        if(amd64)
         {
-            amd64 = binary[4] == 0x2;
-    
-            uint64_t offset = 0;
-            uint16_t headerSize = 0;
-            uint16_t numHeaders = 0;
-            uint16_t stringsIndex = 0;
-            if(amd64)
+            Elf64_Ehdr* header = (Elf64_Ehdr*)binary;
+            headerSize = header->e_shentsize;
+            numHeaders = header->e_shnum;
+            offset = header->e_shoff;
+            stringsIndex = header->e_shstrndx;
+        }
+        else
+        {
+            Elf32_Ehdr* header = (Elf32_Ehdr*)binary;
+            headerSize = header->e_shentsize;
+            numHeaders = header->e_shnum;
+            offset = header->e_shoff;
+            stringsIndex = header->e_shstrndx;
+        }
+
+        sections sect;
+        int32_t ndx = 0;
+        const int16_t totalHeaders = numHeaders;
+        sect.si = (sectionInfo*)malloc(sizeof(sectionInfo)*numHeaders);
+        while(numHeaders--)
+        {
+            if(headerSize == sizeof(Elf64_Shdr))
             {
-                Elf64_Ehdr* header = (Elf64_Ehdr*)binary;
-                headerSize = header->e_shentsize;
-                numHeaders = header->e_shnum;
-                offset = header->e_shoff;
-                stringsIndex = header->e_shstrndx;
+                Elf64_Shdr* section = (Elf64_Shdr*)(binary + offset);
+                sect.si[ndx].index = section->sh_name;
+                sect.si[ndx].address = section->sh_addr;
+                sect.si[ndx].type = section->sh_type;
+                sect.si[ndx].offset = section->sh_offset;
+                sect.si[ndx].size = section->sh_size;
             }
             else
             {
-                Elf32_Ehdr* header = (Elf32_Ehdr*)binary;
-                headerSize = header->e_shentsize;
-                numHeaders = header->e_shnum;
-                offset = header->e_shoff;
-                stringsIndex = header->e_shstrndx;
+                Elf32_Shdr* section = (Elf32_Shdr*)(binary + offset);
+                sect.si[ndx].index = section->sh_name;
+                sect.si[ndx].address = section->sh_addr;
+                sect.si[ndx].type = section->sh_type;
+                sect.si[ndx].offset = section->sh_offset;
+                sect.si[ndx].size = section->sh_size;
             }
     
-            sections sect;
-            int32_t ndx = 0;
-            const int16_t totalHeaders = numHeaders;
-            sect.si = (sectionInfo*)malloc(sizeof(sectionInfo)*numHeaders);
-            while(numHeaders--)
-            {
-                if(headerSize == sizeof(Elf64_Shdr))
-                {
-                    Elf64_Shdr* section = (Elf64_Shdr*)(binary + offset);
-                    sect.si[ndx].index = section->sh_name;
-                    sect.si[ndx].address = section->sh_addr;
-                    sect.si[ndx].type = section->sh_type;
-                    sect.si[ndx].offset = section->sh_offset;
-                    sect.si[ndx].size = section->sh_size;
-                }
-                else
-                {
-                    Elf32_Shdr* section = (Elf32_Shdr*)(binary + offset);
-                    sect.si[ndx].index = section->sh_name;
-                    sect.si[ndx].address = section->sh_addr;
-                    sect.si[ndx].type = section->sh_type;
-                    sect.si[ndx].offset = section->sh_offset;
-                    sect.si[ndx].size = section->sh_size;
-                }
-    
-                offset += headerSize;
-                ndx++;
-            }
-    
-            int32_t symbolsIndex = 0;
-            int32_t debugLineIndex = 0;
-            int32_t stringTableIndex = 0;
-    
-            ndx = 0;
-            numHeaders = totalHeaders;
-            int32_t debugLine   = getIndexForString(binary, sect.si[stringsIndex], ".debug_line");
-            int32_t symbolTable = getIndexForString(binary, sect.si[stringsIndex], ".symtab");
-            int32_t stringTable = getIndexForString(binary, sect.si[stringsIndex], ".strtab");
-            while(numHeaders--)
-            {
-                sect.si[ndx].debugLine   = sect.si[ndx].index == debugLine;
-                sect.si[ndx].symbols     = sect.si[ndx].index == symbolTable;
-                sect.si[ndx].stringTable = sect.si[ndx].index == stringTable;
-                if(sect.si[ndx].symbols)
-                    symbolsIndex = ndx;
-                if(sect.si[ndx].stringTable)
-                    stringTableIndex = ndx;
-                if(sect.si[ndx].debugLine)
-                    debugLineIndex = ndx;
-                ndx++;
-            }
-    
-            runLineNumberProgram(binary, sect.si[debugLineIndex], argument);
-    
-            ndx = 0;
-    
-            uint8_t type = 0;
-            uint32_t name = 0;
-            uint64_t address = 0;
-            uint64_t highestAddress = 0;
-            int32_t symbols = sect.si[symbolsIndex].size / (headerSize == sizeof(Elf64_Shdr) ? sizeof(Elf64_Sym): sizeof(Elf32_Sym));
-    
-            char buffer[256];
-            while(symbols--)
-            {
-                if(headerSize == sizeof(Elf64_Shdr))
-                {
-                    Elf64_Sym* symbols = (Elf64_Sym*)(binary + sect.si[symbolsIndex].offset);
-                    type = ELF64_ST_TYPE(symbols[ndx].st_info);
-                    name = symbols[ndx].st_name;
-                    address = symbols[ndx].st_value;
-                }
-                else
-                {
-                    Elf32_Sym* symbols = (Elf32_Sym*)(binary + sect.si[symbolsIndex].offset);
-                    type = ELF32_ST_TYPE(symbols[ndx].st_info);
-                    name = symbols[ndx].st_name;
-                    address = symbols[ndx].st_value;
-                }
-    
-                if(type == 2) //function
-                {
-                    highestAddress = highestAddress < address ? address: highestAddress;
-                    getStringForIndex(binary, sect.si[stringTableIndex], name, buffer, 256);
-                    if(!strcmp(FUNCTION_NAME, buffer))
-                    {
-                        profilerAddress = address;
-                    }
-                }
-                ndx++;
-            }
-    
-            moduleBound = highestAddress;
-    
-            free(sect.si);
-            free(binary);
+            offset += headerSize;
+            ndx++;
         }
-    }    
+
+        int32_t symbolsIndex = 0;
+        int32_t debugLineIndex = 0;
+        int32_t stringTableIndex = 0;
+
+        ndx = 0;
+        numHeaders = totalHeaders;
+        int32_t debugLine   = getIndexForString(binary, sect.si[stringsIndex], ".debug_line");
+        int32_t symbolTable = getIndexForString(binary, sect.si[stringsIndex], ".symtab");
+        int32_t stringTable = getIndexForString(binary, sect.si[stringsIndex], ".strtab");
+        while(numHeaders--)
+        {
+            sect.si[ndx].debugLine   = sect.si[ndx].index == debugLine;
+            sect.si[ndx].symbols     = sect.si[ndx].index == symbolTable;
+            sect.si[ndx].stringTable = sect.si[ndx].index == stringTable;
+            if(sect.si[ndx].symbols)
+                symbolsIndex = ndx;
+            if(sect.si[ndx].stringTable)
+                stringTableIndex = ndx;
+            if(sect.si[ndx].debugLine)
+                debugLineIndex = ndx;
+            ndx++;
+        }
+
+        runLineNumberProgram(binary, sect.si[debugLineIndex], argument);
+
+        ndx = 0;
+
+        uint8_t type = 0;
+        uint32_t name = 0;
+        uint64_t address = 0;
+        uint64_t highestAddress = 0;
+        int32_t symbols = sect.si[symbolsIndex].size / (headerSize == sizeof(Elf64_Shdr) ? sizeof(Elf64_Sym): sizeof(Elf32_Sym));  
+
+        char buffer[256];
+        while(symbols--)
+        {
+            if(headerSize == sizeof(Elf64_Shdr))
+            {
+                Elf64_Sym* symbols = (Elf64_Sym*)(binary + sect.si[symbolsIndex].offset);
+                type = ELF64_ST_TYPE(symbols[ndx].st_info);
+                name = symbols[ndx].st_name;
+                address = symbols[ndx].st_value;
+            }
+            else
+            {
+                Elf32_Sym* symbols = (Elf32_Sym*)(binary + sect.si[symbolsIndex].offset);
+                type = ELF32_ST_TYPE(symbols[ndx].st_info);
+                name = symbols[ndx].st_name;
+                address = symbols[ndx].st_value;
+            } 
+
+            if(type == 2) //function
+            {
+                highestAddress = highestAddress < address ? address: highestAddress;
+                getStringForIndex(binary, sect.si[stringTableIndex], name, buffer, 256);
+                if(!strcmp(FUNCTION_NAME, buffer))
+                {
+                    profilerAddress = address;
+                }
+            }
+            ndx++;
+        }
+
+        moduleBound = highestAddress;
+
+        free(sect.si);
+        free(binary);
+    }
     
     energyAnalyzer energy;
     categoryAnalyzer division;    
@@ -532,30 +531,33 @@ int main(int argc, char** argv)
     }
     else if(replay)
     {
-        free(binary);   
+        uint64_t address;
+        std::string addressStr;
         std::string opcode;
         std::string mnemonic;
         std::string group;
         std::string subgroup;
         std::ifstream replay;
-        replay.open(cachedArgv[argument]);
+        replay.open(cachedArgv[--argument]);
 
         while(!replay.eof())
         {
             isa_instr instruction;
+            replay >> addressStr;
             replay >> opcode;
             replay >> mnemonic;
             replay >> group;
             replay >> subgroup;
 
-            //A8 push gen stack
+            //401273 A8 push gen stack
+            address = strtol(addressStr.c_str(), nullptr, 16);
             instruction.m_opcode = strtol(opcode.c_str(), nullptr, 16);
             strcpy(instruction.m_mnem, mnemonic.c_str());
             strcpy(instruction.m_group, group.c_str());
             strcpy(instruction.m_subgroup, subgroup.c_str());
                
-            energy.analyze(0, &instruction);
-            division.analyze(0, &instruction);
+            energy.analyze(address, &instruction);
+            division.analyze(address, &instruction);
         }
         replay.close();
     }
