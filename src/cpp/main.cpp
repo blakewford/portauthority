@@ -35,6 +35,7 @@ struct sectionInfo
     uint64_t address;
     uint64_t offset;
     uint64_t size;
+    bool text;
     bool symbols;
     bool debugLine;
     bool stringTable;
@@ -366,17 +367,20 @@ int main(int argc, char** argv)
             ndx++;
         }
 
+        int32_t textIndex = 0;
         int32_t symbolsIndex = 0;
         int32_t debugLineIndex = 0;
         int32_t stringTableIndex = 0;
 
         ndx = 0;
         numHeaders = totalHeaders;
+        int32_t text        = getIndexForString(binary, sect.si[stringsIndex], ".text");
         int32_t debugLine   = getIndexForString(binary, sect.si[stringsIndex], ".debug_line");
         int32_t symbolTable = getIndexForString(binary, sect.si[stringsIndex], ".symtab");
         int32_t stringTable = getIndexForString(binary, sect.si[stringsIndex], ".strtab");
         while(numHeaders--)
         {
+            sect.si[ndx].text   = sect.si[ndx].index == text;
             sect.si[ndx].debugLine   = sect.si[ndx].index == debugLine;
             sect.si[ndx].symbols     = sect.si[ndx].index == symbolTable;
             sect.si[ndx].stringTable = sect.si[ndx].index == stringTable;
@@ -386,9 +390,12 @@ int main(int argc, char** argv)
                 stringTableIndex = ndx;
             if(sect.si[ndx].debugLine)
                 debugLineIndex = ndx;
+            if(sect.si[ndx].text)
+                textIndex = ndx;
             ndx++;
         }
 
+        profilerAddress = sect.si[textIndex].address; //reasonable default
         runLineNumberProgram(binary, sect.si[debugLineIndex], argument);
 
         ndx = 0;
