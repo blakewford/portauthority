@@ -403,7 +403,7 @@ int main(int argc, char** argv)
         uint8_t type = 0;
         uint32_t name = 0;
         uint64_t address = 0;
-        uint64_t highestAddress = 0;
+        uint64_t highestAddress = ~0;
         int32_t symbols = sect.si[symbolsIndex].size / (headerSize == sizeof(Elf64_Shdr) ? sizeof(Elf64_Sym): sizeof(Elf32_Sym));  
 
         char buffer[256];
