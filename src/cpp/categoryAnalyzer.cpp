@@ -35,6 +35,22 @@ public:
 
     virtual void report()
     {
+        printf("<html>\n<body bgcolor=\"#ccecfc\">\n<div id=\"chart\"></div>\n<script>\n");
+
+        FILE* script = fopen("chart.js", "r");
+        if(script)
+        {
+            fseek(script, 0, SEEK_END);
+            int32_t size = ftell(script);
+            rewind(script);
+            uint8_t* binary = (uint8_t*)malloc(size);
+            size_t read = fread(binary, 1, size, script);
+            if(read != size) return;
+
+            printf("%s\n", binary);
+            free(binary);
+        }
+
         printf("addRange(%.0f, \"red\");\n",     (gCategoryCount[0]/(double)m_total) * 100);
         printf("addRange(%.0f, \"orange\");\n",  (gCategoryCount[1]/(double)m_total) * 100);
         printf("addRange(%.0f, \"yellow\");\n",  (gCategoryCount[2]/(double)m_total) * 100);
@@ -53,7 +69,7 @@ public:
         printf("addRange(%.0f, \"fuchsia\");\n", (gCategoryCount[15]/(double)m_total) * 100);
         printf("addRange(%.0f, \"purple\");\n",  (gCategoryCount[16]/(double)m_total) * 100);
 
-        printf("\n");
+        printf("</script>\n\n");
 
         //key
         printf("<font color=\"red\">%s</font></br>\n",     gCategories[0]);
@@ -72,7 +88,9 @@ public:
         printf("<font color=\"lime\">%s</font></br>\n",    gCategories[13]);
         printf("<font color=\"aqua\">%s</font></br>\n",    gCategories[14]);
         printf("<font color=\"fuchsia\">%s</font></br>\n", gCategories[15]);
-        printf("<font color=\"purple\">%s</font></br>\n",  gCategories[16]); 
+        printf("<font color=\"purple\">%s</font></br>\n",  gCategories[16]);
+
+        printf("</body></html>");
     }
 
     virtual void console()

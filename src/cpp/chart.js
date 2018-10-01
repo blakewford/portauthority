@@ -49,12 +49,3 @@ function wipe()
 
 initialize();
 wipe();
-
-addRange(14, "red");
-addRange(14, "orange");
-addRange(14, "yellow");
-addRange(16, "green");
-addRange(14, "blue");
-addRange(14, "indigo");
-addRange(14, "violet");
-

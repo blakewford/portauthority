@@ -12,5 +12,5 @@ public:
 
 void analyzer::analyze(uint64_t address, const isa_instr* instruction)
 {
-    printf("%llX %lX %s %s %s\n", address, instruction->m_opcode, instruction->m_mnem, instruction->m_group, instruction->m_subgroup);
+    printf("%lX %lX %s %s %s\n", address, instruction->m_opcode, instruction->m_mnem, instruction->m_group, instruction->m_subgroup);
 }

@@ -266,24 +266,6 @@ int main(int argc, char** argv)
     int32_t argument = 1;
     bool replay = false;
     bool createReport = false;
-    if(cachedArgc > 1 && !strcmp(cachedArgv[1], "--remote"))
-    {
-        serve();
-        return 0;
-    }
-
-    if(cachedArgc > 1 && !strcmp(cachedArgv[1], "--temp"))
-    {
-        FILE* temp = fopen("/tmp/cluster-profile", "w");
-        if(temp)
-        {
-            const char* response = "{}";
-            fwrite(response, strlen(response), 1, temp);
-            fclose(temp);
-            argument++;
-        }
-    }
-
     if(cachedArgc > 1 && !strcmp(cachedArgv[1], "--report"))
     {
         createReport = true;
@@ -582,54 +564,5 @@ int main(int argc, char** argv)
 
     fclose(executable);
 
-}
-
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <string.h>
-
-#define GUI_PORT 0xBFF
-
-void serve()
-{
-    int32_t fd, sock;
-    struct sockaddr_in address;
-      
-    fd = socket(AF_INET, SOCK_STREAM, 0);
-    if(fd == 0)
-        return;
-
-    address.sin_family = AF_INET;
-    address.sin_addr.s_addr = INADDR_ANY;
-    address.sin_port = htons( GUI_PORT );
-      
-    if(bind(fd, (struct sockaddr*)&address, sizeof(address)) == -1)
-        return;
-
-    if(listen(fd, 1) == -1)
-        return;
-
-    int32_t length = sizeof(address);
-    if((sock = accept(fd, (struct sockaddr *)&address, (socklen_t*)&length)) == -1)
-        return;
-
-    char c;
-    int argc;
-    read(sock, &c, 1);
-    argc = atoi(&c);
-    cachedArgc = argc;
-
-    char* storagePointer = argvStorage;
-    while(argc--)
-    {
-        cachedArgv[argc] = storagePointer;
-        int32_t length = read(sock, &cachedArgv[argc], 1024);
-        storagePointer+=(length+1);
-    }
-
-    const char* response = "{}";
-    write(sock, response, strlen(response));
-    close(sock);
-    close(fd);
 }
 
