@@ -72,6 +72,7 @@ struct lineInfo
 
 std::map<uint64_t, lineInfo*> gAddressToLineTable;
 #include "energyAnalyzer.cpp"
+#include "gdb.cpp"
 
 extern "C"
 {
@@ -233,8 +234,6 @@ void runLineNumberProgram(uint8_t*& binary, const sectionInfo& debugLine, int32_
     }
 }
 
-void serve();
-
 int main(int argc, char** argv)
 {
     cachedArgc = argc;
@@ -385,7 +384,7 @@ int main(int argc, char** argv)
         uint8_t type = 0;
         uint32_t name = 0;
         uint64_t address = 0;
-        uint64_t highestAddress = ~0;
+        uint64_t highestAddress = 0;
         int32_t symbols = sect.si[symbolsIndex].size / (headerSize == sizeof(Elf64_Shdr) ? sizeof(Elf64_Sym): sizeof(Elf32_Sym));  
 
         char buffer[256];
@@ -418,6 +417,7 @@ int main(int argc, char** argv)
             ndx++;
         }
 
+        if(highestAddress == 0) highestAddress = ~0;
         moduleBound = highestAddress;
 
         free(sect.si);
@@ -426,12 +426,19 @@ int main(int argc, char** argv)
     
     energyAnalyzer energy;
     categoryAnalyzer division;    
-    if(!replay && profilerAddress != 0)
+    if(!replay)
     {
         int32_t status = 0;
         user_regs_struct registers;
 
-        pid_t pid;
+        bool useGdb = false;
+        if(useGdb)
+        {
+            profileGdb(cachedArgv[argument]);
+            return 0;
+        }
+
+        pid_t pid = 0;
         posix_spawn(&pid, cachedArgv[argument], NULL, NULL, &cachedArgv[argument+1], NULL);
 
         ptrace(PTRACE_ATTACH, pid, NULL, NULL);
