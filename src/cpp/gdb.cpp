@@ -19,7 +19,7 @@ void* runProgram(void* argument)
     int error = system(buffer);
 }
 
-void profileGdb(const char* executable)
+void profileGdb(const char* executable, uint64_t moduleBound)
 {
     pthread_t programThread;
     pthread_create(&programThread, NULL, runProgram, (char*)executable);
@@ -68,5 +68,27 @@ void profileGdb(const char* executable)
     memset(buffer, '\0', 1024);
     sprintf(buffer, "echo quit > /proc/%d/fd/0", pid);
     error = system(buffer);
-    printf("\n");
-} 
+
+    char line[256];
+    int32_t instructionCount = 0;
+    FILE* log = fopen("gdb.txt", "r");
+    while(fgets(line, sizeof(line), log))
+    {
+        if(strstr(line, "(gdb) 0x") != NULL)
+        {
+            long address = strtol(strstr(line, "0x"), NULL, 16);
+            printf("0x%lx\n", address);
+            if(address < moduleBound)
+            {
+                instructionCount++;
+            }
+        }
+        if(strstr(line, "__stop_program") != NULL)
+        {
+            break;
+        }
+    }
+
+    printf("%d 0x%lx\n", instructionCount, moduleBound);
+    fclose(log);
+}

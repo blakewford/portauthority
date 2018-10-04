@@ -434,7 +434,7 @@ int main(int argc, char** argv)
         bool useGdb = false;
         if(useGdb)
         {
-            profileGdb(cachedArgv[argument]);
+            profileGdb(cachedArgv[argument], 0x100);
             return 0;
         }
 
