@@ -19,7 +19,7 @@ void* runProgram(void* argument)
     int error = system(buffer);
 }
 
-void profileGdb(const char* executable, uint64_t profilerAddress, uint64_t moduleBound, isa* arch)
+void profileGdb(const char* executable, uint64_t profilerAddress, uint64_t moduleBound, isa* arch, analyzer** analyzers)
 {
     pthread_t programThread;
     pthread_create(&programThread, NULL, runProgram, (char*)executable);
@@ -80,6 +80,11 @@ void profileGdb(const char* executable, uint64_t profilerAddress, uint64_t modul
             printf("0x%lx\n", address);
             if(address < moduleBound)
             {
+                uint8_t count = NUM_ANALYZERS;
+                while(count--)
+                {
+//                    analyzers[count]->analyze(address, NULL);
+                }
                 instructionCount++;
             }
         }
