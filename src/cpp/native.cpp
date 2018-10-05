@@ -6,7 +6,7 @@
 
 #define BREAK 0xCC00000000000000 //x86 breakpoint instruction
 
-void profileNative(const char* executable, uint64_t profilerAddress, uint64_t moduleBound, isa* arch)
+void profileNative(const char* executable, uint64_t profilerAddress, uint64_t moduleBound, isa* arch, analyzer** analyzers)
 {
     x86_isa& instructionSet = (x86_isa&)(*arch);
 
@@ -20,25 +20,25 @@ void profileNative(const char* executable, uint64_t profilerAddress, uint64_t mo
     FILE* reopen = fopen(executable, "r");
     size_t read = fread(binary, 1, size, reopen);
     if(read != size) return;
-   
+
     bool amd64 = binary[4] == 0x2;
 
-    posix_spawn(&pid, executable, NULL, NULL, NULL, NULL);   
+    posix_spawn(&pid, executable, NULL, NULL, NULL, NULL);
     ptrace(PTRACE_ATTACH, pid, NULL, NULL);
     waitpid(pid, &status, WSTOPPED);
     profilerAddress -= (sizeof(uint64_t));
     profilerAddress++;
-    long data = ptrace(PTRACE_PEEKDATA, pid, profilerAddress, NULL); 
+    long data = ptrace(PTRACE_PEEKDATA, pid, profilerAddress, NULL);
     //set our starting breakpoint
     ptrace(PTRACE_POKEDATA, pid, profilerAddress, (data&0x00FFFFFFFFFFFFFF) | BREAK);
-    ptrace(PTRACE_CONT, pid, NULL, NULL); 
+    ptrace(PTRACE_CONT, pid, NULL, NULL);
     //_start causes the process to stop
     waitpid(pid, &status, WSTOPPED);
     //run to break
     ptrace(PTRACE_CONT, pid, NULL, NULL);
-    waitpid(pid, &status, WSTOPPED);   
+    waitpid(pid, &status, WSTOPPED);
     //replace instruction
-    ptrace(PTRACE_POKEDATA, pid, profilerAddress, data);   
+    ptrace(PTRACE_POKEDATA, pid, profilerAddress, data);
     const int32_t INSTRUCTION_LENGTH_MAX = 7;
     uint8_t instructions[INSTRUCTION_LENGTH_MAX];
 
@@ -53,7 +53,7 @@ void profileNative(const char* executable, uint64_t profilerAddress, uint64_t mo
         {
             //natural program termination
             break;
-        }  
+        }
         if(registers.rip < moduleBound)
         {
             uint64_t value = ptrace(PTRACE_PEEKDATA, pid, registers.rip, NULL);
@@ -74,7 +74,7 @@ void profileNative(const char* executable, uint64_t profilerAddress, uint64_t mo
             }
             char mnem[16];
             memset(mnem, '\0', 16);
-            const char* disasm = ud_insn_asm(&u); 
+            const char* disasm = ud_insn_asm(&u);
             byte = 0;
             char c = disasm[0];
             while(c != '\0' && c != ' ')
@@ -85,10 +85,12 @@ void profileNative(const char* executable, uint64_t profilerAddress, uint64_t mo
             long ndx = instructionSet.find(mnem);
             if(ndx != -1)
             {
+                uint8_t count = NUM_ANALYZERS;
                 const isa_instr* instruction = instructionSet.get_instr(ndx);
-                printf("%lld\n", registers.rip);
-//                energy.analyze(registers.rip, instruction);
-//                division.analyze(registers.rip, instruction);
+                while(count--)
+                {
+                    analyzers[count]->analyze(registers.rip, instruction);
+                }
             }
             else
             {

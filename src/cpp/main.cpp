@@ -16,6 +16,8 @@
 #include <fstream>
 #include <sstream>
 
+#define NUM_ANALYZERS 2
+
 int32_t cachedArgc = 0;
 char argvStorage[1024];
 char* cachedArgv[64];
@@ -424,7 +426,11 @@ int main(int argc, char** argv)
     }
     
     energyAnalyzer energy;
-    categoryAnalyzer division;    
+    categoryAnalyzer division;
+
+    analyzer* analyzers[NUM_ANALYZERS];
+    analyzers[0] = &energy;
+    analyzers[1] = &division;
     if(!replay)
     {
         if(useGdb)
@@ -433,7 +439,7 @@ int main(int argc, char** argv)
         }
         else
         {
-            profileNative(cachedArgv[argument], profilerAddress, moduleBound, &instructionSet);
+            profileNative(cachedArgv[argument], profilerAddress, moduleBound, &instructionSet, analyzers);
         }
     }
     else if(replay)
