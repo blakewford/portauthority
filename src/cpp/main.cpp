@@ -5,16 +5,10 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include <spawn.h>
-
-#include <sys/user.h>
-#include <sys/wait.h>
-#include <sys/ptrace.h>
 
 #include <libelf.h>
 //#include <byteswap.h>
 
-#include <udis86.h>
 #include "parser.cpp"
 #include "categoryAnalyzer.cpp"
 
@@ -25,8 +19,6 @@
 int32_t cachedArgc = 0;
 char argvStorage[1024];
 char* cachedArgv[64];
-
-#define BREAK 0xCC00000000000000 //x86 breakpoint instruction
 
 struct sectionInfo
 {
@@ -72,6 +64,7 @@ struct lineInfo
 
 std::map<uint64_t, lineInfo*> gAddressToLineTable;
 #include "energyAnalyzer.cpp"
+#include "native.cpp"
 #include "gdb.cpp"
 
 extern "C"
@@ -278,6 +271,7 @@ int main(int argc, char** argv)
     }
 
     bool amd64 = false;
+    bool useGdb = false;
     uint64_t moduleBound = 0;
     uint64_t profilerAddress = 0;
     const char* FUNCTION_NAME = "main";
@@ -298,6 +292,7 @@ int main(int argc, char** argv)
         if(read != size) return -1;
 
         amd64 = binary[4] == 0x2;
+        uint8_t machine = 0;
         uint64_t offset = 0;
         uint16_t headerSize = 0;
         uint16_t numHeaders = 0;
@@ -309,6 +304,7 @@ int main(int argc, char** argv)
             numHeaders = header->e_shnum;
             offset = header->e_shoff;
             stringsIndex = header->e_shstrndx;
+            machine = header->e_machine;
         }
         else
         {
@@ -317,7 +313,10 @@ int main(int argc, char** argv)
             numHeaders = header->e_shnum;
             offset = header->e_shoff;
             stringsIndex = header->e_shstrndx;
+            machine = header->e_machine;
         }
+
+        useGdb = machine == EM_AVR;
 
         sections sect;
         int32_t ndx = 0;
@@ -428,102 +427,14 @@ int main(int argc, char** argv)
     categoryAnalyzer division;    
     if(!replay)
     {
-        int32_t status = 0;
-        user_regs_struct registers;
-
-        bool useGdb = false;
         if(useGdb)
         {
-            profileGdb(cachedArgv[argument], 0x100);
-            return 0;
+            profileGdb(cachedArgv[argument], profilerAddress, 0x100, NULL);
         }
-
-        pid_t pid = 0;
-        posix_spawn(&pid, cachedArgv[argument], NULL, NULL, &cachedArgv[argument+1], NULL);
-
-        ptrace(PTRACE_ATTACH, pid, NULL, NULL);
-        waitpid(pid, &status, WSTOPPED);
-
-        profilerAddress -= (sizeof(uint64_t));
-        profilerAddress++;
-        long data = ptrace(PTRACE_PEEKDATA, pid, profilerAddress, NULL);
-
-        //set our starting breakpoint
-        ptrace(PTRACE_POKEDATA, pid, profilerAddress, (data&0x00FFFFFFFFFFFFFF) | BREAK);
-        ptrace(PTRACE_CONT, pid, NULL, NULL);
-
-        //_start causes the process to stop
-        waitpid(pid, &status, WSTOPPED);
-
-        //run to break
-        ptrace(PTRACE_CONT, pid, NULL, NULL);
-        waitpid(pid, &status, WSTOPPED);
-
-        //replace instruction
-        ptrace(PTRACE_POKEDATA, pid, profilerAddress, data);
-
-        const int32_t INSTRUCTION_LENGTH_MAX = 7;
-        uint8_t instructions[INSTRUCTION_LENGTH_MAX];
-
-        ud_t u;
-        ud_init(&u);
-        ud_set_mode(&u, amd64 ? 64: 32);
-        ud_set_syntax(&u, UD_SYN_ATT);
-        while(WIFSTOPPED(status))
+        else
         {
-            ptrace(PTRACE_GETREGS, pid, NULL, &registers);
-            if(registers.rip == 0)
-            {
-                //natural program termination
-                break;
-            }
-
-            if(registers.rip < moduleBound)
-            {
-                uint64_t value = ptrace(PTRACE_PEEKDATA, pid, registers.rip, NULL);
-                //printf("%llx ", registers.rip);
-                for(int32_t i = 0; i < INSTRUCTION_LENGTH_MAX; i++)
-                {
-                    instructions[i] = value&0xFF;
-                    value >>= 8;
-                }
-
-                int byte = 0;
-                bool invalid = true;
-                while(invalid && (byte <= INSTRUCTION_LENGTH_MAX))
-                {
-                    byte++;
-                    ud_set_input_buffer(&u, instructions, byte);
-                    ud_disassemble(&u);
-                    invalid = strcmp(ud_insn_asm(&u), "invalid ") == 0;
-                }
-                char mnem[16];
-                memset(mnem, '\0', 16);
-                const char* disasm = ud_insn_asm(&u);
-
-                byte = 0;
-                char c = disasm[0];
-                while(c != '\0' && c != ' ')
-                {
-                    mnem[byte++] = c;
-                    c = disasm[byte];
-                }
-                long ndx = instructionSet.find(mnem);
-                if(ndx != -1)
-                {
-                    const isa_instr* instruction = instructionSet.get_instr(ndx);
-                    energy.analyze(registers.rip, instruction);
-                    division.analyze(registers.rip, instruction);
-                }
-                else
-                {
-                    //printf("Not found: %s\n", mnem);
-                }
-            }
-            ptrace(PTRACE_SINGLESTEP, pid, NULL, NULL);
-            waitpid(pid, &status, WSTOPPED);
+            profileNative(cachedArgv[argument], profilerAddress, moduleBound, &instructionSet);
         }
-        kill(pid, SIGKILL);
     }
     else if(replay)
     {
@@ -570,6 +481,5 @@ int main(int argc, char** argv)
     }
 
     fclose(executable);
-
 }
 

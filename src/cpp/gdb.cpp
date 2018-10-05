@@ -15,11 +15,11 @@ void* runProgram(void* argument)
 {
     char buffer[256];
     memset(buffer, '\0', 256);
-    sprintf(buffer, "( cat ) | avr-gdb %s -ex \"target remote :1234\" -ex \"break main\" -ex \"c\"", argument);
+    sprintf(buffer, "( cat ) | avr-gdb %s -ex \"target remote :1234\" -ex \"break main\" -ex \"c\"", (const char*)argument);
     int error = system(buffer);
 }
 
-void profileGdb(const char* executable, uint64_t moduleBound)
+void profileGdb(const char* executable, uint64_t profilerAddress, uint64_t moduleBound, isa* arch)
 {
     pthread_t programThread;
     pthread_create(&programThread, NULL, runProgram, (char*)executable);
@@ -91,4 +91,6 @@ void profileGdb(const char* executable, uint64_t moduleBound)
 
     printf("%d 0x%lx\n", instructionCount, moduleBound);
     fclose(log);
+
+    remove("gdb.txt");
 }
