@@ -2,7 +2,7 @@ bool gTimeout = false;
 
 void* startTimer(void*)
 {
-    int count = cachedArgc > 2 ? atoi(cachedArgv[2]): 60;
+    int count = 60; //make selectable
     while(count--)
     {
         usleep(1000*1000);

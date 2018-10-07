@@ -435,7 +435,7 @@ int main(int argc, char** argv)
     {
         if(useGdb)
         {
-            profileGdb(cachedArgv[argument], profilerAddress, 0x100, NULL, NULL);
+            profileGdb(cachedArgv[argument], profilerAddress, 0x100, NULL, analyzers);
         }
         else
         {
