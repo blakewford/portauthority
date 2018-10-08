@@ -25,6 +25,7 @@ void profileGdb(const char* executable, uint64_t profilerAddress, uint64_t modul
     pthread_create(&programThread, NULL, runProgram, (char*)executable);
 
     char buffer[1024];
+    char buffer2[1024];
     int32_t error = 0;
     int32_t rounds = 0;
 
@@ -58,11 +59,13 @@ void profileGdb(const char* executable, uint64_t profilerAddress, uint64_t modul
     sprintf(buffer, "echo set logging redirect on > /proc/%d/fd/0", pid);
     error = system(buffer);
     sprintf(buffer, "echo si > /proc/%d/fd/0", pid);
+    sprintf(buffer2, "echo 'x $pc' > /proc/%d/fd/0", pid);
     pthread_t timerThread;
     pthread_create(&timerThread, NULL, startTimer, NULL);
     while(!gTimeout)
     {
         error = system(buffer);
+        error = system(buffer2);
     }
     usleep(1*1000*1000);
     memset(buffer, '\0', 1024);
