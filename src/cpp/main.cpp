@@ -241,21 +241,7 @@ int main(int argc, char** argv)
         storagePointer+=(length+1);
     }
 
-    char* json = NULL;
-    FILE* x86 = fopen("x86.json", "r");
-    if(x86)
-    {
-        fseek(x86, 0, SEEK_END);
-        int32_t size = ftell(x86);
-        rewind(x86);
-        json = (char*)malloc(size);
-        size_t read = fread(json, 1, size, x86);
-        if(read != size) return -1;
-    }
-
-    x86_isa instructionSet;
-    parse(json, &instructionSet);
-    free(json);
+    isa* instructionSet = NULL;
 
     int32_t argument = 1;
     bool replay = false;
@@ -319,6 +305,32 @@ int main(int argc, char** argv)
         }
 
         useGdb = machine == EM_AVR;
+
+        char* json = NULL;
+        FILE* library = NULL;
+        if(useGdb)
+        {
+            library = fopen("avr.json", "r");
+            instructionSet = new avr_isa();
+        }
+        else
+        {
+            library = fopen("x86.json", "r");
+            instructionSet = new x86_isa();
+        }
+
+        if(library)
+        {
+            fseek(library, 0, SEEK_END);
+            int32_t size = ftell(library);
+            rewind(library);
+            json = (char*)malloc(size);
+            size_t read = fread(json, 1, size, library);
+            if(read != size) return -1;
+        }
+
+        parse(json, instructionSet);
+        free(json);
 
         sections sect;
         int32_t ndx = 0;
@@ -435,11 +447,11 @@ int main(int argc, char** argv)
     {
         if(useGdb)
         {
-            profileGdb(cachedArgv[argument], profilerAddress, 0x100, NULL, analyzers);
+            profileGdb(cachedArgv[argument], profilerAddress, 0x100, instructionSet, analyzers);
         }
         else
         {
-            profileNative(cachedArgv[argument], profilerAddress, moduleBound, &instructionSet, analyzers);
+            profileNative(cachedArgv[argument], profilerAddress, moduleBound, instructionSet, analyzers);
         }
     }
     else if(replay)
@@ -474,6 +486,9 @@ int main(int argc, char** argv)
         }
         replay.close();
     }
+
+    delete instructionSet;
+    instructionSet = NULL;
 
     if(createReport)
     {

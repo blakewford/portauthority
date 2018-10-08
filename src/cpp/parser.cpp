@@ -95,7 +95,7 @@ void isa::populate(container_object* obj)
     }
 }
 
-void x86_isa::populate_specific(container_object* obj)
+void normal::populate_specific(container_object* obj)
 {
     assert(!strcmp("parameters", obj->get_name()));
     container_object* container = (container_object*)obj;

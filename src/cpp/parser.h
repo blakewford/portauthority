@@ -124,7 +124,7 @@ struct isa
 
 };
 
-struct x86_isa: public isa
+struct normal: public isa
 {
     virtual bool Uint(unsigned value)
     {
@@ -187,5 +187,13 @@ struct x86_isa: public isa
     const  char* get_group(int32_t ndx){ return m_instr.at(ndx)->m_group; };
     const  char* get_subgroup(int32_t ndx){ return m_instr.at(ndx)->m_subgroup; };
 const isa_instr* get_instr(int32_t ndx){ return m_instr.at(ndx); };
+};
+
+struct x86_isa: public normal
+{
+};
+
+struct avr_isa: public normal
+{
 };
 #endif
