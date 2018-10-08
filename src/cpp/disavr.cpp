@@ -41,41 +41,41 @@ void handleUnimplemented()
     assert(0);
 }
 
-int32_t fetch(uint16_t opcode)
+const char* decode(uint16_t opcode)
 {
     uint8_t opcode0 = (opcode & 0xFF00) >> 8;
     uint8_t opcode1 = opcode & 0xFF;
     if(((opcode0 == 0x95) && (opcode1 == 0x98))) //break
-        return false;
+        return "break";
 
     switch(opcode0)
     {
         case 0x0:
             if(opcode1 == 0x00) //nop
             {
-                break;
+                return "nop";
             }
             handleUnimplemented();
         case 0x1: //movw
-            break;
+            return "movw";
         case 0x2: //muls
         case 0x3: //mulsu
-            break;
+            return "muls";
         case 0x4:
         case 0x5:
         case 0x6:
         case 0x7: //cpc
-            break;
+            return "cpc";
         case 0x8:
         case 0x9:
         case 0xA:
         case 0xB: //sbc
-            break;
+            return "sbc";
         case 0xC:
         case 0xD:
         case 0xE:
         case 0xF: //add
-            break;
+            return "add";
         case 0x10:
         case 0x11:
         case 0x12:
@@ -86,37 +86,37 @@ int32_t fetch(uint16_t opcode)
         case 0x15:
         case 0x16:
         case 0x17: //cp
-           break;
+           return "cp";
         case 0x18:
         case 0x19:
         case 0x1A:
         case 0x1B: //sub
-           break;
+           return "sub";
         case 0x1C:
         case 0x1D:
         case 0x1E:
         case 0x1F: //adc
-           break;
+           return "adc";
         case 0x20:
         case 0x21:
         case 0x22:
         case 0x23: //and
-           break;
+           return "and";
         case 0x24:
         case 0x25:
         case 0x26:
         case 0x27: //eor
-           break;
+           return "eor";
         case 0x28:
         case 0x29:
         case 0x2A:
         case 0x2B: //or
-           break;
+           return "or";
         case 0x2C:
         case 0x2D:
         case 0x2E:
         case 0x2F: //mov
-           break;
+           return "mov";
         case 0x30:
         case 0x31:
         case 0x32:
@@ -133,7 +133,7 @@ int32_t fetch(uint16_t opcode)
         case 0x3D:
         case 0x3E:
         case 0x3F: //cpi
-            break;
+            return "cpi";
         case 0x40:
         case 0x41:
         case 0x42:
@@ -150,7 +150,7 @@ int32_t fetch(uint16_t opcode)
         case 0x4D:
         case 0x4E:
         case 0x4F: //sbci
-            break;
+            return "sbci";
         case 0x50:
         case 0x51:
         case 0x52:
@@ -167,7 +167,7 @@ int32_t fetch(uint16_t opcode)
         case 0x5D:
         case 0x5E:
         case 0x5F: //subi
-            break;
+            return "subi";
         case 0x60:
         case 0x61:
         case 0x62:
@@ -184,7 +184,7 @@ int32_t fetch(uint16_t opcode)
         case 0x6D:
         case 0x6E:
         case 0x6F: //ori
-            break;
+            return "ori";
         case 0x70:
         case 0x71:
         case 0x72:
@@ -201,7 +201,7 @@ int32_t fetch(uint16_t opcode)
         case 0x7D:
         case 0x7E:
         case 0x7F: //andi
-            break;
+            return "andi";
         case 0x80:
         case 0x81:
             if((opcode1 & 0xF) >= 0x8) //ld (ldd) y
@@ -276,7 +276,7 @@ int32_t fetch(uint16_t opcode)
         case 0x91:
             if((opcode1 & 0xF) == 0x0) //lds
             {
-               break;
+               return "lds";
             }
             if((opcode1 & 0xF) == 0x1) //ld z+
             {
@@ -296,7 +296,7 @@ int32_t fetch(uint16_t opcode)
             }
             if((opcode1 & 0xF) == 0x7) //elpm
             {
-                break;
+                return "elpm";
             }
             if((opcode1 & 0xF) == 0x9) //ld y+
             {
@@ -316,14 +316,14 @@ int32_t fetch(uint16_t opcode)
             }
             if((opcode1 & 0xF) == 0xF) //pop
             {
-                break;
+                return "pop";
             }
             handleUnimplemented();
         case 0x92:
         case 0x93:
            if((opcode1 & 0xF) == 0x0) //sts
            {
-              break;
+              return "sts";
            }
            if((opcode1 & 0xF) == 0x1) //st (std) z+
            {
@@ -343,7 +343,7 @@ int32_t fetch(uint16_t opcode)
            }
            if((opcode1 & 0xF) == 0xF) //push
            {
-               break;
+               return "push";
            }
            if((opcode1 & 0xF) == 0xC) //st x
            {
@@ -362,27 +362,27 @@ int32_t fetch(uint16_t opcode)
         case 0x95:
             if((opcode0 == 0x94) && (opcode1 == 0x08)) //sec
             {
-                break;
+                return "sec";
             }
             if((opcode0 == 0x94) && (opcode1 == 0x09)) //ijmp
             {
-                break;
+                return "ijmp";
             }
             if((opcode0 == 0x94) && (opcode1 == 0x68)) //set
             {
-                break;
+                return "set";
             }
             if((opcode0 == 0x94) && (opcode1 == 0x78)) //sei
             {
-                break;
+                return "sei";
             }
             if((opcode0 == 0x94) && (opcode1 == 0xE8)) //clt
             {
-                break;
+                return "clt";
             }
             if((opcode0 == 0x94) && (opcode1 == 0xF8)) //cli
             {
-                break;
+                return "cli";
             }
             if((opcode1 == 0x88) || (opcode1 == 0xA8)) //sleep || wdr
             {
@@ -390,40 +390,40 @@ int32_t fetch(uint16_t opcode)
             }
             if((opcode0 == 0x95) && (opcode1 == 0x8)) //ret
             {
-                break;
+                return "ret";
             }
             if((opcode0 == 0x95) && (opcode1 == 0x9)) //icall
             {
-                break;
+                return "icall";
             }
             if((opcode0 == 0x95) && (opcode1 == 0x18)) //reti
             {
-                break;
+                return "reti";
             }
             switch(opcode1 & 0x0F)
             {
                 case 0x0: //com
-                    break;
+                    return "com";
                 case 0x1: //neg
-                    break;
+                    return "neg";
                 case 0x2: //swap
-                    break;
+                    return "swap";
                 case 0x3: //inc
-                    break;
+                    return "inc";
                 case 0x5: //asr
-                    break;
+                    return "asr";
                 case 0x6: //lsr
-                    break;
+                    return "lsr";
                 case 0x7: //ror
-                    break;
+                    return "ror";
                 case 0xA: //dec
-                    break;
+                    return "dec";
                 case 0xC:
                 case 0xD: //jmp
-                    break;
+                    return "jmp";
                 case 0xE:
                 case 0xF: //call
-                    break;
+                    return "call";
                 default:
                     handleUnimplemented();
                     break;
@@ -446,11 +446,11 @@ int32_t fetch(uint16_t opcode)
             }
             if(opcode0 == 0x96)
             {
-                break;
+                return "adiw";
             }
             if(opcode0 == 0x97)
             {
-                break;
+                return "sbiw";
             }
             switch((opcode1 & 0x30) >> 4)
             {
@@ -467,9 +467,9 @@ int32_t fetch(uint16_t opcode)
             }
             break;
         case 0x98: //cbi
-            break;
+            return "cbi";
         case 0x9A: //sbi
-            break;
+            return "sbi";
         case 0x9B: //sbis
             //longOpcode
             break;
@@ -477,7 +477,7 @@ int32_t fetch(uint16_t opcode)
         case 0x9D:
         case 0x9E:
         case 0x9F: //mul
-           break;
+           return "mul";
         case 0xA0:
         case 0xA1:
         case 0xA4:
@@ -520,7 +520,7 @@ int32_t fetch(uint16_t opcode)
         case 0xB5:
         case 0xB6:
         case 0xB7: //in
-            break;
+            return "in";
         case 0xB8:
         case 0xB9:
         case 0xBA:
@@ -529,7 +529,7 @@ int32_t fetch(uint16_t opcode)
         case 0xBD:
         case 0xBE:
         case 0xBF: //out
-            break;
+            return "out";
         case 0xC0:
         case 0xC1:
         case 0xC2:
@@ -549,9 +549,9 @@ int32_t fetch(uint16_t opcode)
             if((opcode0 == 0xCF) && (opcode1 == 0xFF))
             {
                 //Program Exit
-                return false;
+                return "exit";
             }
-            break;
+            return "rjmp";
         case 0xD0:
         case 0xD1:
         case 0xD2:
@@ -568,7 +568,7 @@ int32_t fetch(uint16_t opcode)
         case 0xDD:
         case 0xDE:
         case 0xDF: //rcall
-            break;
+            return "rcall";
         case 0xE0:
         case 0xE1:
         case 0xE2:
@@ -585,30 +585,30 @@ int32_t fetch(uint16_t opcode)
         case 0xED:
         case 0xEE:
         case 0xEF: //ldi
-            break;
+            return "ldi";
         case 0xF0:
         case 0xF1:
         case 0xF2:
         case 0xF3:
             if((((opcode0 & 0x0C) >> 2) == 0x0) && ((opcode1 & 0x7) == 0x0)) //brcs
             {
-                break;
+                return "brcs";
             }
             if((((opcode0 & 0x0C) >> 2) == 0x0) && ((opcode1 & 0x7) == 0x1)) //breq
             {
-                break;
+                return "breq";
             }
             if((((opcode0 & 0x0C) >> 2) == 0x0) && ((opcode1 & 0x7) == 0x2)) //brmi
             {
-                break;
+                return "brmi";
             }
             if((((opcode0 & 0x0C) >> 2) == 0x0) && ((opcode1 & 0x7) == 0x4)) //brlt
             {
-                break;
+                return "brlt";
             }
             if((((opcode0 & 0x0C) >> 2) == 0x0) && ((opcode1 & 0x7) == 0x6)) //brts
             {
-                break;
+                return "brts";
             }
             handleUnimplemented();
         case 0xF4:
@@ -617,35 +617,35 @@ int32_t fetch(uint16_t opcode)
         case 0xF7:
             if((((opcode0 & 0x0C) >> 2) == 0x1) && ((opcode1 & 0x7) == 0x2)) //brpl
             {
-                break;
+                return "brpl";
             }
             if((((opcode0 & 0x0C) >> 2) == 0x1) && ((opcode1 & 0x7) == 0x0)) //brcc
             {
-                break;
+                return "brcc";
             }
             if((((opcode0 & 0x0C) >> 2) == 0x1) && ((opcode1 & 0x7) == 0x1)) //brne
             {
-                break;
+                return "brne";
             }
             if((((opcode0 & 0x0C) >> 2) == 0x1) && ((opcode1 & 0x7) == 0x4)) //brge
             {
-                break;
+                return "brge";
             }
             if((((opcode0 & 0x0C) >> 2) == 0x1) && ((opcode1 & 0x7) == 0x6)) //brtc
             {
-                break;
+                return "brtc";
             }
             handleUnimplemented();
         case 0xF8:
         case 0xF9: //bld
             if((opcode1 & 0xF) < 0x8)
             {
-                break;
+                return "bld";
             }
             handleUnimplemented();
         case 0xFA:
         case 0xFB: //bst
-            break;
+            return "bst";
         case 0xFC:
         case 0xFD: //sbrc
             if((opcode1 & 0xF) < 0x8)
@@ -667,5 +667,5 @@ int32_t fetch(uint16_t opcode)
             break;
     }
 
-    return true;
+    return "invalid";
 }
