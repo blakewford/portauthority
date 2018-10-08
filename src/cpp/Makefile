@@ -1,5 +1,5 @@
 CC:= g++
-SRC:= main.cpp
+SRC:= main.cpp disavr.cpp
 DEBUG:=
 
 authority: $(SRC) libudis86/libudis86.a
