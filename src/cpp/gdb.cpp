@@ -1,3 +1,5 @@
+#include <byteswap.h>
+
 bool gTimeout = false;
 
 void* startTimer(void*)
@@ -32,9 +34,9 @@ void profileGdb(const char* executable, uint64_t profilerAddress, uint64_t modul
     pid_t pid = 0;
     while(pid == 0)
     {
+        FILE *cmd;
         char pidString[6];
         memset(pidString, '\0', 6);
-        FILE *cmd;
         if(rounds % 2 == 0)
         {
             cmd = popen("pidof gdb", "r");
@@ -77,7 +79,12 @@ void profileGdb(const char* executable, uint64_t profilerAddress, uint64_t modul
     FILE* log = fopen("gdb.txt", "r");
     while(fgets(line, sizeof(line), log))
     {
-        if(strstr(line, "(gdb) 0x") != NULL)
+        if(strstr(line, "main()") != NULL)
+        {
+            uint16_t instruction = bswap_16(((uint32_t)strtol(strstr(line, ":")+1, NULL, 16)) >> 16);
+            printf("%s 0x%x ", decode(instruction), instruction);
+        }
+        else if(strstr(line, "(gdb) 0x") != NULL)
         {
             long address = strtol(strstr(line, "0x"), NULL, 16);
             printf("0x%lx\n", address);

@@ -7,7 +7,6 @@
 #include <stdint.h>
 
 #include <libelf.h>
-//#include <byteswap.h>
 
 #include "parser.cpp"
 #include "categoryAnalyzer.cpp"
@@ -67,6 +66,7 @@ struct lineInfo
 std::map<uint64_t, lineInfo*> gAddressToLineTable;
 #include "energyAnalyzer.cpp"
 #include "native.cpp"
+#include "disavr.cpp"
 #include "gdb.cpp"
 
 extern "C"
