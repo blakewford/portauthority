@@ -81,7 +81,7 @@ void profileGdb(const char* executable, uint64_t profilerAddress, uint64_t modul
     {
         if(strstr(line, "main()") != NULL)
         {
-            uint16_t instruction = bswap_16(((uint32_t)strtol(strstr(line, ":")+1, NULL, 16)) >> 16);
+            uint16_t instruction = (((uint32_t)strtol(strstr(line, ":")+1, NULL, 16)) >> 16);
             printf("%s 0x%x ", decode(instruction), instruction);
         }
         else if(strstr(line, "(gdb) 0x") != NULL)
@@ -97,6 +97,10 @@ void profileGdb(const char* executable, uint64_t profilerAddress, uint64_t modul
                 }
                 instructionCount++;
             }
+        }
+        else
+        {
+            printf("\n");
         }
         if(strstr(line, "__stop_program") != NULL)
         {
