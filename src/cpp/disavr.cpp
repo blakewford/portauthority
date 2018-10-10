@@ -206,22 +206,22 @@ const char* decode(uint16_t opcode)
         case 0x81:
             if((opcode1 & 0xF) >= 0x8) //ld (ldd) y
             {
-                break;
+                return "ldd";
             }
             if((opcode1 & 0xF) < 0x8) //ld (ldd) z
             {
-                break;
+                return "ldd";
             }
             handleUnimplemented();
         case 0x82:
         case 0x83:
             if((opcode1 & 0xF) >= 0x8) //st (std) y
             {
-                break;
+                return "std";
             }
             if((opcode1 & 0xF) < 0x8) //st (std) z
             {
-                break;
+                return "std";
             }
             handleUnimplemented();
         case 0x84:
@@ -230,33 +230,33 @@ const char* decode(uint16_t opcode)
         case 0x8D:
             if((opcode1 & 0xF) >= 0x8) //ld (ldd) y
             {
-                break;
+                return "ldd";
             }
             if((opcode1 & 0xF) < 0x8) //ld (ldd) z
             {
-                break;
+                return "ldd";
             }
             handleUnimplemented();
         case 0x86:
         case 0x87:
             if((opcode1 & 0xF) >= 0x8) //st (std) y
             {
-                break;
+                return "std";
             }
             if((opcode1 & 0xF) < 0x8) //st (std) z
             {
-                break;
+                return "std";
             }
             handleUnimplemented();
         case 0x88:
         case 0x89:
             if((opcode1 & 0xF) >= 0x8) //ld (ldd) y
             {
-                break;
+                return "ldd";
             }
             if((opcode1 & 0xF) < 0x8) //ld (ldd) z
             {
-                break;
+                return "ldd";
             }
             handleUnimplemented();
         case 0x8A:
@@ -265,11 +265,11 @@ const char* decode(uint16_t opcode)
         case 0x8F:
             if((opcode1 & 0xF) >= 0x8) //st (std) y
             {
-                break;
+                return "std";
             }
             if((opcode1 & 0xF) < 0x8) //st (std) z
             {
-                break;
+                return "std";
             }
             handleUnimplemented();
         case 0x90:
@@ -280,19 +280,19 @@ const char* decode(uint16_t opcode)
             }
             if((opcode1 & 0xF) == 0x1) //ld z+
             {
-                break;
+                return "ld";
             }
             if((opcode1 & 0xF) == 0x2) //ld -z
             {
-                break;
+                return "ld";
             }
             if((opcode1 & 0xF) == 0x4) //lpm (rd, z)
             {
-                break;
+                return "lpm";
             }
             if((opcode1 & 0xF) == 0x5) //lpm (rd, z+)
             {
-                break;
+                return "lpm";
             }
             if((opcode1 & 0xF) == 0x7) //elpm
             {
@@ -300,19 +300,19 @@ const char* decode(uint16_t opcode)
             }
             if((opcode1 & 0xF) == 0x9) //ld y+
             {
-                break;
+                return "ld";
             }
             if((opcode1 & 0xF) == 0xA) //ld -y
             {
-                break;
+                return "ld";
             }
             if((opcode1 & 0xF) == 0xC) //ld x
             {
-                break;
+                return "ld";
             }
             if((opcode1 & 0xF) == 0xD) //ld x+
             {
-                break;
+                return "ld";
             }
             if((opcode1 & 0xF) == 0xF) //pop
             {
@@ -327,19 +327,19 @@ const char* decode(uint16_t opcode)
            }
            if((opcode1 & 0xF) == 0x1) //st (std) z+
            {
-               break;
+               return "std";
            }
            if((opcode1 & 0xF) == 0x2) //st (std) -z
            {
-               break;
+               return "std";
            }
            if((opcode1 & 0xF) == 0x9) //st (std) y+
            {
-               break;
+               return "std";
            }
            if((opcode1 & 0xF) == 0xA) //st (std) -y
            {
-               break;
+               return "std";
            }
            if((opcode1 & 0xF) == 0xF) //push
            {
@@ -347,15 +347,15 @@ const char* decode(uint16_t opcode)
            }
            if((opcode1 & 0xF) == 0xC) //st x
            {
-               break;
+               return "st";
            }
            if((opcode1 & 0xF) == 0xD) //st x+
            {
-               break;
+               return "st";
            }
            if((opcode1 & 0xF) == 0xE) //st -x
            {
-               break;
+               return "st";
            }
            handleUnimplemented();
         case 0x94:
@@ -384,9 +384,13 @@ const char* decode(uint16_t opcode)
             {
                 return "cli";
             }
-            if((opcode1 == 0x88) || (opcode1 == 0xA8)) //sleep || wdr
+            if((opcode0 == 0x95) && (opcode1 == 0x88)) //sleep
             {
-                break;
+                return "sleep";
+            }
+            if((opcode0 == 0x95) && (opcode1 == 0xA8)) //wdr
+            {
+                return "wdr";
             }
             if((opcode0 == 0x95) && (opcode1 == 0x8)) //ret
             {
@@ -488,11 +492,11 @@ const char* decode(uint16_t opcode)
         case 0xAD:
             if((opcode1 & 0xF) < 0x8) //ld (ldd) z
             {
-                break;
+                return "ldd";
             }
             if((opcode1 & 0xF) >= 0x8) //ld (ldd) y
             {
-                break;
+                return "ldd";
             }
             handleUnimplemented();
         case 0xA2:
@@ -505,11 +509,11 @@ const char* decode(uint16_t opcode)
         case 0xAF:
             if((opcode1 & 0xF) < 0x8) //st (std) z
             {
-                break;
+                return "std";
             }
             if((opcode1 & 0xF) >= 0x8) //st (std) y
             {
-                break;
+                return "std";
             }
             handleUnimplemented();
         case 0xB0:
