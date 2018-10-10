@@ -23,6 +23,8 @@ void* runProgram(void* argument)
 
 void profileGdb(const char* executable, uint64_t profilerAddress, uint64_t moduleBound, isa* arch, analyzer** analyzers)
 {
+    avr_isa& instructionSet = (avr_isa&)(*arch);
+
     pthread_t programThread;
     pthread_create(&programThread, NULL, runProgram, (char*)executable);
 
@@ -75,41 +77,43 @@ void profileGdb(const char* executable, uint64_t profilerAddress, uint64_t modul
     error = system(buffer);
 
     char line[256];
+    uint16_t opcode = 0x9598; //BREAK
     int32_t instructionCount = 0;
     FILE* log = fopen("gdb.txt", "r");
     while(fgets(line, sizeof(line), log))
     {
         if(strstr(line, "main()") != NULL)
         {
-            uint16_t instruction = (((uint32_t)strtol(strstr(line, ":")+1, NULL, 16)) >> 16);
-            printf("%s 0x%x ", decode(instruction), instruction);
+            opcode = (((uint32_t)strtol(strstr(line, ":")+1, NULL, 16)) >> 16);
         }
         else if(strstr(line, "(gdb) 0x") != NULL)
         {
             long address = strtol(strstr(line, "0x"), NULL, 16);
-            printf("0x%lx\n", address);
             if(address < moduleBound)
             {
-                uint8_t count = NUM_ANALYZERS;
-                while(count--)
+                long ndx = instructionSet.find(decode(opcode));
+                if(ndx != -1)
                 {
-//                    analyzers[count]->analyze(address, NULL);
+                    uint8_t count = NUM_ANALYZERS;
+                    const isa_instr* instruction = instructionSet.get_instr(ndx);
+                    while(count--)
+                    {
+                        analyzers[count]->analyze(address, instruction);
+                    }
+                    instructionCount++;
                 }
-                instructionCount++;
+                else
+                {
+                    printf("Not found %s 0x%x\n", decode(opcode), opcode);
+                }
+                opcode = 0x9598; //BREAK
             }
-        }
-        else
-        {
-            printf("\n");
         }
         if(strstr(line, "__stop_program") != NULL)
         {
             break;
         }
     }
-
-    printf("%d 0x%lx\n", instructionCount, moduleBound);
     fclose(log);
-
     remove("gdb.txt");
 }
