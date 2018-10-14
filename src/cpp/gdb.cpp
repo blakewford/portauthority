@@ -2,9 +2,9 @@
 
 bool gTimeout = false;
 
-void* startTimer(void*)
+void* startTimer(void* arg)
 {
-    int count = 60; //make selectable
+    int32_t count = *(int32_t*)arg;
     while(count--)
     {
         usleep(1000*1000);
@@ -21,7 +21,7 @@ void* runProgram(void* argument)
     int error = system(buffer);
 }
 
-void profileGdb(const char* executable, uint64_t profilerAddress, uint64_t moduleBound, isa* arch, analyzer** analyzers)
+void profileGdb(const char* executable, uint64_t profilerAddress, uint64_t moduleBound, isa* arch, analyzer** analyzers, int32_t timeout)
 {
     avr_isa& instructionSet = (avr_isa&)(*arch);
 
@@ -65,7 +65,7 @@ void profileGdb(const char* executable, uint64_t profilerAddress, uint64_t modul
     sprintf(buffer, "echo si > /proc/%d/fd/0", pid);
     sprintf(buffer2, "echo 'x $pc' > /proc/%d/fd/0", pid);
     pthread_t timerThread;
-    pthread_create(&timerThread, NULL, startTimer, NULL);
+    pthread_create(&timerThread, NULL, startTimer, &timeout);
     while(!gTimeout)
     {
         error = system(buffer);
@@ -77,7 +77,7 @@ void profileGdb(const char* executable, uint64_t profilerAddress, uint64_t modul
     error = system(buffer);
 
     char line[256];
-    uint16_t opcode = 0x9598; //BREAK
+    uint16_t opcode = 0x0000; //NOP
     int32_t instructionCount = 0;
     FILE* log = fopen("gdb.txt", "r");
     while(fgets(line, sizeof(line), log))
@@ -96,6 +96,11 @@ void profileGdb(const char* executable, uint64_t profilerAddress, uint64_t modul
                 {
                     uint8_t count = NUM_ANALYZERS;
                     const isa_instr* instruction = instructionSet.get_instr(ndx);
+                    if(!strcmp(instruction->m_mnem, "break"))
+                    {
+                        printf("BREAK\n");
+                        break;
+                    }
                     while(count--)
                     {
                         analyzers[count]->analyze(address, instruction);
@@ -106,7 +111,7 @@ void profileGdb(const char* executable, uint64_t profilerAddress, uint64_t modul
                 {
                     printf("Not found %s 0x%x\n", decode(opcode), opcode);
                 }
-                opcode = 0x9598; //BREAK
+                opcode = 0x000; //NOP
             }
         }
         if(strstr(line, "__stop_program") != NULL)
@@ -116,4 +121,5 @@ void profileGdb(const char* executable, uint64_t profilerAddress, uint64_t modul
     }
     fclose(log);
     remove("gdb.txt");
+    printf("%d\n", instructionCount);
 }

@@ -245,6 +245,7 @@ int main(int argc, char** argv)
 
     int32_t argument = 1;
     bool replay = false;
+    uint16_t timeout = 0;
     bool createReport = false;
     if(cachedArgc > 1 && !strcmp(cachedArgv[1], "--report"))
     {
@@ -255,6 +256,13 @@ int main(int argc, char** argv)
     if(cachedArgc > 1 && !strcmp(cachedArgv[1], "--replay"))
     {
         replay = true;
+        argument++;
+    }
+
+    if(cachedArgc > 1 && !strcmp(cachedArgv[1], "--timeout"))
+    {
+        timeout = strtol(cachedArgv[2], nullptr,10);
+        argument++;
         argument++;
     }
 
@@ -447,7 +455,7 @@ int main(int argc, char** argv)
     {
         if(useGdb)
         {
-            profileGdb(cachedArgv[argument], profilerAddress, 0x100, instructionSet, analyzers);
+            profileGdb(cachedArgv[argument], profilerAddress, moduleBound, instructionSet, analyzers, timeout ? timeout: 60);
         }
         else
         {
