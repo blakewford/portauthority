@@ -82,7 +82,7 @@ void profileGdb(const char* executable, uint64_t profilerAddress, uint64_t modul
     FILE* log = fopen("gdb.txt", "r");
     while(fgets(line, sizeof(line), log))
     {
-        if(strstr(line, "main()") != NULL)
+        if(strstr(line, "<") != NULL && strstr(line, ":") != NULL)
         {
             opcode = (((uint32_t)strtol(strstr(line, ":")+1, NULL, 16)) >> 16);
         }
@@ -105,13 +105,13 @@ void profileGdb(const char* executable, uint64_t profilerAddress, uint64_t modul
                     {
                         analyzers[count]->analyze(address, instruction);
                     }
-                    instructionCount++;
                 }
                 else
                 {
                     printf("Not found %s 0x%x\n", decode(opcode), opcode);
                 }
                 opcode = 0x000; //NOP
+                instructionCount++;
             }
         }
         if(strstr(line, "__stop_program") != NULL)

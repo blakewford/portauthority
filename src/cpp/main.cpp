@@ -10,12 +10,13 @@
 
 #include "parser.cpp"
 #include "categoryAnalyzer.cpp"
+#include "coverageAnalyzer.cpp"
 
 #include <map>
 #include <fstream>
 #include <sstream>
 
-#define NUM_ANALYZERS 2
+#define NUM_ANALYZERS 3
 
 int32_t cachedArgc = 0;
 char argvStorage[1024];
@@ -447,10 +448,12 @@ int main(int argc, char** argv)
     
     energyAnalyzer energy;
     categoryAnalyzer division;
+    coverageAnalyzer coverage;
 
     analyzer* analyzers[NUM_ANALYZERS];
     analyzers[0] = &energy;
     analyzers[1] = &division;
+    analyzers[2] = &coverage;
     if(!replay)
     {
         if(useGdb)
