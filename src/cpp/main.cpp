@@ -261,7 +261,7 @@ int main(int argc, char** argv)
 
     if(cachedArgc > 1 && !strcmp(cachedArgv[1], "--timeout"))
     {
-        timeout = strtol(cachedArgv[2], nullptr,10);
+        timeout = strtol(cachedArgv[2], nullptr, 10);
         argument++;
         argument++;
     }

@@ -78,7 +78,7 @@ void profileGdb(const char* executable, uint64_t profilerAddress, uint64_t modul
 
     char line[256];
     uint16_t opcode = 0x0000; //NOP
-    int32_t instructionCount = 0;
+    uint32_t instructionCount = 0;
     FILE* log = fopen("gdb.txt", "r");
     while(fgets(line, sizeof(line), log))
     {
@@ -121,5 +121,5 @@ void profileGdb(const char* executable, uint64_t profilerAddress, uint64_t modul
     }
     fclose(log);
     remove("gdb.txt");
-    printf("%d\n", instructionCount);
+    printf("%u\n", instructionCount);
 }
