@@ -269,6 +269,8 @@ int main(int argc, char** argv)
 
     bool amd64 = false;
     bool useGdb = false;
+    uint64_t textSize = 0;
+    uint64_t textStart = 0;
     uint64_t moduleBound = 0;
     uint64_t profilerAddress = 0;
     const char* FUNCTION_NAME = "main";
@@ -398,7 +400,9 @@ int main(int argc, char** argv)
             ndx++;
         }
 
-        profilerAddress = sect.si[textIndex].address; //reasonable default
+        textSize = sect.si[textIndex].size;
+        textStart = sect.si[textIndex].address;
+        profilerAddress = textStart; //reasonable default
         runLineNumberProgram(binary, sect.si[debugLineIndex], argument);
 
         ndx = 0;
@@ -448,7 +452,7 @@ int main(int argc, char** argv)
     
     energyAnalyzer energy;
     categoryAnalyzer division;
-    coverageAnalyzer coverage;
+    coverageAnalyzer coverage(textStart, textSize);
 
     analyzer* analyzers[NUM_ANALYZERS];
     analyzers[0] = &energy;
@@ -458,7 +462,7 @@ int main(int argc, char** argv)
     {
         if(useGdb)
         {
-            profileGdb(cachedArgv[argument], profilerAddress, moduleBound, instructionSet, analyzers, timeout ? timeout: 60);
+            profileGdb(cachedArgv[argument], profilerAddress, moduleBound, instructionSet, analyzers, timeout ? timeout: 15);
         }
         else
         {
@@ -494,6 +498,7 @@ int main(int argc, char** argv)
                
             energy.analyze(address, &instruction);
             division.analyze(address, &instruction);
+            coverage.analyze(address, &instruction);
         }
         replay.close();
     }
@@ -505,11 +510,13 @@ int main(int argc, char** argv)
     {
         energy.report();
         division.report();
+        coverage.report();
     }
     else
     {
         energy.console();
-        division.console();       
+        division.console();
+        coverage.console();
     }
 
     fclose(executable);
