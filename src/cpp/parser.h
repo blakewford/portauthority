@@ -16,8 +16,8 @@ struct isa_instr
     public:
         uint64_t m_address;
         long m_opcode;
+        long m_cycles;
         long m_size;
-        long m_count;
         char m_mnem[MAX_BUFFER_SIZE];
         char m_group[MAX_BUFFER_SIZE];
         char m_subgroup[MAX_BUFFER_SIZE];
@@ -128,9 +128,34 @@ struct isa
 
 struct normal: public isa
 {
+    enum state
+    {
+        OPCODE,
+        CYCLES,
+        SIZE,
+        UNKNOWN
+    };
+
+    state m_state = UNKNOWN;
+
     virtual bool Uint(unsigned value)
     {
-        m_instr.back()->m_opcode = value;
+        switch(m_state)
+        {
+            case OPCODE:
+                m_instr.back()->m_opcode = value;
+                break;
+            case CYCLES:
+                m_instr.back()->m_cycles = value;
+                break;
+            case SIZE:
+                m_instr.back()->m_size = value;
+                break;
+            default:
+                break;
+        }
+        m_state = UNKNOWN;
+
         return true;
     }
 
@@ -138,7 +163,15 @@ struct normal: public isa
     {
         if(!strcmp(key, "opcode"))
         {
-            //Do nothing!
+            m_state = OPCODE;
+        }
+        else if(!strcmp(key, "cycles"))
+        {
+            m_state = CYCLES;
+        }
+        else if(!strcmp(key, "size"))
+        {
+            m_state = SIZE;
         }
         else if(!strcmp(key, "mnemonic"))
         {
