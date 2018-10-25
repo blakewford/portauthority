@@ -77,14 +77,14 @@ void profileGdb(const char* executable, uint64_t profilerAddress, uint64_t modul
     error = system(buffer);
 
     char line[256];
-    uint16_t opcode = 0x0000; //NOP
+    uint32_t opcode = 0x0000; //NOP
     uint32_t instructionCount = 0;
     FILE* log = fopen("gdb.txt", "r");
     while(fgets(line, sizeof(line), log))
     {
         if(strstr(line, "<") != NULL && strstr(line, ":") != NULL)
         {
-            opcode = (((uint32_t)strtol(strstr(line, ":")+1, NULL, 16)) >> 16);
+            opcode = (uint32_t)strtol(strstr(line, ":")+1, NULL, 16);
         }
         else if(strstr(line, "(gdb) 0x") != NULL)
         {

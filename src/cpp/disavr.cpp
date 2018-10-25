@@ -3,48 +3,54 @@
 #include <stdio.h>
 #include <assert.h>
 
-bool longOpcode(uint16_t opcode)
+void handleUnimplemented()
+{
+    printf("Warning unimplemented\n");
+}
+
+const char* decode(uint32_t opcode)
 {
     uint8_t opcode0 = (opcode & 0xFF00) >> 8;
     uint8_t opcode1 = opcode & 0xFF;
+    uint8_t opcode2 = (opcode & 0xFF000000) >> 24;
+    uint8_t opcode3 = (opcode & 0xFF0000) >> 16;
 
-    switch(opcode0)
+    switch(opcode2)
     {
         case 0x90:
         case 0x91:
-            if((opcode1 & 0xF) == 0) //lds
+            if((opcode3 & 0xF) == 0x0)
             {
-                return true;
+                return "lds";
             }
             break;
         case 0x92:
         case 0x93:
-            if((opcode1 & 0xF) == 0) //sts
+            if((opcode3 & 0xF) == 0x0)
             {
-                return true;
+                return "sts";
             }
             break;
         case 0x94:
         case 0x95:
-            if((opcode1 & 0xF) > 0xB) //jmp / call
+            switch(opcode3)
             {
-                return true;
+                case 0xC:
+                case 0xD:
+                    return "jmp";
+                    break;
+                case 0xE:
+                case 0xF:
+                    return "call";
+                    break;
+                default:
+                    break;
             }
+            break;
+        default:
             break;
     }
 
-    return false;
-}
-
-void handleUnimplemented()
-{
-    assert(0);
-}
-
-const char* decode(uint16_t opcode)
-{
-    uint8_t opcode0 = (opcode & 0xFF00) >> 8;
-    uint8_t opcode1 = opcode & 0xFF;
     if(((opcode0 == 0x95) && (opcode1 == 0x98))) //break
         return "break";
 
@@ -56,6 +62,7 @@ const char* decode(uint16_t opcode)
                 return "nop";
             }
             handleUnimplemented();
+            break;
         case 0x1: //movw
             return "movw";
         case 0x2: //muls
@@ -213,6 +220,7 @@ const char* decode(uint16_t opcode)
                 return "ldd";
             }
             handleUnimplemented();
+            break;
         case 0x82:
         case 0x83:
             if((opcode1 & 0xF) >= 0x8) //st (std) y
@@ -224,6 +232,7 @@ const char* decode(uint16_t opcode)
                 return "std";
             }
             handleUnimplemented();
+            break;
         case 0x84:
         case 0x85:
         case 0x8C:
@@ -237,6 +246,7 @@ const char* decode(uint16_t opcode)
                 return "ldd";
             }
             handleUnimplemented();
+            break;
         case 0x86:
         case 0x87:
             if((opcode1 & 0xF) >= 0x8) //st (std) y
@@ -248,6 +258,7 @@ const char* decode(uint16_t opcode)
                 return "std";
             }
             handleUnimplemented();
+            break;
         case 0x88:
         case 0x89:
             if((opcode1 & 0xF) >= 0x8) //ld (ldd) y
@@ -259,6 +270,7 @@ const char* decode(uint16_t opcode)
                 return "ldd";
             }
             handleUnimplemented();
+            break;
         case 0x8A:
         case 0x8B:
         case 0x8E:
@@ -272,6 +284,7 @@ const char* decode(uint16_t opcode)
                 return "std";
             }
             handleUnimplemented();
+            break;
         case 0x90:
         case 0x91:
             if((opcode1 & 0xF) == 0x0) //lds
@@ -319,6 +332,7 @@ const char* decode(uint16_t opcode)
                 return "pop";
             }
             handleUnimplemented();
+            break;
         case 0x92:
         case 0x93:
            if((opcode1 & 0xF) == 0x0) //sts
@@ -358,6 +372,7 @@ const char* decode(uint16_t opcode)
                return "st";
            }
            handleUnimplemented();
+           break;
         case 0x94:
         case 0x95:
             if((opcode0 == 0x94) && (opcode1 == 0x08)) //sec
@@ -424,10 +439,12 @@ const char* decode(uint16_t opcode)
                     return "dec";
                 case 0xC:
                 case 0xD: //jmp
-                    return "jmp";
+                    handleUnimplemented(); //32-bit
+                    break;
                 case 0xE:
                 case 0xF: //call
-                    return "call";
+                    handleUnimplemented(); //32-bit
+                    break;
                 default:
                     handleUnimplemented();
                     break;
@@ -447,6 +464,7 @@ const char* decode(uint16_t opcode)
                     break;
                 default:
                     handleUnimplemented();
+                    break;
             }
             if(opcode0 == 0x96)
             {
@@ -468,6 +486,7 @@ const char* decode(uint16_t opcode)
                     break;
                 default:
                     handleUnimplemented();
+                    break;
             }
             break;
         case 0x98: //cbi
@@ -475,8 +494,7 @@ const char* decode(uint16_t opcode)
         case 0x9A: //sbi
             return "sbi";
         case 0x9B: //sbis
-            //longOpcode
-            break;
+            return "sbis";
         case 0x9C:
         case 0x9D:
         case 0x9E:
@@ -499,6 +517,7 @@ const char* decode(uint16_t opcode)
                 return "ldd";
             }
             handleUnimplemented();
+            break;
         case 0xA2:
         case 0xA3:
         case 0xA6:
@@ -516,6 +535,7 @@ const char* decode(uint16_t opcode)
                 return "std";
             }
             handleUnimplemented();
+            break;
         case 0xB0:
         case 0xB1:
         case 0xB2:
@@ -615,6 +635,7 @@ const char* decode(uint16_t opcode)
                 return "brts";
             }
             handleUnimplemented();
+            break;
         case 0xF4:
         case 0xF5:
         case 0xF6:
@@ -640,6 +661,7 @@ const char* decode(uint16_t opcode)
                 return "brtc";
             }
             handleUnimplemented();
+            break;
         case 0xF8:
         case 0xF9: //bld
             if((opcode1 & 0xF) < 0x8)
@@ -647,25 +669,16 @@ const char* decode(uint16_t opcode)
                 return "bld";
             }
             handleUnimplemented();
+            break;
         case 0xFA:
         case 0xFB: //bst
             return "bst";
         case 0xFC:
         case 0xFD: //sbrc
-            if((opcode1 & 0xF) < 0x8)
-            {
-                //longOpcode
-                break;
-            }
-            handleUnimplemented();
+            return "sbrc";
         case 0xFE:
         case 0xFF: //sbrs
-            if((opcode1 & 0xF) < 0x8)
-            {
-                //longOpcode
-                break;
-            }
-            handleUnimplemented();
+            return "sbrs";
         default:
             handleUnimplemented();
             break;

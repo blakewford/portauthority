@@ -16,6 +16,8 @@ struct isa_instr
     public:
         uint64_t m_address;
         long m_opcode;
+        long m_size;
+        long m_count;
         char m_mnem[MAX_BUFFER_SIZE];
         char m_group[MAX_BUFFER_SIZE];
         char m_subgroup[MAX_BUFFER_SIZE];
@@ -181,7 +183,7 @@ struct normal: public isa
 
         return ndx;
     };
-    void populate_specific(container_object* obj);
+    virtual void populate_specific(container_object* obj);
     long get_opcode(int32_t ndx){ return m_instr.at(ndx)->m_opcode; };
     const  char* get_mnemonic(int32_t ndx){ return m_instr.at(ndx)->m_mnem; };
     const  char* get_group(int32_t ndx){ return m_instr.at(ndx)->m_group; };
@@ -195,5 +197,8 @@ struct x86_isa: public normal
 
 struct avr_isa: public normal
 {
+public:
+    virtual void populate_specific(container_object* obj);
+    long m_size;
 };
 #endif

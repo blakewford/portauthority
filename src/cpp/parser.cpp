@@ -118,6 +118,31 @@ void normal::populate_specific(container_object* obj)
     }
 }
 
+void avr_isa::populate_specific(container_object* obj)
+{
+    normal::populate_specific(obj);
+    container_object* container = (container_object*)obj;
+    for(int i = 0; i < container->child_count(); i++)
+    {
+        object* param = container->at(i);
+        const char* name = param->get_name();
+        if(!strcmp(name, "opcode"))
+        {
+        }
+        else if(!strcmp(name, "mnemonic"))
+        {
+        }
+        else if(!strcmp(name, "mnemonic"))
+        {
+            m_instr.back()->m_size = param->get_long_value();
+        }
+        else
+        {
+            assert(0);
+        }
+    }
+}
+
 enum parse_state
 {
     UNKNOWN,
