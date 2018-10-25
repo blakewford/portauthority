@@ -14,6 +14,10 @@ class container_object;
 struct isa_instr
 {
     public:
+        isa_instr(long size)
+        {
+            m_size = size;
+        }
         uint64_t m_address;
         long m_opcode;
         long m_cycles;
@@ -74,7 +78,7 @@ struct isa
     {
         if(m_create)
         {
-            m_instr.push_back(new isa_instr());
+            m_instr.push_back(new isa_instr(2));
         }
 
         return true;
@@ -232,6 +236,5 @@ struct avr_isa: public normal
 {
 public:
     virtual void populate_specific(container_object* obj);
-    long m_size;
 };
 #endif

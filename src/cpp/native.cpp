@@ -87,9 +87,11 @@ void profileNative(const char* executable, uint64_t profilerAddress, uint64_t mo
             {
                 uint8_t count = NUM_ANALYZERS;
                 const isa_instr* instruction = instructionSet.get_instr(ndx);
+                isa_instr modified = *instruction;
+                modified.m_size = byte;
                 while(count--)
                 {
-                    analyzers[count]->analyze(registers.rip, instruction);
+                    analyzers[count]->analyze(registers.rip, &modified);
                 }
             }
             else

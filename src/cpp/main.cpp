@@ -409,6 +409,7 @@ int main(int argc, char** argv)
 
         uint8_t type = 0;
         uint32_t name = 0;
+        uint64_t symbolSize = 0;
         uint64_t address = 0;
         uint64_t highestAddress = 0;
         int32_t symbols = sect.si[symbolsIndex].size / (headerSize == sizeof(Elf64_Shdr) ? sizeof(Elf64_Sym): sizeof(Elf32_Sym));  
@@ -421,6 +422,7 @@ int main(int argc, char** argv)
                 Elf64_Sym* symbols = (Elf64_Sym*)(binary + sect.si[symbolsIndex].offset);
                 type = ELF64_ST_TYPE(symbols[ndx].st_info);
                 name = symbols[ndx].st_name;
+                symbolSize = symbols[ndx].st_size;
                 address = symbols[ndx].st_value;
             }
             else
@@ -428,12 +430,14 @@ int main(int argc, char** argv)
                 Elf32_Sym* symbols = (Elf32_Sym*)(binary + sect.si[symbolsIndex].offset);
                 type = ELF32_ST_TYPE(symbols[ndx].st_info);
                 name = symbols[ndx].st_name;
+                symbolSize = symbols[ndx].st_size;
                 address = symbols[ndx].st_value;
             } 
 
             if(type == 2) //function
             {
                 highestAddress = highestAddress < address ? address: highestAddress;
+                highestAddress += symbolSize;
                 getStringForIndex(binary, sect.si[stringTableIndex], name, buffer, 256);
                 if(!strcmp(FUNCTION_NAME, buffer))
                 {
@@ -482,7 +486,7 @@ int main(int argc, char** argv)
 
         while(!replay.eof())
         {
-            isa_instr instruction;
+            isa_instr instruction(2);
             replay >> addressStr;
             replay >> opcode;
             replay >> mnemonic;
