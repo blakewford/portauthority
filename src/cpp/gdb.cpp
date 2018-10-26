@@ -1,6 +1,12 @@
+#include <stdio.h>
+#include <unistd.h>
+#include <string.h>
 #include <byteswap.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
 
 bool gTimeout = false;
+#define GDB_PORT 1234
 
 void* startTimer(void* arg)
 {
@@ -122,4 +128,79 @@ void profileGdb(const char* executable, uint64_t profilerAddress, uint64_t modul
     fclose(log);
     remove("gdb.txt");
     printf("%u\n", instructionCount);
+}
+
+char gLastPacket[64];
+bool packetRead(int fd)
+{
+    char byte;
+    uint8_t ndx = 0;
+    char buffer[64];
+    memset(buffer, '\0', 64);
+
+    ssize_t err = 0;
+    err = read(fd, &byte, 1); //ack
+    while(byte != '#')
+    {
+        err = read(fd, &byte, 1);
+        buffer[ndx++] = byte;
+    }
+
+    if(!strcmp(gLastPacket, buffer))
+    {
+        return false;
+    }
+
+    strcpy(gLastPacket, buffer);
+
+    char checksum[2];
+    err = read(fd, checksum, 2);
+
+    return true;
+}
+
+bool packetWrite(int fd, const char* replay)
+{
+    ssize_t err = 0;
+    err = write(fd, "+", 1); //ack
+    err = write(fd, replay, strlen(replay));
+    return packetRead(fd);
+}
+
+void singleStep()
+{
+    int32_t fd;
+    struct sockaddr_in address;
+
+    fd = socket(AF_INET, SOCK_STREAM, 0);
+    if(fd == 0)
+        return;
+
+    address.sin_family = AF_INET;
+    address.sin_addr.s_addr = INADDR_ANY;
+    address.sin_port = htons(GDB_PORT);
+
+    if(connect(fd, (struct sockaddr*)&address, sizeof(address)) == -1)
+        return;
+
+    const char* replay = "";
+
+    //replay sniffed initialization packets
+    packetWrite(fd, "$qSupported:multiprocess+;swbreak+;hwbreak+;qRelocInsn+#c9");
+    packetWrite(fd, "$Hg0#df");
+    packetWrite(fd, "$qTStatus#49");
+    packetWrite(fd, "$?#3f");
+    packetWrite(fd, "$qfThreadInfo#bb");
+    packetWrite(fd, "$qL1160000000000000000#55");
+    packetWrite(fd, "$Hc-1#09");
+    packetWrite(fd, "$qC#b4");
+    packetWrite(fd, "$qAttached#8f");
+    packetWrite(fd, "$qOffsets#4b");
+    packetWrite(fd, "$qL1160000000000000000#55");
+    packetWrite(fd, "$qSymbol::#5b");
+
+    while(packetWrite(fd, "$s#73"))
+        ;
+
+    close(fd);
 }
