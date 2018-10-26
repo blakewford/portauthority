@@ -23,7 +23,7 @@ void* runProgram(void* argument)
 {
     char buffer[256];
     memset(buffer, '\0', 256);
-    sprintf(buffer, "( cat ) | avr-gdb %s -ex \"target remote :1234\" -ex \"break main\" -ex \"c\"", (const char*)argument);
+    sprintf(buffer, "( cat ) | avr-gdb %s -ex \"target remote :1234\"", (const char*)argument);
     int error = system(buffer);
 }
 
@@ -162,7 +162,6 @@ bool packetRead(int fd)
 bool packetWrite(int fd, const char* replay)
 {
     ssize_t err = 0;
-    err = write(fd, "+", 1); //ack
     err = write(fd, replay, strlen(replay));
     return packetRead(fd);
 }
@@ -186,20 +185,20 @@ void singleStep()
     const char* replay = "";
 
     //replay sniffed initialization packets
-    packetWrite(fd, "$qSupported:multiprocess+;swbreak+;hwbreak+;qRelocInsn+#c9");
-    packetWrite(fd, "$Hg0#df");
-    packetWrite(fd, "$qTStatus#49");
-    packetWrite(fd, "$?#3f");
-    packetWrite(fd, "$qfThreadInfo#bb");
-    packetWrite(fd, "$qL1160000000000000000#55");
-    packetWrite(fd, "$Hc-1#09");
-    packetWrite(fd, "$qC#b4");
-    packetWrite(fd, "$qAttached#8f");
-    packetWrite(fd, "$qOffsets#4b");
-    packetWrite(fd, "$qL1160000000000000000#55");
-    packetWrite(fd, "$qSymbol::#5b");
+    packetWrite(fd, "+$qSupported:multiprocess+;swbreak+;hwbreak+;qRelocInsn+#c9");
+    packetWrite(fd, "+$Hg0#df");
+    packetWrite(fd, "+$qTStatus#49");
+    packetWrite(fd, "+$?#3f");
+    packetWrite(fd, "+$qfThreadInfo#bb");
+    packetWrite(fd, "+$qL1160000000000000000#55");
+    packetWrite(fd, "+$Hc-1#09");
+    packetWrite(fd, "+$qC#b4");
+    packetWrite(fd, "+$qAttached#8f");
+    packetWrite(fd, "+$qOffsets#4b");
+    packetWrite(fd, "+$qL1160000000000000000#55");
+    packetWrite(fd, "+$qSymbol::#5b");
 
-    while(packetWrite(fd, "$s#73"))
+    while(packetWrite(fd, "+$s#73"))
         ;
 
     close(fd);
