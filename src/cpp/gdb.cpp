@@ -8,9 +8,9 @@
 #define GDB_PORT 1234
 
 char gLastPacket[64];
-bool packetRead(int fd, uint32_t& address)
+bool packetRead(int fd, uint32_t& value)
 {
-    address = 0;
+    value = 0;
 
     char byte;
     uint8_t ndx = 0;
@@ -33,7 +33,12 @@ bool packetRead(int fd, uint32_t& address)
     if(strstr(buffer, "T05") != nullptr)
     {
         std::string message(buffer);
-        address = bswap_32(strtol(message.substr(message.find_last_of(":")+1).c_str(), nullptr, 16));
+        value = bswap_32(strtol(message.substr(message.find_last_of(":")+1).c_str(), nullptr, 16));
+    }
+    else if(strstr(buffer, "$") != nullptr && strstr(buffer, "#"))
+    {
+        std::string message(buffer);
+        value = bswap_32(strtol(message.substr(1, message.length()-1).c_str(), nullptr, 16));
     }
 
     strcpy(gLastPacket, buffer);
@@ -90,6 +95,23 @@ void profileGdb(const char* executable, uint64_t profilerAddress, uint64_t modul
     {
         if(address < moduleBound)
         {
+            uint8_t size = 16;
+            char buffer[size];
+            memset(buffer, '\0', size);
+            sprintf(buffer, "%x", address);
+
+            uint32_t checksum = 0;
+            while(size--)
+            {
+                checksum += buffer[size];
+            }
+            checksum += 'm';
+            checksum += ',';
+            checksum += '4';
+
+            //+$mce,4#95
+            sprintf(buffer, "+$m%x,4#%x\n", address, checksum%256);
+            packetWrite(fd, opcode, buffer);
             long ndx = instructionSet.find(decode(opcode));
             if(ndx != -1)
             {
@@ -109,7 +131,6 @@ void profileGdb(const char* executable, uint64_t profilerAddress, uint64_t modul
             {
                 printf("Not found %s 0x%x\n", decode(opcode), opcode);
             }
-            opcode = 0; //NOP
             instructionCount++;
         }
     }
