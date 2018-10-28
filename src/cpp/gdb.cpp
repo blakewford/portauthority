@@ -119,7 +119,7 @@ uint32_t profileGdb(const char* executable, uint64_t profilerAddress, uint64_t m
                 const isa_instr* instruction = instructionSet.get_instr(ndx);
                 if(!strcmp(instruction->m_mnem, "break"))
                 {
-                    printf("BREAK\n");
+                    //printf("BREAK\n");
                     break;
                 }
                 while(count--)

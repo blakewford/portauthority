@@ -17,6 +17,7 @@ public:
 
     virtual void report()
     {
+        printf("<div><font color=\"gray\"><b>%.2f%c Coverage</b></font><br/><br/></div>\n", (m_count/(double)m_textSize)*100, '%');
     }
 
     virtual void console()

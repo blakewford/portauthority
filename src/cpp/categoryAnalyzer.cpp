@@ -35,6 +35,7 @@ public:
 
     virtual void report()
     {
+        printf("<div id=\"chart\"></div>\n<script>\n");
         FILE* script = fopen("chart.js", "r");
         if(script)
         {
@@ -45,6 +46,7 @@ public:
             size_t read = fread(binary, 1, size, script);
             if(read != size) return;
 
+            binary[size-1] = '\0';
             printf("%s\n", binary);
             free(binary);
         }

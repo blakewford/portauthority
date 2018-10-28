@@ -516,8 +516,8 @@ int main(int argc, char** argv)
     {
         analyzer::header(cachedArgv[argument], !useGdb, machine, instructionCount);
         energy.report();
-        division.report();
         coverage.report();
+        division.report();
         analyzer::footer();
     }
     else

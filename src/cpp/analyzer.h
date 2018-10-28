@@ -57,7 +57,7 @@ void analyzer::header(const char* executable, bool native, int32_t machine, uint
             break;
     }
 
-    printf("<html>\n<body bgcolor=\"#ccecfc\">\n<div id=\"chart\"><br/><font color=\"gray\"><b>%s<br/>%s<br/>%s<br/>Instruction count: %u<br/><br/></b></font></div>\n<script>\n", arch, data, executable, instructionCount);
+    printf("<html>\n<body bgcolor=\"#ccecfc\">\n<div><br/><font color=\"gray\"><b>%s<br/>%s<br/>%s<br/>Instruction count: %u<br/><br/></b></font>\n", arch, data, executable, instructionCount);
 }
 
 void analyzer::footer()
