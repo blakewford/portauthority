@@ -59,7 +59,7 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
         if(registers.rip < moduleBound)
         {
             uint64_t value = ptrace(PTRACE_PEEKDATA, pid, registers.rip, NULL);
-            //printf("%llx ", registers.rip);
+            //printf("%llx\n", registers.rip);
             for(int32_t i = 0; i < INSTRUCTION_LENGTH_MAX; i++)
             {
                 instructions[i] = value&0xFF;

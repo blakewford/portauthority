@@ -274,7 +274,6 @@ int main(int argc, char** argv)
     uint64_t textStart = 0;
     uint64_t moduleBound = 0;
     uint64_t profilerAddress = 0;
-    const char* FUNCTION_NAME = "main";
 
     FILE* executable = 0;
     if(replay)
@@ -316,6 +315,7 @@ int main(int argc, char** argv)
         }
 
         useGdb = machine == EM_AVR;
+        const char* FUNCTION_NAME = useGdb ? "__vectors": "main";
 
         char* json = nullptr;
         FILE* library = nullptr;
@@ -472,7 +472,10 @@ int main(int argc, char** argv)
         }
         else
         {
+            const int32_t RUNTIME_BIAS = 360;
+            coverage.adjustCount(RUNTIME_BIAS);
             instructionCount = profileNative(cachedArgv[argument], profilerAddress, moduleBound, instructionSet, analyzers);
+            instructionCount += RUNTIME_BIAS;
         }
     }
     else if(replay)
