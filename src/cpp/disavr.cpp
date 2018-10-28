@@ -5,7 +5,7 @@
 
 void handleUnimplemented()
 {
-    printf("Warning unimplemented\n");
+    //printf("Warning unimplemented\n");
 }
 
 const char* decode(uint32_t opcode)

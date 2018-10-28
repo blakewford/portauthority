@@ -221,7 +221,7 @@ void runLineNumberProgram(uint8_t*& binary, const sectionInfo& debugLine, int32_
             strcpy(pInfo->fileName, token.c_str());
             stream >> pInfo->lineNumber;
             stream >> token;
-            lineAddress = (int32_t)strtol(token.c_str(), NULL, 0);
+            lineAddress = (int32_t)strtol(token.c_str(), nullptr, 0);
             if(lineAddress != 0)
             {
                 gAddressToLineTable.insert(std::make_pair(lineAddress, pInfo)); 
@@ -242,7 +242,7 @@ int main(int argc, char** argv)
         storagePointer+=(length+1);
     }
 
-    isa* instructionSet = NULL;
+    isa* instructionSet = nullptr;
 
     int32_t argument = 1;
     bool replay = false;
@@ -269,6 +269,7 @@ int main(int argc, char** argv)
 
     bool amd64 = false;
     bool useGdb = false;
+    uint8_t machine = 0;
     uint64_t textSize = 0;
     uint64_t textStart = 0;
     uint64_t moduleBound = 0;
@@ -291,7 +292,6 @@ int main(int argc, char** argv)
         if(read != size) return -1;
 
         amd64 = binary[4] == 0x2;
-        uint8_t machine = 0;
         uint64_t offset = 0;
         uint16_t headerSize = 0;
         uint16_t numHeaders = 0;
@@ -317,8 +317,8 @@ int main(int argc, char** argv)
 
         useGdb = machine == EM_AVR;
 
-        char* json = NULL;
-        FILE* library = NULL;
+        char* json = nullptr;
+        FILE* library = nullptr;
         if(useGdb)
         {
             library = fopen("avr.json", "r");
@@ -462,15 +462,17 @@ int main(int argc, char** argv)
     analyzers[0] = &energy;
     analyzers[1] = &division;
     analyzers[2] = &coverage;
+
+    uint32_t instructionCount = 0;
     if(!replay)
     {
         if(useGdb)
         {
-            profileGdb(cachedArgv[argument], profilerAddress, moduleBound, instructionSet, analyzers, timeout ? timeout: 15);
+            instructionCount = profileGdb(cachedArgv[argument], profilerAddress, moduleBound, instructionSet, analyzers, timeout ? timeout: 15);
         }
         else
         {
-            profileNative(cachedArgv[argument], profilerAddress, moduleBound, instructionSet, analyzers);
+            instructionCount = profileNative(cachedArgv[argument], profilerAddress, moduleBound, instructionSet, analyzers);
         }
     }
     else if(replay)
@@ -508,13 +510,15 @@ int main(int argc, char** argv)
     }
 
     delete instructionSet;
-    instructionSet = NULL;
+    instructionSet = nullptr;
 
     if(createReport)
     {
+        analyzer::header(cachedArgv[argument], !useGdb, machine, instructionCount);
         energy.report();
         division.report();
         coverage.report();
+        analyzer::footer();
     }
     else
     {

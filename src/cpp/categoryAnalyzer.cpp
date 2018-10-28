@@ -35,8 +35,6 @@ public:
 
     virtual void report()
     {
-        printf("<html>\n<body bgcolor=\"#ccecfc\">\n<div id=\"chart\"></div>\n<script>\n");
-
         FILE* script = fopen("chart.js", "r");
         if(script)
         {
@@ -89,8 +87,6 @@ public:
         printf("<font color=\"aqua\">%s</font></br>\n",    gCategories[14]);
         printf("<font color=\"fuchsia\">%s</font></br>\n", gCategories[15]);
         printf("<font color=\"purple\">%s</font></br>\n",  gCategories[16]);
-
-        printf("</body></html>");
     }
 
     virtual void console()
@@ -114,6 +110,6 @@ public:
         while(count--)
         {
             m_total += gCategoryCount[count];
-        }     
+        }
     }
 };

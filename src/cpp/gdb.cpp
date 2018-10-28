@@ -56,7 +56,7 @@ bool packetWrite(int fd, uint32_t& address, const char* replay)
     return packetRead(fd, address);
 }
 
-void profileGdb(const char* executable, uint64_t profilerAddress, uint64_t moduleBound, isa* arch, analyzer** analyzers, int32_t timeout)
+uint32_t profileGdb(const char* executable, uint64_t profilerAddress, uint64_t moduleBound, isa* arch, analyzer** analyzers, int32_t timeout)
 {
     avr_isa& instructionSet = (avr_isa&)(*arch);
 
@@ -65,14 +65,14 @@ void profileGdb(const char* executable, uint64_t profilerAddress, uint64_t modul
 
     fd = socket(AF_INET, SOCK_STREAM, 0);
     if(fd == 0)
-        return;
+        return 0;
 
     socketAddress.sin_family = AF_INET;
     socketAddress.sin_addr.s_addr = INADDR_ANY;
     socketAddress.sin_port = htons(GDB_PORT);
 
     if(connect(fd, (struct sockaddr*)&socketAddress, sizeof(socketAddress)) == -1)
-        return;
+        return 0;
 
     uint32_t address = 0;
     //replay sniffed initialization packets
@@ -129,12 +129,12 @@ void profileGdb(const char* executable, uint64_t profilerAddress, uint64_t modul
             }
             else
             {
-                printf("Not found %s 0x%x\n", decode(opcode), opcode);
+                //printf("Not found %s 0x%x\n", decode(opcode), opcode);
             }
             instructionCount++;
         }
     }
 
-    printf("%u\n", instructionCount);
     close(fd);
+    return instructionCount;
 }

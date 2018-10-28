@@ -6,7 +6,7 @@
 
 #define BREAK 0xCC00000000000000 //x86 breakpoint instruction
 
-void profileNative(const char* executable, uint64_t profilerAddress, uint64_t moduleBound, isa* arch, analyzer** analyzers)
+uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_t moduleBound, isa* arch, analyzer** analyzers)
 {
     x86_isa& instructionSet = (x86_isa&)(*arch);
 
@@ -19,7 +19,7 @@ void profileNative(const char* executable, uint64_t profilerAddress, uint64_t mo
 
     FILE* reopen = fopen(executable, "r");
     size_t read = fread(binary, 1, size, reopen);
-    if(read != size) return;
+    if(read != size) return 0;
 
     bool amd64 = binary[4] == 0x2;
 
@@ -41,6 +41,8 @@ void profileNative(const char* executable, uint64_t profilerAddress, uint64_t mo
     ptrace(PTRACE_POKEDATA, pid, profilerAddress, data);
     const int32_t INSTRUCTION_LENGTH_MAX = 7;
     uint8_t instructions[INSTRUCTION_LENGTH_MAX];
+
+    uint32_t instructionCount = 0;
 
     ud_t u;
     ud_init(&u);
@@ -98,9 +100,12 @@ void profileNative(const char* executable, uint64_t profilerAddress, uint64_t mo
             {
                 //printf("Not found: %s\n", mnem);
             }
+            instructionCount++;
         }
         ptrace(PTRACE_SINGLESTEP, pid, NULL, NULL);
         waitpid(pid, &status, WSTOPPED);
     }
     kill(pid, SIGKILL);
+
+    return instructionCount;
 }
