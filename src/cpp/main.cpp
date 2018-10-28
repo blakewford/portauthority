@@ -491,7 +491,7 @@ int main(int argc, char** argv)
 
         while(!replay.eof())
         {
-            isa_instr instruction(2);
+            isa_instr instruction(2, 1);
             replay >> addressStr;
             replay >> opcode;
             replay >> mnemonic;
@@ -517,7 +517,7 @@ int main(int argc, char** argv)
 
     if(createReport)
     {
-        analyzer::header(cachedArgv[argument], !useGdb, machine, instructionCount);
+        analyzer::header(cachedArgv[argument], !useGdb, machine, instructionCount, coverage.getCycleCount());
         energy.report();
         coverage.report();
         division.report();

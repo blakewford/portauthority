@@ -14,9 +14,10 @@ class container_object;
 struct isa_instr
 {
     public:
-        isa_instr(long size)
+        isa_instr(long size, long cycles)
         {
             m_size = size;
+            m_cycles = cycles;
         }
         uint64_t m_address;
         long m_opcode;
@@ -78,7 +79,7 @@ struct isa
     {
         if(m_create)
         {
-            m_instr.push_back(new isa_instr(2));
+            m_instr.push_back(new isa_instr(2, 1));
         }
 
         return true;

@@ -5,7 +5,7 @@
 class analyzer
 {
 public:
-    static  void header(const char* executable, bool native, int32_t machine, uint32_t instructionCount);
+    static  void header(const char* executable, bool native, int32_t machine, uint32_t instructionCount, uint64_t cycleCount);
     static  void footer();
 
     virtual void report() = 0;
@@ -13,7 +13,7 @@ public:
     virtual void analyze(uint64_t address, const isa_instr* instruction) = 0;
 };
 
-void analyzer::header(const char* executable, bool native, int32_t machine, uint32_t instructionCount)
+void analyzer::header(const char* executable, bool native, int32_t machine, uint32_t instructionCount, uint64_t cycleCount)
 {
     char data[64];
     memset(data, '\0', 64);
@@ -57,7 +57,12 @@ void analyzer::header(const char* executable, bool native, int32_t machine, uint
             break;
     }
 
-    printf("<html>\n<body bgcolor=\"#ccecfc\">\n<div><br/><font color=\"gray\"><b>%s<br/>%s<br/>%s<br/>Instruction count: %u<br/><br/></b></font>\n", arch, data, executable, instructionCount);
+    printf("<html>\n<body bgcolor=\"#ccecfc\">\n<div><br/><font color=\"gray\"><b>%s<br/>%s<br/>%s<br/>Instruction count: %u ", arch, data, executable, instructionCount);
+    if(instructionCount != cycleCount)
+    {
+        printf("Cycle count: %lu\n", cycleCount);
+    }
+    printf("<br/><br/></b></font>");
 }
 
 void analyzer::footer()
