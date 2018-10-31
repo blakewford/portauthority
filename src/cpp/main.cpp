@@ -6,13 +6,15 @@
 #include <stdlib.h>
 #include <stdint.h>
 
+#include <deque>
 #include <libelf.h>
-
+std::deque<uint64_t> gAddresses;
 #include "parser.cpp"
 #include "categoryAnalyzer.cpp"
 #include "coverageAnalyzer.cpp"
 
 #include <map>
+
 #include <fstream>
 #include <sstream>
 
@@ -34,6 +36,8 @@ struct sectionInfo
     bool debugLine;
     bool stringTable;
 };
+
+#include "dumpbin.cpp"
 
 struct sections
 {
@@ -245,8 +249,8 @@ int main(int argc, char** argv)
     isa* instructionSet = nullptr;
 
     int32_t argument = 1;
+    bool dump = false;
     bool replay = false;
-    uint16_t timeout = 0;
     bool createReport = false;
     if(cachedArgc > 1 && !strcmp(cachedArgv[1], "--report"))
     {
@@ -254,16 +258,15 @@ int main(int argc, char** argv)
         argument++;
     }
 
-    if(cachedArgc > 1 && !strcmp(cachedArgv[1], "--replay"))
+    if(cachedArgc > 1 && !strcmp(cachedArgv[1], "--dumpbin"))
     {
-        replay = true;
+        dump = true;
         argument++;
     }
 
-    if(cachedArgc > 1 && !strcmp(cachedArgv[1], "--timeout"))
+    if(cachedArgc > 1 && !strcmp(cachedArgv[1], "--replay"))
     {
-        timeout = strtol(cachedArgv[2], nullptr, 10);
-        argument++;
+        replay = true;
         argument++;
     }
 
@@ -400,6 +403,11 @@ int main(int argc, char** argv)
             ndx++;
         }
 
+        if(dump)
+        {
+            dumpbin(binary, &sect.si[textIndex], gAddresses);
+        }
+
         textSize = sect.si[textIndex].size;
         textStart = sect.si[textIndex].address;
         profilerAddress = textStart; //reasonable default
@@ -468,7 +476,10 @@ int main(int argc, char** argv)
     {
         if(useGdb)
         {
-            instructionCount = profileGdb(cachedArgv[argument], profilerAddress, moduleBound, instructionSet, analyzers, timeout ? timeout: 15);
+            const int32_t RUNTIME_BIAS = 0x3154; //TODO This is flexible based on running project. Adjust to be dynamic.
+            coverage.adjustCount(RUNTIME_BIAS);
+            instructionCount = profileGdb(cachedArgv[argument], profilerAddress, moduleBound, instructionSet, analyzers);
+            instructionCount += RUNTIME_BIAS;
         }
         else
         {

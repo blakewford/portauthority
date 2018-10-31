@@ -37,7 +37,21 @@ public:
     {
         for(auto iter = m_addresses.begin(); iter != m_addresses.end(); iter++)
         {
-            printf("0x%lx\n", *iter);
+            while(gAddresses.size() > 0 && *iter > gAddresses.front())
+            {
+                printf("         0x%lx\n", gAddresses.front());
+                gAddresses.pop_front();
+            }
+            printf("0x%lx ", *iter);
+            if(gAddresses.size() > 0)
+            {
+                printf("0x%lx\n", gAddresses.front());
+                gAddresses.pop_front();
+            }
+            else
+            {
+                printf("\n");
+            }
         }
         printf("0x%lx 0x%lx 0x%lx %lu\n", m_textStart, m_bytes, m_textSize, m_cycles);
     }
