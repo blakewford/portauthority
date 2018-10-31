@@ -39,13 +39,13 @@ public:
         {
             while(gAddresses.size() > 0 && *iter > gAddresses.front())
             {
-                printf("         0x%lx\n", gAddresses.front());
+                printf("\t0x%lx\n", gAddresses.front());
                 gAddresses.pop_front();
             }
-            printf("0x%lx ", *iter);
+            printf("0x%lx", *iter);
             if(gAddresses.size() > 0)
             {
-                printf("0x%lx\n", gAddresses.front());
+                printf("\t0x%lx\n", gAddresses.front());
                 gAddresses.pop_front();
             }
             else
