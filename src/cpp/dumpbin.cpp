@@ -1,6 +1,6 @@
 #include <udis86.h>
 
-void dumpbin(const uint8_t* binary, bool amd64, uint64_t entryAddress, sectionInfo* info, std::deque<uint64_t>& addresses)
+void dumpbin(const uint8_t* binary, bool amd64, bool useGdb, uint64_t entryAddress, sectionInfo* info, std::deque<uint64_t>& addresses)
 {
     uint64_t address = entryAddress;
     uint64_t offset = info->offset;
@@ -9,31 +9,89 @@ void dumpbin(const uint8_t* binary, bool amd64, uint64_t entryAddress, sectionIn
         binary++;
     }
 
-    const int32_t INSTRUCTION_LENGTH_MAX = 7;
-
-    ud_t u;
-    ud_init(&u);
-    ud_set_mode(&u, amd64 ? 64: 32);
-    ud_set_syntax(&u, UD_SYN_ATT);
     uint64_t size = info->size;
-    while(size)
+
+    if(!useGdb)
     {
-        uint32_t* instruction = (uint32_t*)binary;
+        const int32_t INSTRUCTION_LENGTH_MAX = 7;
 
-        int byte = 0;
-        bool invalid = true;
-        while(invalid && (byte <= INSTRUCTION_LENGTH_MAX))
+        ud_t u;
+        ud_init(&u);
+        ud_set_mode(&u, amd64 ? 64: 32);
+        ud_set_syntax(&u, UD_SYN_ATT);
+        while(size)
         {
-            byte++;
-            ud_set_input_buffer(&u, (uint8_t*)binary, byte);
-            ud_disassemble(&u);
-            invalid = strcmp(ud_insn_asm(&u), "invalid ") == 0;
+            uint32_t* instruction = (uint32_t*)binary;
+
+            int byte = 0;
+            bool invalid = true;
+            while(invalid && (byte <= INSTRUCTION_LENGTH_MAX))
+            {
+                byte++;
+                ud_set_input_buffer(&u, (uint8_t*)binary, byte);
+                ud_disassemble(&u);
+                invalid = strcmp(ud_insn_asm(&u), "invalid ") == 0;
+            }
+
+            addresses.push_back(address);
+            address += byte;
+            binary += byte;
+            size -= byte;
+
         }
+    }
+    else
+    {
+        while(size)
+        {
+            uint32_t instruction = *(uint32_t*)binary;
 
-        addresses.push_back(address);
-        address += byte;
-        binary += byte;
-        size -= byte;
+            uint8_t opcode0 = (instruction & 0xFF00) >> 8;
+            uint8_t opcode1 = instruction & 0xFF;
+            uint8_t opcode2 = (instruction & 0xFF000000) >> 24;
+            uint8_t opcode3 = (instruction & 0xFF0000) >> 16;
 
+            int byte = 2;
+            switch(opcode2)
+            {
+                case 0x90:
+                case 0x91:
+                    if((opcode3 & 0xF) == 0x0)
+                    {
+                        byte = 4;
+                    }
+                    break;
+                case 0x92:
+                case 0x93:
+                    if((opcode3 & 0xF) == 0x0)
+                    {
+                        byte = 4;
+                    }
+                    break;
+                case 0x94:
+                case 0x95:
+                    switch(opcode3)
+                    {
+                        case 0xC:
+                        case 0xD:
+                            byte = 4;
+                            break;
+                        case 0xE:
+                        case 0xF:
+                            byte = 4;
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
+                default:
+                    break;
+            }
+
+            addresses.push_back(address);
+            address += byte;
+            binary += byte;
+            size -= byte;
+        }
     }
 }

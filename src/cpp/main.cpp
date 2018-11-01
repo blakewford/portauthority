@@ -408,7 +408,7 @@ int main(int argc, char** argv)
 
         if(dump)
         {
-            dumpbin(binary, amd64, entryAddress, &sect.si[textIndex], gAddresses);
+            dumpbin(binary, amd64, useGdb, entryAddress, &sect.si[textIndex], gAddresses);
         }
 
         textSize = sect.si[textIndex].size;
