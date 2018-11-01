@@ -85,23 +85,36 @@ uint32_t profileGdb(const char* executable, uint8_t machine, uint64_t profilerAd
         return 0;
 
     uint32_t address = 0;
-    //replay sniffed initialization packets
-    packetWrite(fd, address, "+$qSupported:multiprocess+;swbreak+;hwbreak+;qRelocInsn+#c9");
-    packetWrite(fd, address, "+$Hg0#df");
-    packetWrite(fd, address, "+$qTStatus#49");
-    packetWrite(fd, address, "+$?#3f");
-    packetWrite(fd, address, "+$qfThreadInfo#bb");
-    packetWrite(fd, address, "+$qL1160000000000000000#55");
-    packetWrite(fd, address, "+$Hc-1#09");
-    packetWrite(fd, address, "+$qC#b4");
-    packetWrite(fd, address, "+$qAttached#8f");
-    packetWrite(fd, address, "+$qOffsets#4b");
-    packetWrite(fd, address, "+$qL1160000000000000000#55");
-    packetWrite(fd, address, "+$qSymbol::#5b");
+    if(machine == EM_AVR)
+    {
+        //replay sniffed initialization packets
+        packetWrite(fd, address, "+$qSupported:multiprocess+;swbreak+;hwbreak+;qRelocInsn+#c9");
+        packetWrite(fd, address, "+$Hg0#df");
+        packetWrite(fd, address, "+$qTStatus#49");
+        packetWrite(fd, address, "+$?#3f");
+        packetWrite(fd, address, "+$qfThreadInfo#bb");
+        packetWrite(fd, address, "+$qL1160000000000000000#55");
+        packetWrite(fd, address, "+$Hc-1#09");
+        packetWrite(fd, address, "+$qC#b4");
+        packetWrite(fd, address, "+$qAttached#8f");
+        packetWrite(fd, address, "+$qOffsets#4b");
+        packetWrite(fd, address, "+$qL1160000000000000000#55");
+        packetWrite(fd, address, "+$qSymbol::#5b");
+    }
 
     uint32_t opcode = 0x0000; //NOP
     uint32_t instructionCount = 0;
-    while(packetWrite(fd, address, "+$s#73"))
+
+    bool keepGoing = false;
+    if(machine == EM_AVR)
+    {
+        keepGoing = packetWrite(fd, address, "+$s#73");
+    }
+    else
+    {
+        keepGoing = packetWrite(fd, address, "+$vCont;s#b8");
+    }
+    while(keepGoing)
     {
         if(address < moduleBound)
         {
@@ -142,6 +155,15 @@ uint32_t profileGdb(const char* executable, uint8_t machine, uint64_t profilerAd
                 //printf("Not found %s 0x%x\n", decode(opcode), opcode);
             }
             instructionCount++;
+        }
+        sched_yield();
+        if(machine == EM_AVR)
+        {
+            keepGoing = packetWrite(fd, address, "+$s#73");
+        }
+        else
+        {
+            keepGoing = packetWrite(fd, address, "+$vCont;s#b8");
         }
     }
 
