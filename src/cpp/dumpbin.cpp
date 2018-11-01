@@ -1,8 +1,8 @@
 #include <udis86.h>
 
-void dumpbin(const uint8_t* binary, sectionInfo* info, std::deque<uint64_t>& addresses)
+void dumpbin(const uint8_t* binary, bool amd64, uint64_t entryAddress, sectionInfo* info, std::deque<uint64_t>& addresses)
 {
-    uint64_t address = 0x4004a0;
+    uint64_t address = entryAddress;
     uint64_t offset = info->offset;
     while(offset--)
     {
@@ -13,7 +13,7 @@ void dumpbin(const uint8_t* binary, sectionInfo* info, std::deque<uint64_t>& add
 
     ud_t u;
     ud_init(&u);
-    ud_set_mode(&u, true ? 64: 32);
+    ud_set_mode(&u, amd64 ? 64: 32);
     ud_set_syntax(&u, UD_SYN_ATT);
     uint64_t size = info->size;
     while(size)

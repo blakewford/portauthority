@@ -297,6 +297,7 @@ int main(int argc, char** argv)
         uint64_t offset = 0;
         uint16_t headerSize = 0;
         uint16_t numHeaders = 0;
+        uint64_t entryAddress = 0;
         uint16_t stringsIndex = 0;
         if(amd64)
         {
@@ -306,6 +307,7 @@ int main(int argc, char** argv)
             offset = header->e_shoff;
             stringsIndex = header->e_shstrndx;
             machine = header->e_machine;
+            entryAddress = header->e_entry;
         }
         else
         {
@@ -315,6 +317,7 @@ int main(int argc, char** argv)
             offset = header->e_shoff;
             stringsIndex = header->e_shstrndx;
             machine = header->e_machine;
+            entryAddress = header->e_entry;
         }
 
         useGdb = machine == EM_AVR;
@@ -405,7 +408,7 @@ int main(int argc, char** argv)
 
         if(dump)
         {
-            dumpbin(binary, &sect.si[textIndex], gAddresses);
+            dumpbin(binary, amd64, entryAddress, &sect.si[textIndex], gAddresses);
         }
 
         textSize = sect.si[textIndex].size;
