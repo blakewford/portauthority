@@ -5,17 +5,20 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
+#include <sys/types.h>
+#include <netdb.h>
+
 #define GDB_PORT 1234
 
-char gLastPacket[64];
+char gLastPacket[256];
 bool packetRead(int fd, uint32_t& value)
 {
     value = 0;
 
     char byte;
     uint8_t ndx = 0;
-    char buffer[64];
-    memset(buffer, '\0', 64);
+    char buffer[256];
+    memset(buffer, '\0', 256);
 
     ssize_t err = 0;
     err = read(fd, &byte, 1); //ack
@@ -56,7 +59,7 @@ bool packetWrite(int fd, uint32_t& address, const char* replay)
     return packetRead(fd, address);
 }
 
-uint32_t profileGdb(const char* executable, uint64_t profilerAddress, uint64_t moduleBound, isa* arch, analyzer** analyzers)
+uint32_t profileGdb(const char* executable, uint8_t machine, uint64_t profilerAddress, uint64_t moduleBound, isa* arch, analyzer** analyzers)
 {
     avr_isa& instructionSet = (avr_isa&)(*arch);
 
@@ -68,7 +71,14 @@ uint32_t profileGdb(const char* executable, uint64_t profilerAddress, uint64_t m
         return 0;
 
     socketAddress.sin_family = AF_INET;
-    socketAddress.sin_addr.s_addr = INADDR_ANY;
+    if(machine == EM_AVR)
+    {
+        socketAddress.sin_addr.s_addr = INADDR_ANY;
+    }
+    else
+    {
+        strcpy((char*)&socketAddress.sin_addr.s_addr, (char*)gethostbyname("raspberrypi")->h_addr);
+    }
     socketAddress.sin_port = htons(GDB_PORT);
 
     if(connect(fd, (struct sockaddr*)&socketAddress, sizeof(socketAddress)) == -1)

@@ -320,7 +320,7 @@ int main(int argc, char** argv)
             entryAddress = header->e_entry;
         }
 
-        useGdb = machine == EM_AVR;
+        useGdb = machine == EM_AVR || machine == EM_ARM || machine == EM_AARCH64;
         const char* FUNCTION_NAME = useGdb ? "__vectors": "main";
 
         char* json = nullptr;
@@ -481,7 +481,7 @@ int main(int argc, char** argv)
         {
             const int32_t RUNTIME_BIAS = 0x3154; //TODO This is flexible based on running project. Adjust to be dynamic.
             coverage.adjustCount(RUNTIME_BIAS);
-            instructionCount = profileGdb(cachedArgv[argument], profilerAddress, moduleBound, instructionSet, analyzers);
+            instructionCount = profileGdb(cachedArgv[argument], machine, profilerAddress, moduleBound, instructionSet, analyzers);
             instructionCount += RUNTIME_BIAS;
         }
         else
