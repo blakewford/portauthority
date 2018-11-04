@@ -479,7 +479,15 @@ int main(int argc, char** argv)
     {
         if(useGdb)
         {
-            const int32_t RUNTIME_BIAS = 560; //TODO This is flexible based on running project. Adjust to be dynamic.
+            int32_t RUNTIME_BIAS = 0;
+            if(machine == EM_AVR)
+            {
+                RUNTIME_BIAS = 0x3154;
+            }
+            else
+            {
+                RUNTIME_BIAS = 560; //TODO This is flexible based on running project. Adjust to be dynamic.
+            }
             coverage.adjustCount(RUNTIME_BIAS);
             instructionCount = profileGdb(cachedArgv[argument], machine, profilerAddress, moduleBound, instructionSet, analyzers);
             instructionCount += RUNTIME_BIAS;
