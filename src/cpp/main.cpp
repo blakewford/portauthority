@@ -408,7 +408,7 @@ int main(int argc, char** argv)
 
         if(dump)
         {
-            dumpbin(binary, amd64, useGdb, entryAddress, &sect.si[textIndex], gAddresses);
+            dumpbin(binary, amd64, machine, entryAddress, &sect.si[textIndex], gAddresses);
         }
 
         textSize = sect.si[textIndex].size;
@@ -479,7 +479,7 @@ int main(int argc, char** argv)
     {
         if(useGdb)
         {
-            const int32_t RUNTIME_BIAS = 0x3154; //TODO This is flexible based on running project. Adjust to be dynamic.
+            const int32_t RUNTIME_BIAS = 560; //TODO This is flexible based on running project. Adjust to be dynamic.
             coverage.adjustCount(RUNTIME_BIAS);
             instructionCount = profileGdb(cachedArgv[argument], machine, profilerAddress, moduleBound, instructionSet, analyzers);
             instructionCount += RUNTIME_BIAS;

@@ -171,6 +171,9 @@ uint32_t profileGdb(const char* executable, uint8_t machine, uint64_t profilerAd
             //+$mce,4#95
             long ndx = -1;
             sprintf(buffer, "+$m%x,4#%x\n", address, checksum%256);
+
+            uint8_t count = NUM_ANALYZERS;
+            const isa_instr* instruction = instructionSet.get_instr(0);
             if(machine == EM_AVR)
             {
                 packetWrite(fd, opcode, buffer);
@@ -178,8 +181,7 @@ uint32_t profileGdb(const char* executable, uint8_t machine, uint64_t profilerAd
             }
             if(ndx != -1)
             {
-                uint8_t count = NUM_ANALYZERS;
-                const isa_instr* instruction = instructionSet.get_instr(ndx);
+                instruction = instructionSet.get_instr(ndx);
                 if(!strcmp(instruction->m_mnem, "break"))
                 {
                     //printf("BREAK\n");
@@ -188,6 +190,15 @@ uint32_t profileGdb(const char* executable, uint8_t machine, uint64_t profilerAd
                 while(count--)
                 {
                     analyzers[count]->analyze(address, instruction);
+                }
+            }
+            else if(machine != EM_AVR)
+            {
+                isa_instr dummy = *instruction;
+                dummy.m_size = 4;
+                while(count--)
+                {
+                    analyzers[count]->analyze(address, &dummy);
                 }
             }
             else
@@ -203,7 +214,7 @@ uint32_t profileGdb(const char* executable, uint8_t machine, uint64_t profilerAd
         }
         else
         {
-            usleep(1000*32);
+            //usleep(1000*32); With Wifi otherwise, weak connection
             keepGoing = packetWrite(fd, address, "+$vCont;s#b8");
         }
     }

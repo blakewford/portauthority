@@ -1,6 +1,6 @@
 #include <udis86.h>
 
-void dumpbin(const uint8_t* binary, bool amd64, bool useGdb, uint64_t entryAddress, sectionInfo* info, std::deque<uint64_t>& addresses)
+void dumpbin(const uint8_t* binary, bool amd64, uint8_t machine, uint64_t entryAddress, sectionInfo* info, std::deque<uint64_t>& addresses)
 {
     uint64_t address = entryAddress;
     uint64_t offset = info->offset;
@@ -11,7 +11,7 @@ void dumpbin(const uint8_t* binary, bool amd64, bool useGdb, uint64_t entryAddre
 
     uint64_t size = info->size;
 
-    if(!useGdb)
+    if(machine == EM_X86_64)
     {
         const int32_t INSTRUCTION_LENGTH_MAX = 7;
 
@@ -40,7 +40,7 @@ void dumpbin(const uint8_t* binary, bool amd64, bool useGdb, uint64_t entryAddre
 
         }
     }
-    else
+    else if(machine == EM_AVR)
     {
         while(size)
         {
@@ -92,6 +92,16 @@ void dumpbin(const uint8_t* binary, bool amd64, bool useGdb, uint64_t entryAddre
             address += byte;
             binary += byte;
             size -= byte;
+        }
+    }
+    else
+    {
+        while(size)
+        {
+            addresses.push_back(address);
+            address += 4;
+            binary += 4;
+            size -= 4;
         }
     }
 }
