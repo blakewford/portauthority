@@ -6,6 +6,7 @@
 #include <netinet/in.h>
 
 #include <sys/types.h>
+#include <arpa/inet.h>
 #include <netdb.h>
 
 #define GDB_PORT 1234
@@ -42,6 +43,11 @@ bool packetRead(int fd, uint32_t& value)
         if(gMachine == EM_AVR)
         {
             value = bswap_32(strtol(message.substr(message.find_last_of(":")+1).c_str(), nullptr, 16));
+        }
+        else if(gMachine == EM_ARM)
+        {
+            message = message.substr(message.find(";0f:")+4, 8);
+            value = bswap_32(strtol(message.c_str(), nullptr, 16));
         }
         else
         {
@@ -90,6 +96,7 @@ uint32_t profileGdb(const char* executable, uint8_t machine, uint64_t profilerAd
     }
     else
     {
+        //socketAddress.sin_addr.s_addr = inet_addr("");
         strncpy((char*)&socketAddress.sin_addr.s_addr, (char*)gethostbyname("raspberrypi")->h_addr, sizeof(in_addr_t));
     }
     socketAddress.sin_port = htons(GDB_PORT);
