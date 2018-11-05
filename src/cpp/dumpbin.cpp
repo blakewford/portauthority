@@ -9,7 +9,7 @@ void dumpbin(const uint8_t* binary, bool amd64, uint8_t machine, uint64_t entryA
         binary++;
     }
 
-    uint64_t size = info->size;
+    int64_t size = info->size;
 
     if(machine == EM_X86_64)
     {
@@ -19,7 +19,7 @@ void dumpbin(const uint8_t* binary, bool amd64, uint8_t machine, uint64_t entryA
         ud_init(&u);
         ud_set_mode(&u, amd64 ? 64: 32);
         ud_set_syntax(&u, UD_SYN_ATT);
-        while(size)
+        while(size > 0)
         {
             uint32_t* instruction = (uint32_t*)binary;
 
@@ -42,7 +42,7 @@ void dumpbin(const uint8_t* binary, bool amd64, uint8_t machine, uint64_t entryA
     }
     else if(machine == EM_AVR)
     {
-        while(size)
+        while(size > 0)
         {
             uint32_t instruction = *(uint32_t*)binary;
 
@@ -96,7 +96,7 @@ void dumpbin(const uint8_t* binary, bool amd64, uint8_t machine, uint64_t entryA
     }
     else
     {
-        while(size)
+        while(size > 0)
         {
             addresses.push_back(address);
             address += 4;

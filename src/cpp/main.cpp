@@ -474,6 +474,8 @@ int main(int argc, char** argv)
     analyzers[1] = &division;
     analyzers[2] = &coverage;
 
+    //profilerAddress = 0x8049a6d;
+
     uint32_t instructionCount = 0;
     if(!replay)
     {
