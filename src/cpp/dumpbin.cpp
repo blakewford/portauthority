@@ -3,6 +3,11 @@
 void dumpbin(const uint8_t* binary, bool amd64, uint8_t machine, uint64_t entryAddress, sectionInfo* info, std::deque<uint64_t>& addresses)
 {
     uint64_t address = entryAddress;
+    if(machine == EM_ARM)
+    {
+        address = info->address;
+    }
+
     uint64_t offset = info->offset;
     while(offset--)
     {
