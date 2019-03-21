@@ -67,7 +67,7 @@ void analyzer::header(const char* executable, bool native, int32_t machine, uint
 
 void analyzer::footer()
 {
-    printf("</body></html>");
+    printf("</div></body></html>");
 }
 
 void analyzer::analyze(uint64_t address, const isa_instr* instruction)
