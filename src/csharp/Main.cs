@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Reflection;
 using System.Threading;
 using System.Web.Script.Serialization;
 using System.Windows.Forms;
@@ -85,10 +86,65 @@ public class Monitor: Form
             XmlDocument Doc = new XmlDocument();
             Doc.LoadXml(Raw);
 
-            wipe();
-            Random Angle = new Random();
-            addRange(Angle.Next(1, 50), Brushes.Red);
-            addRange(Angle.Next(1, 50), Brushes.Blue);
+            XmlNodeList NodeList = Doc.GetElementsByTagName("script");
+            foreach(XmlElement Element in NodeList)
+            {
+                string[] Lines = Element.InnerXml.Split(new char[]{'\n'});
+
+                Int32 Count = 0;
+                while(Count < Lines.Length)
+                {
+                    string Line = Lines[Count];
+                    if(!Line.Equals(String.Empty) &&
+                       !Line.StartsWith("var "))
+                    {
+                        if(Line.StartsWith("function "))
+                        {
+                            while(!Line.Contains("}"))
+                            {
+                                Count++;
+                                Line = Lines[Count];
+                            }
+                        }
+                        else
+                        {
+                            string[] Components = Line.Split('(');
+                            string MethodName = Components[0];
+                            string Definition = Components[1].Split(')')[0];
+
+                            Object[] Objects = null;
+                            MethodInfo Method = GetType().GetMethod(MethodName);
+                            if(Line.Contains("()"))
+                            {
+                                Objects = new Object[0];
+                            }
+                            else
+                            {
+                                string[] Parameters = Definition.Split(',');
+
+                                Int32 Order = 0;
+                                Objects = new Object[Parameters.Length];
+                                foreach(string Parameter in Parameters)
+                                {
+                                    string Processed = Parameter.Trim();
+                                    if(Parameter.Contains("\""))
+                                    {
+                                        Processed = Processed.Replace("\"", "");
+                                        Objects[Order] = Processed;
+                                    }
+                                    else
+                                    {
+                                        Objects[Order] = Int32.Parse(Processed);
+                                    }
+                                    Order++;
+                                }
+                            }
+                            Method.Invoke(this, Objects);
+                        }
+                    }
+                    Count++;
+                }
+            }
         });
 
         WaitForTask(WorkThread);
@@ -145,30 +201,30 @@ public class Monitor: Form
     }
 
     // Chart API
-    void initialize()
+    public void initialize()
     {
     }
 
-    void wipe()
+    public void wipe()
     {
         PreviousFill = 0;
         Chart.Image = new Bitmap(CHART_SIZE,CHART_SIZE, PixelFormat.Format32bppPArgb);
 
-        addRange(100, Brushes.Gray);
+        addRange(100, "gray");
         PreviousFill = 0;
     }
 
-    void addRange(Int32 Percentage, Brush Fill)
-    { 
+    public void addRange(Int32 Percentage, string Fill)
+    {
         GraphicsPath Path = new GraphicsPath();
 
-        Int32 Angle = Convert.ToInt32(360.0*(Percentage/100.0));
+        Int32 Angle = Convert.ToInt32(Math.Ceiling(360.0*(Percentage/100.0)));
 
         const Int32 MID_POINT = (CHART_SIZE/2);
         Path.AddLine(MID_POINT, MID_POINT, MID_POINT, MID_POINT);
         Path.AddArc(0, 0, CHART_SIZE, CHART_SIZE, 270 + PreviousFill, Angle);
         PreviousFill += Angle;
 
-        Graphics.FromImage(Chart.Image).FillPath(Fill, Path);
+        Graphics.FromImage(Chart.Image).FillPath(new SolidBrush(Color.FromName(Fill)), Path);
     }
 }
