@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Threading;
 using System.Web.Script.Serialization;
 using System.Windows.Forms;
 using System.Xml;
@@ -40,29 +41,57 @@ public class Monitor: Form
         File.WriteAllText("settings.json", Json);
     }
 
+    void WaitForTask(Thread WorkThread)
+    {
+        if(Cursor == Cursors.WaitCursor)
+            return;
+
+        Cursor = Cursors.WaitCursor;
+
+        WorkThread.Start();
+        new Thread(() => {
+            WorkThread.Join();
+            Refresh();
+            Invoke((MethodInvoker)delegate
+            {
+                Cursor = Cursors.Default;
+
+                // Hack to update Cursor
+                Point Position = System.Windows.Forms.Cursor.Position;
+                System.Windows.Forms.Cursor.Position = Position;
+            });
+        }).Start();
+    }
+
     void ButtonClicked(object o, System.EventArgs e)
     {
-        ProcessStartInfo Info = new ProcessStartInfo(GLOBAL.authority + "authority", "--report " + Path.Text);
-        Info.WorkingDirectory = GLOBAL.authority;
-        Info.UseShellExecute = false;
-        Info.RedirectStandardOutput = true;
+        Thread WorkThread = new Thread(() => {
 
-        Process Debug = Process.Start(Info);
-        Debug.WaitForExit();
+            string Raw = String.Empty;
 
-        string Raw = Debug.StandardOutput.ReadToEnd();
+            ProcessStartInfo Info = new ProcessStartInfo(GLOBAL.authority + "authority", "--report " + Path.Text);
+            Info.WorkingDirectory = GLOBAL.authority;
+            Info.UseShellExecute = false;
+            Info.RedirectStandardOutput = true;
 
-        //Sanitize
-        Raw = Raw.Replace("</br>", "<br></br>");
-  
-        XmlDocument Doc = new XmlDocument();
-        Doc.LoadXml(Raw);
+            Process Debug = Process.Start(Info);
+            Debug.WaitForExit();
 
-        wipe();
-        Random Angle = new Random();
-        addRange(Angle.Next(1, 50), Brushes.Red);
-        addRange(Angle.Next(1, 50), Brushes.Blue);
-        Refresh();
+            Raw = Debug.StandardOutput.ReadToEnd();
+
+            //Sanitize
+            Raw = Raw.Replace("</br>", "<br></br>");
+
+            XmlDocument Doc = new XmlDocument();
+            Doc.LoadXml(Raw);
+
+            wipe();
+            Random Angle = new Random();
+            addRange(Angle.Next(1, 50), Brushes.Red);
+            addRange(Angle.Next(1, 50), Brushes.Blue);
+        });
+
+        WaitForTask(WorkThread);
     }
 
     public Monitor()
@@ -105,6 +134,14 @@ public class Monitor: Form
         SwitchButton.Click += ButtonClicked;
         Application.ApplicationExit += OnExit;
         Path.Text = GLOBAL.app;
+
+         // Create an empty MainMenu.
+         MainMenu Main = new MainMenu();
+         MenuItem FileItem = new MenuItem();
+
+         FileItem.Text = "File";
+         Main.MenuItems.Add(FileItem);
+         Menu = Main;
     }
 
     // Chart API
