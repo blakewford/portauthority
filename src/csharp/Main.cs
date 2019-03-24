@@ -12,9 +12,10 @@ using System.Xml;
 
 public class Monitor: Form
 {
-    const Int32 SCREEN_WIDTH  = 960;
-    const Int32 SCREEN_HEIGHT = 1080;
+    Int32 SCREEN_WIDTH  = Convert.ToInt32(Screen.PrimaryScreen.Bounds.Width*.8);
+    Int32 SCREEN_HEIGHT = Convert.ToInt32(Screen.PrimaryScreen.Bounds.Height*.9);
     const Int32 CHART_SIZE    = 480;
+    const Int32 BUTTON_SIZE   = 48;
 
     struct Settings
     {
@@ -150,6 +151,11 @@ public class Monitor: Form
         WaitForTask(WorkThread);
     }
 
+    void ToolbarClicked(object o, System.EventArgs e)
+    {
+        Console.WriteLine(Cursor.Position.Y);
+    }
+
     public Monitor()
     {
         Text = "Monitor"; 
@@ -157,24 +163,51 @@ public class Monitor: Form
         Height = SCREEN_HEIGHT;
         FormBorderStyle = FormBorderStyle.FixedDialog;
 
-        Int32 Buffer = 4;
+        Int32 BufferX = 448;
+        Int32 BufferY = 4;
 
         Button SwitchButton = new Button();
         SwitchButton.Text = "Switch";
-        SwitchButton.Location = new Point(Buffer, Buffer);
+        SwitchButton.Location = new Point(BufferX, BufferY);
         Controls.Add(SwitchButton);
 
         Path.Width = 512;
-        Path.Location = new Point(80, Buffer);
+        Path.Height = SwitchButton.Height;
+        Path.Location = new Point(SwitchButton.Width + BufferX, BufferY);
         Controls.Add(Path);
 
-        Chart.BackColor = Color.White;
+        Int32 Count = SCREEN_HEIGHT/BUTTON_SIZE;
+        Int32 Diff = SCREEN_HEIGHT - (Count*BUTTON_SIZE);
 
-        Int32 OffsetX = 4;
+        while(Count-- > 0)
+        {
+            PictureBox ImageButton = new PictureBox();
+            ImageButton.ClientSize = new Size(BUTTON_SIZE, BUTTON_SIZE*Count);
+            ImageButton.Image = new Bitmap(BUTTON_SIZE, BUTTON_SIZE, PixelFormat.Format32bppPArgb);
+            ImageButton.BackColor = Color.Gray;
+            ImageButton.Click += ToolbarClicked;
+            Controls.Add(ImageButton);
+        }
+
+        PictureBox Navigator = new PictureBox();
+        Navigator.ClientSize = new Size(BUTTON_SIZE+384, SCREEN_HEIGHT-Diff-BUTTON_SIZE);
+        Navigator.Image = new Bitmap(BUTTON_SIZE+384, SCREEN_HEIGHT-Diff-BUTTON_SIZE, PixelFormat.Format32bppPArgb);
+        Navigator.BackColor = Color.Black;
+        Controls.Add(Navigator);
+
+        Int32 OffsetX = BufferX;
         Int32 OffsetY = 32;
         Chart.ClientSize = new Size(CHART_SIZE+OffsetX, CHART_SIZE+OffsetY);
         Chart.Padding = new System.Windows.Forms.Padding(OffsetX, OffsetY, 0, 0);
         Controls.Add(Chart);
+
+        PictureBox TrimBar = new PictureBox();
+        TrimBar.ClientSize = new Size(SCREEN_WIDTH, SCREEN_HEIGHT);
+        TrimBar.Image = new Bitmap(SCREEN_WIDTH, BUTTON_SIZE, PixelFormat.Format32bppPArgb);
+        TrimBar.Padding = new System.Windows.Forms.Padding(0, SCREEN_HEIGHT-Diff-BUTTON_SIZE, 0, 0);
+        Controls.Add(TrimBar);
+
+        Graphics.FromImage(TrimBar.Image).Clear(Color.Blue);
 
         Control Window = new Control();
         Window.BackColor = Color.White;
