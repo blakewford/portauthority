@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Diagnostics;
 using System.Drawing.Drawing2D;
@@ -20,6 +21,7 @@ public class Monitor: Form
     struct Settings
     {
         public string authority;
+        public string workspace;
         public string app;
     }
 
@@ -156,6 +158,54 @@ public class Monitor: Form
         Console.WriteLine(Cursor.Position.Y);
     }
 
+    private static string[] GetTargetList(string WorkingDirectory)
+    {
+        List<string> Targets = new List<string>();
+        ProcessStartInfo Info = new ProcessStartInfo("make", "-rRqp");
+        Info.WorkingDirectory = WorkingDirectory;
+        Info.UseShellExecute = false;
+        Info.RedirectStandardOutput = true;
+
+        Process Debug = Process.Start(Info);
+        Debug.WaitForExit();
+
+        string Database = Debug.StandardOutput.ReadToEnd();
+        string[] Lines = Database.Split(new char[]{'\n'});
+
+        Int32 Current = 0;
+        while(Current < Lines.Length)
+        {
+            string Line = Lines[Current];
+            if(Line.Contains("# automatic") || Line.Contains("# environment") || Line.Contains("# default") || Line.Contains("# makefile"))
+            {
+                Current++; // Skip variables
+            }
+            else if(Line.Contains("# Not a target"))
+            {
+                Current++;
+            }
+            else if(Line.StartsWith("#"))
+            {
+                Current++; // Comment
+            }
+            else if(Line.StartsWith("\t"))
+            {
+                Current++; // Comment
+            }
+            else
+            {
+                string Target = Line.Trim();
+                if(Target != String.Empty)
+                {
+                    Targets.Add(Target.Split(new char[]{':'})[0]);
+                }
+            }
+            Current++;
+        }
+
+        return Targets.ToArray();
+    }
+
     public Monitor()
     {
         Text = "Monitor"; 
@@ -231,6 +281,12 @@ public class Monitor: Form
          FileItem.Text = "File";
          Main.MenuItems.Add(FileItem);
          Menu = Main;
+
+        string[] Targets = GetTargetList(GLOBAL.workspace);
+        foreach(string Target in Targets)
+        {
+            Console.WriteLine(Target);
+        }
     }
 
     // Chart API
