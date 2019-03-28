@@ -86,7 +86,7 @@ public class Monitor: Form
         }).Start();
     }
 
-    void ButtonClicked(object o, System.EventArgs e)
+    void Categorize()
     {
         Thread WorkThread = new Thread(() => {
 
@@ -193,6 +193,17 @@ public class Monitor: Form
         }
     }
 
+    void ListDoubleClick(object sender, EventArgs e)
+    {
+        ListBox Navigator = (ListBox)Controls.Find("Navigator", true)[0];
+        Int32 Selected = Navigator.IndexFromPoint(PointToClient(Cursor.Position));
+        if(Selected >= 0)
+        {
+            Console.WriteLine(((string)Navigator.Items[Selected]).Trim());
+            Categorize();
+        }
+    }
+
     private static string[] GetTargetList(string WorkingDirectory)
     {
         List<string> Targets = new List<string>();
@@ -239,6 +250,7 @@ public class Monitor: Form
         }
 
         Targets.Remove("clean"); // Make this list selectable, 'x' in UI?
+        Targets.Sort();
 
         return Targets.ToArray();
     }
@@ -270,15 +282,9 @@ public class Monitor: Form
         Int32 BufferX = 448;
         Int32 BufferY = 4;
 
-        Button SwitchButton = new Button();
-        SwitchButton.Text = "Switch";
-        SwitchButton.Location = new Point(BufferX, BufferY);
-        SwitchButton.BackColor = Color.LightGray;
-        Controls.Add(SwitchButton);
-
         Path.Width = 512;
-        Path.Height = SwitchButton.Height;
-        Path.Location = new Point(SwitchButton.Width + BufferX, BufferY);
+        Path.Font = new Font(UNIVERSAL_FONT, 15, FontStyle.Regular, GraphicsUnit.Pixel);
+        Path.Location = new Point(BufferX, BufferY);
         Controls.Add(Path);
 
         Int32 Count = SCREEN_HEIGHT/BUTTON_SIZE;
@@ -323,8 +329,10 @@ public class Monitor: Form
             Navigator.Items.Add(Buffer + Target);
         }
 
+        Navigator.DoubleClick += ListDoubleClick;
         Navigator.ClientSize = new Size(BUTTON_SIZE+384, SCREEN_HEIGHT-Diff-BUTTON_SIZE);
         Navigator.BackColor = Default.NavigatorColor;
+        Navigator.Name = "Navigator";
         Controls.Add(Navigator);
 
         Int32 OffsetX = BufferX;
@@ -346,7 +354,6 @@ public class Monitor: Form
         Window.ClientSize = new Size(SCREEN_WIDTH, SCREEN_HEIGHT);
         Controls.Add(Window);
 
-        SwitchButton.Click += ButtonClicked;
         Application.ApplicationExit += OnExit;
         Path.Text = GLOBAL.app;
     }
