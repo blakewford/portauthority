@@ -11,6 +11,7 @@ using System.Web.Script.Serialization;
 using System.Windows.Forms;
 using System.Xml;
 
+#pragma warning disable 618
 public class Monitor: Form
 {
     Int32 SCREEN_WIDTH  = Convert.ToInt32(Screen.PrimaryScreen.Bounds.Width*.8);
@@ -18,11 +19,29 @@ public class Monitor: Form
     const Int32 CHART_SIZE    = 480;
     const Int32 BUTTON_SIZE   = 48;
 
+    const string UNIVERSAL_FONT = "Courier";
+
     struct Settings
     {
         public string authority;
         public string workspace;
         public string app;
+    }
+
+    struct Theme
+    {
+        public Theme(Color ButtonPanel, Color NavigatorPanel, Color Workspace, Color Status)
+        {
+            ButtonColor = ButtonPanel;
+            NavigatorColor = NavigatorPanel;
+            WorkspaceColor = Workspace;
+            StatusColor = Status;
+        }
+
+        public Color ButtonColor;
+        public Color NavigatorColor;
+        public Color WorkspaceColor;
+        public Color StatusColor;
     }
 
     Settings GLOBAL;
@@ -155,7 +174,23 @@ public class Monitor: Form
 
     void ToolbarClicked(object o, System.EventArgs e)
     {
-        Console.WriteLine(Cursor.Position.Y);
+        Int32 VerticalPosition = PointToClient(Cursor.Position).Y;
+        if(Menu == null)
+        {
+            if(VerticalPosition < BUTTON_SIZE)
+            {
+                // Create an empty MainMenu.
+                MainMenu Main = new MainMenu();
+                MenuItem FileItem = new MenuItem();   
+                FileItem.Text = "File";
+                Main.MenuItems.Add(FileItem);
+                Menu = Main;
+            }
+        }
+        else
+        {
+            Menu = null;
+        }
     }
 
     private static string[] GetTargetList(string WorkingDirectory)
@@ -203,11 +238,30 @@ public class Monitor: Form
             Current++;
         }
 
+        Targets.Remove("clean"); // Make this list selectable, 'x' in UI?
+
         return Targets.ToArray();
     }
 
     public Monitor()
     {
+        Theme Default =
+            new Theme
+            (
+                System.Drawing.ColorTranslator.FromHtml("#363636"),
+                System.Drawing.ColorTranslator.FromHtml("#2A292B"),
+                System.Drawing.ColorTranslator.FromHtml("#232323"), 
+                Color.Blue
+            );
+
+        if(File.Exists("settings.json"))
+        {
+            var Deserializer = new JavaScriptSerializer();
+            GLOBAL = Deserializer.Deserialize<Settings>(File.ReadAllText("settings.json"));
+        }
+
+        BackColor = Default.WorkspaceColor;
+
         Text = "Monitor"; 
         Width  = SCREEN_WIDTH;
         Height = SCREEN_HEIGHT;
@@ -219,6 +273,7 @@ public class Monitor: Form
         Button SwitchButton = new Button();
         SwitchButton.Text = "Switch";
         SwitchButton.Location = new Point(BufferX, BufferY);
+        SwitchButton.BackColor = Color.LightGray;
         Controls.Add(SwitchButton);
 
         Path.Width = 512;
@@ -229,20 +284,47 @@ public class Monitor: Form
         Int32 Count = SCREEN_HEIGHT/BUTTON_SIZE;
         Int32 Diff = SCREEN_HEIGHT - (Count*BUTTON_SIZE);
 
-        while(Count-- > 0)
+        PictureBox ImageButton = new PictureBox();
+        ImageButton.ClientSize = new Size(BUTTON_SIZE, BUTTON_SIZE*Count);
+        ImageButton.Image = new Bitmap(BUTTON_SIZE, BUTTON_SIZE*Count, PixelFormat.Format32bppPArgb);
+        Graphics Panel = Graphics.FromImage(ImageButton.Image);
+
+        Bitmap[] Icons = new Bitmap[Count];
+        Icons[0] = new Bitmap("icons/menu.png");
+
+        Int32 Icon = 0;
+        while(Icon < Count)
         {
-            PictureBox ImageButton = new PictureBox();
-            ImageButton.ClientSize = new Size(BUTTON_SIZE, BUTTON_SIZE*Count);
-            ImageButton.Image = new Bitmap(BUTTON_SIZE, BUTTON_SIZE, PixelFormat.Format32bppPArgb);
-            ImageButton.BackColor = Color.Gray;
-            ImageButton.Click += ToolbarClicked;
-            Controls.Add(ImageButton);
+            if(Icons[Icon] != null)
+            {
+                Panel.DrawImage(Icons[Icon], 0.0f, 48.0f*Icon, new RectangleF(0.0f, 0.0f, 48.0f, 48.0f), GraphicsUnit.Pixel);
+            }
+            Icon++;
         }
 
-        PictureBox Navigator = new PictureBox();
+        ImageButton.BackColor = Default.ButtonColor;
+        ImageButton.Click += ToolbarClicked;
+        Controls.Add(ImageButton);
+
+        ListBox Navigator = new ListBox();
+        Navigator.BorderStyle = BorderStyle.None;
+        Navigator.Font = new Font(UNIVERSAL_FONT, 24, FontStyle.Bold, GraphicsUnit.Pixel);
+
+        string Buffer = String.Empty;
+        Int32 Spaces = Convert.ToInt32(Math.Ceiling(BUTTON_SIZE/GetAutoScaleSize(Navigator.Font).Width));
+        while(Spaces-- > 0)
+        {
+            Buffer += " ";
+        }
+
+        string[] Targets = GetTargetList(GLOBAL.workspace);
+        foreach(string Target in Targets)
+        {
+            Navigator.Items.Add(Buffer + Target);
+        }
+
         Navigator.ClientSize = new Size(BUTTON_SIZE+384, SCREEN_HEIGHT-Diff-BUTTON_SIZE);
-        Navigator.Image = new Bitmap(BUTTON_SIZE+384, SCREEN_HEIGHT-Diff-BUTTON_SIZE, PixelFormat.Format32bppPArgb);
-        Navigator.BackColor = Color.Black;
+        Navigator.BackColor = Default.NavigatorColor;
         Controls.Add(Navigator);
 
         Int32 OffsetX = BufferX;
@@ -257,36 +339,16 @@ public class Monitor: Form
         TrimBar.Padding = new System.Windows.Forms.Padding(0, SCREEN_HEIGHT-Diff-BUTTON_SIZE, 0, 0);
         Controls.Add(TrimBar);
 
-        Graphics.FromImage(TrimBar.Image).Clear(Color.Blue);
+        Graphics.FromImage(TrimBar.Image).Clear(Default.StatusColor);
 
         Control Window = new Control();
         Window.BackColor = Color.White;
         Window.ClientSize = new Size(SCREEN_WIDTH, SCREEN_HEIGHT);
         Controls.Add(Window);
 
-        if(File.Exists("settings.json"))
-        {
-            var Deserializer = new JavaScriptSerializer();
-            GLOBAL = Deserializer.Deserialize<Settings>(File.ReadAllText("settings.json"));
-        }
-
         SwitchButton.Click += ButtonClicked;
         Application.ApplicationExit += OnExit;
         Path.Text = GLOBAL.app;
-
-         // Create an empty MainMenu.
-         MainMenu Main = new MainMenu();
-         MenuItem FileItem = new MenuItem();
-
-         FileItem.Text = "File";
-         Main.MenuItems.Add(FileItem);
-         Menu = Main;
-
-        string[] Targets = GetTargetList(GLOBAL.workspace);
-        foreach(string Target in Targets)
-        {
-            Console.WriteLine(Target);
-        }
     }
 
     // Chart API
