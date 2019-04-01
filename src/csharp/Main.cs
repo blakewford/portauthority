@@ -18,11 +18,17 @@ public partial class Monitor: Form
 
     const string UNIVERSAL_FONT = "Courier";
 
+    struct Assignment
+    {
+        public string name;
+        public string target;
+    }
+
     struct Settings
     {
         public string authority;
         public string workspace;
-        public string app;
+        public Assignment[] assignments;
     }
 
     struct Theme
@@ -52,7 +58,14 @@ public partial class Monitor: Form
 
     void OnExit(object o, System.EventArgs e)
     {
-        GLOBAL.app = Path.Text;
+        Int32 Count = 0;
+        GLOBAL.assignments = new Assignment[ApplicationMap.Count];
+        foreach(var assignment in ApplicationMap)
+        {
+            GLOBAL.assignments[Count].name = assignment.Key;
+            GLOBAL.assignments[Count].target = assignment.Value;
+            Count++;
+        }
 
         var Serializer = new JavaScriptSerializer();
         string Json = Serializer.Serialize(GLOBAL);
@@ -100,9 +113,15 @@ public partial class Monitor: Form
         Int32 Selected = Navigator.IndexFromPoint(PointToClient(Cursor.Position));
         if(Selected >= 0)
         {
-            Console.WriteLine(((string)Navigator.Items[Selected]).Trim());
             Categorize();
         }
+    }
+
+    void TargetSelectionChanged(object Sender, EventArgs e)
+    {
+        ListBox Navigator = (ListBox)Controls.Find("Navigator", true)[0];
+        string Target = ApplicationMap[((string)Navigator.Items[Navigator.SelectedIndex]).Trim()];
+        Path.Text = Target;
     }
 
     private static string[] GetTargetList(string WorkingDirectory)
@@ -228,7 +247,16 @@ public partial class Monitor: Form
 
         AddTargets(Navigator);
 
+        foreach(var assignment in GLOBAL.assignments)
+        {
+            if(ApplicationMap.ContainsKey(assignment.name))
+            {
+                ApplicationMap[assignment.name] = assignment.target;
+            }
+        }
+
         Navigator.DoubleClick += ListDoubleClick;
+        Navigator.SelectedIndexChanged += TargetSelectionChanged;
         Navigator.ClientSize = new Size(BUTTON_SIZE+384, SCREEN_HEIGHT-Diff-BUTTON_SIZE);
         Navigator.BackColor = Default.NavigatorColor;
         Navigator.Name = "Navigator";
@@ -254,6 +282,5 @@ public partial class Monitor: Form
         Controls.Add(Window);
 
         Application.ApplicationExit += OnExit;
-        Path.Text = GLOBAL.app;
     }
 }

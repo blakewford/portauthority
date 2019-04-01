@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
@@ -33,6 +34,12 @@ public partial class Monitor
 
     void Categorize()
     {
+        if(!File.Exists(Path.Text))
+        {
+            MessageBox.Show("Invalid target binary selected!");
+            return;
+        }
+
         Thread WorkThread = new Thread(() => {
 
             string Raw = String.Empty;

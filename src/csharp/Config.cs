@@ -1,9 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.Windows.Forms;
 
 #pragma warning disable 618
 public partial class Monitor
 {
+    Dictionary<string, string> ApplicationMap = new Dictionary<string, string>();
+
     void LinkedEvent(object Sender, EventArgs e)
     {
         OpenFileDialog Dialog = new OpenFileDialog();
@@ -13,6 +16,9 @@ public partial class Monitor
             string LinkedControl = ((Button)Sender).Name.Split(':')[1];
             TextBox Box = (TextBox)Controls.Find(LinkedControl, true)[0];
             Box.Text = Dialog.FileName;
+
+            ListBox Navigator = (ListBox)Controls.Find("Navigator", true)[0];
+            ApplicationMap[((string)Navigator.Items[Navigator.SelectedIndex]).Trim()] = Box.Text;
         }
     }
 
@@ -42,6 +48,10 @@ public partial class Monitor
         foreach(string Target in Targets)
         {
             Ctrl.Items.Add(Buffer + Target);
+            if(!ApplicationMap.ContainsKey(Target))
+            {
+                ApplicationMap.Add(Target, "");
+            }
         } 
     }
 
