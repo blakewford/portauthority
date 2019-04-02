@@ -56,6 +56,7 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
             //natural program termination
             break;
         }
+        //need better protections here for code that does not exit cleanly, without exit()
         if(registers.rip < moduleBound)
         {
             uint64_t value = ptrace(PTRACE_PEEKDATA, pid, registers.rip, NULL);
