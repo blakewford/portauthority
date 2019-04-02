@@ -83,19 +83,37 @@ public partial class Monitor: Form
                 MainMenu Main = new MainMenu();
 
                 MenuItem FileItem = new MenuItem("File");
-                FileItem.MenuItems.Add( new MenuItem("Open Workspace"));
+                MenuItem Workspace = new MenuItem("Open Workspace");
+                Workspace.Click += delegate(object Item, EventArgs Args)
+                {
+                    FolderBrowserDialog Dialog = new FolderBrowserDialog();
+                    DialogResult Result = Dialog.ShowDialog();
+                    if(Result == DialogResult.OK)
+                    {
+                        GLOBAL.workspace = Dialog.SelectedPath;
+                    }
+                };
+
+                FileItem.MenuItems.Add(Workspace);
 
                 MenuItem ExitItem = new MenuItem("Exit");
-                ExitItem.Click  += delegate(object Item, EventArgs Args){ Close(); };
+                ExitItem.Click += delegate(object Item, EventArgs Args){ Close(); };
                 FileItem.MenuItems.Add(ExitItem);
                 Main.MenuItems.Add(FileItem);
 
                 MenuItem Edit = new MenuItem("Edit");
-                Edit.MenuItems.Add( new MenuItem("Set Target Binary"));
+                MenuItem Set = new MenuItem("Set Target Binary");
+                Set.Name = ":Path";
+                Set.Click += LinkedEvent;
+                Edit.MenuItems.Add(Set);
                 Main.MenuItems.Add(Edit);
 
+                MenuItem Attach = new MenuItem("Attach to Running Process");
+                MenuItem Start = new MenuItem("Start Profile");
                 MenuItem Profile = new MenuItem("Profile");
-                Profile.Click += delegate(object Item, EventArgs Args){ Categorize(); };
+                Profile.MenuItems.Add(Attach);
+                Profile.MenuItems.Add(Start);
+                Start.Click += delegate(object Item, EventArgs Args){ Categorize(); };
                 Main.MenuItems.Add(Profile);
 
                 Menu = Main;

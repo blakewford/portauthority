@@ -13,12 +13,27 @@ public partial class Monitor
         DialogResult Result = Dialog.ShowDialog();
         if(Result == DialogResult.OK)
         {
-            string LinkedControl = ((Button)Sender).Name.Split(':')[1];
-            TextBox Box = (TextBox)Controls.Find(LinkedControl, true)[0];
-            Box.Text = Dialog.FileName;
+            string LinkedControl = String.Empty;
+            if(Sender.GetType() == typeof(Button))
+            {
+                LinkedControl = ((Button)Sender).Name.Split(':')[1];
+            }
+            else
+            {
+                LinkedControl = ((MenuItem)Sender).Name.Split(':')[1];
+            }
 
             ListBox Navigator = (ListBox)Controls.Find("Navigator", true)[0];
-            ApplicationMap[((string)Navigator.Items[Navigator.SelectedIndex]).Trim()] = Box.Text;
+            if(Navigator.SelectedIndex >= 0)
+            {
+                TextBox Box = (TextBox)Controls.Find(LinkedControl, true)[0];
+                Box.Text = Dialog.FileName;
+                ApplicationMap[((string)Navigator.Items[Navigator.SelectedIndex]).Trim()] = Box.Text;
+            }
+            else
+            {
+                MessageBox.Show("Select a target before assigning a binary");
+            }
         }
     }
 
