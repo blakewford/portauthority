@@ -24,11 +24,15 @@ public partial class Monitor: Form
         public string target;
     }
 
+    struct Project
+    {
+        public Assignment[] assignments;
+    }
+
     struct Settings
     {
         public string authority;
         public string workspace;
-        public Assignment[] assignments;
     }
 
     struct Theme
@@ -48,6 +52,7 @@ public partial class Monitor: Form
     }
 
     Settings GLOBAL;
+    Project PROJECT;
 
     private TextBox Path       = new TextBox();
     private PictureBox Chart   = new PictureBox();
@@ -59,21 +64,31 @@ public partial class Monitor: Form
     void OnExit(object o, System.EventArgs e)
     {
         Int32 Count = 0;
-        GLOBAL.assignments = new Assignment[ApplicationMap.Count];
+        PROJECT.assignments = new Assignment[ApplicationMap.Count];
         foreach(var assignment in ApplicationMap)
         {
-            GLOBAL.assignments[Count].name = assignment.Key;
-            GLOBAL.assignments[Count].target = assignment.Value;
+            PROJECT.assignments[Count].name = assignment.Key;
+            PROJECT.assignments[Count].target = assignment.Value;
             Count++;
         }
 
         var Serializer = new JavaScriptSerializer();
         string Json = Serializer.Serialize(GLOBAL);
         File.WriteAllText("settings.json", Json);
+
+        if(Directory.Exists(GLOBAL.workspace))
+        {
+            Directory.CreateDirectory(GLOBAL.workspace +"//.portauth");
+            string ProjectJson = Serializer.Serialize(PROJECT);
+            File.WriteAllText(GLOBAL.workspace +"//.portauth//"+"settings.json", ProjectJson);
+        }
     }
 
     void ToolbarClicked(object Object, System.EventArgs e)
     {
+        PictureBox Toolbar = (PictureBox)Controls.Find("Toolbar", true)[0];
+        Graphics Panel = Graphics.FromImage(Toolbar.Image);
+
         Int32 VerticalPosition = PointToClient(Cursor.Position).Y;
         if(Menu == null)
         {
@@ -90,7 +105,24 @@ public partial class Monitor: Form
                     DialogResult Result = Dialog.ShowDialog();
                     if(Result == DialogResult.OK)
                     {
+                        OnExit(null, null);
                         GLOBAL.workspace = Dialog.SelectedPath;
+
+                        if(File.Exists(GLOBAL.workspace + "//.portauth//" + "settings.json"))
+                        {
+                            var Deserializer = new JavaScriptSerializer();
+                            PROJECT = Deserializer.Deserialize<Project>(File.ReadAllText(GLOBAL.workspace + "//.portauth//" + "settings.json"));
+                            ListBox Navigator = (ListBox)Controls.Find("Navigator", true)[0];
+                            Navigator.Items.Clear();
+                            Path.Clear();
+                            wipe();
+                            AddTargets(Navigator);
+                            ApplicationMap.Clear();
+                            foreach(Assignment A in PROJECT.assignments)
+                            {
+                                ApplicationMap.Add(A.name, A.target);
+                            }
+                        }
                     }
                 };
 
@@ -122,7 +154,11 @@ public partial class Monitor: Form
         else
         {
             Menu = null;
+            Panel.DrawImage(new Bitmap("icons/selected.png"), 0.0f, BUTTON_SIZE*1, new RectangleF(0.0f, 0.0f, BUTTON_SIZE, BUTTON_SIZE), GraphicsUnit.Pixel);
+            Panel.DrawImage(new Bitmap("icons/category.png"), 0.0f, BUTTON_SIZE*1, new RectangleF(0.0f, 0.0f, BUTTON_SIZE, BUTTON_SIZE), GraphicsUnit.Pixel);
         }
+
+        Refresh();
     }
 
     void ListDoubleClick(object Sender, EventArgs e)
@@ -210,6 +246,12 @@ public partial class Monitor: Form
             GLOBAL = Deserializer.Deserialize<Settings>(File.ReadAllText("settings.json"));
         }
 
+        if(File.Exists(GLOBAL.workspace + "//.portauth//" + "settings.json"))
+        {
+            var Deserializer = new JavaScriptSerializer();
+            PROJECT = Deserializer.Deserialize<Project>(File.ReadAllText(GLOBAL.workspace + "//.portauth//" + "settings.json"));
+        }
+
         BackColor = Default.WorkspaceColor;
 
         Text = "Monitor"; 
@@ -238,12 +280,16 @@ public partial class Monitor: Form
         Int32 Diff = SCREEN_HEIGHT - (Count*BUTTON_SIZE);
 
         PictureBox ImageButton = new PictureBox();
+        ImageButton.Name = "Toolbar";
         ImageButton.ClientSize = new Size(BUTTON_SIZE, BUTTON_SIZE*Count);
         ImageButton.Image = new Bitmap(BUTTON_SIZE, BUTTON_SIZE*Count, PixelFormat.Format32bppPArgb);
         Graphics Panel = Graphics.FromImage(ImageButton.Image);
 
         Bitmap[] Icons = new Bitmap[Count];
         Icons[0] = new Bitmap("icons/menu.png");
+        Icons[1] = new Bitmap("icons/category.png");
+        Icons[2] = new Bitmap("icons/green.png");
+        Icons[3] = new Bitmap("icons/coverage.png");
 
         Int32 Icon = 0;
         while(Icon < Count)
@@ -265,12 +311,19 @@ public partial class Monitor: Form
 
         AddTargets(Navigator);
 
-        foreach(var assignment in GLOBAL.assignments)
+        if(PROJECT.assignments != null)
         {
-            if(ApplicationMap.ContainsKey(assignment.name))
+            foreach(var assignment in PROJECT.assignments)
             {
-                ApplicationMap[assignment.name] = assignment.target;
+                if(ApplicationMap.ContainsKey(assignment.name))
+                {
+                    ApplicationMap[assignment.name] = assignment.target;
+                }
             }
+        }
+        else
+        {
+            PROJECT.assignments = new Assignment[0];
         }
 
         Navigator.DoubleClick += ListDoubleClick;
@@ -300,5 +353,10 @@ public partial class Monitor: Form
         Controls.Add(Window);
 
         Application.ApplicationExit += OnExit;
+
+        wipe();
+
+        Panel.DrawImage(new Bitmap("icons/selected.png"), 0.0f, BUTTON_SIZE*1, new RectangleF(0.0f, 0.0f, BUTTON_SIZE, BUTTON_SIZE), GraphicsUnit.Pixel);
+        Panel.DrawImage(new Bitmap("icons/category.png"), 0.0f, BUTTON_SIZE*1, new RectangleF(0.0f, 0.0f, BUTTON_SIZE, BUTTON_SIZE), GraphicsUnit.Pixel);
     }
 }

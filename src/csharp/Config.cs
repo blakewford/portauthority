@@ -10,6 +10,7 @@ public partial class Monitor
     void LinkedEvent(object Sender, EventArgs e)
     {
         OpenFileDialog Dialog = new OpenFileDialog();
+        Dialog.InitialDirectory = GLOBAL.workspace;
         DialogResult Result = Dialog.ShowDialog();
         if(Result == DialogResult.OK)
         {
