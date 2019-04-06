@@ -32,6 +32,71 @@ public partial class Monitor
         }).Start();
     }
 
+    void DrawChart(string Raw)
+    {
+        //Sanitize
+        Raw = Raw.Replace("</br>", "<br></br>");
+
+        XmlDocument Doc = new XmlDocument();
+        Doc.LoadXml(Raw);
+        XmlNodeList NodeList = Doc.GetElementsByTagName("script");
+        foreach(XmlElement Element in NodeList)
+        {
+            string[] Lines = Element.InnerXml.Split(new char[]{'\n'});
+            Int32 Count = 0;
+            while(Count < Lines.Length)
+            {
+                string Line = Lines[Count];
+                if(!Line.Equals(String.Empty) &&
+                   !Line.StartsWith("var "))
+                {
+                    if(Line.StartsWith("function "))
+                    {
+                        while(!Line.Contains("}"))
+                        {
+                            Count++;
+                            Line = Lines[Count];
+                        }
+                    }
+                    else
+                    {
+                        string[] Components = Line.Split('(');
+                        string MethodName = Components[0];
+                        string Definition = Components[1].Split(')')[0];
+                        Object[] Objects = null;
+                        MethodInfo Method = GetType().GetMethod(MethodName);
+                        if(Line.Contains("()"))
+                        {
+                            Objects = new Object[0];
+                        }
+                        else
+                        {
+                            string[] Parameters = Definition.Split(',');
+                            Int32 Order = 0;
+                            Objects = new Object[Parameters.Length];
+                            foreach(string Parameter in Parameters)
+                            {
+                                string Processed = Parameter.Trim();
+                                if(Parameter.Contains("\""))
+                                {
+                                    Processed = Processed.Replace("\"", "");
+                                    Objects[Order] = Processed;
+                                }
+                                else
+                                {
+                                    Objects[Order] = Int32.Parse(Processed);
+                                }
+                                Order++;
+                            }
+                        }
+                        Method.Invoke(this, Objects);
+                    }
+                }
+                Count++;
+            }
+        }
+    }
+
     void Categorize()
     {
         if(!File.Exists(Path.Text))
@@ -53,72 +118,9 @@ public partial class Monitor
             Debug.WaitForExit();
 
             Raw = Debug.StandardOutput.ReadToEnd();
+            File.WriteAllText(GLOBAL.workspace +"//.portauth//"+"index.html", Raw);
 
-            //Sanitize
-            Raw = Raw.Replace("</br>", "<br></br>");
-
-            XmlDocument Doc = new XmlDocument();
-            Doc.LoadXml(Raw);
-
-            XmlNodeList NodeList = Doc.GetElementsByTagName("script");
-            foreach(XmlElement Element in NodeList)
-            {
-                string[] Lines = Element.InnerXml.Split(new char[]{'\n'});
-
-                Int32 Count = 0;
-                while(Count < Lines.Length)
-                {
-                    string Line = Lines[Count];
-                    if(!Line.Equals(String.Empty) &&
-                       !Line.StartsWith("var "))
-                    {
-                        if(Line.StartsWith("function "))
-                        {
-                            while(!Line.Contains("}"))
-                            {
-                                Count++;
-                                Line = Lines[Count];
-                            }
-                        }
-                        else
-                        {
-                            string[] Components = Line.Split('(');
-                            string MethodName = Components[0];
-                            string Definition = Components[1].Split(')')[0];
-
-                            Object[] Objects = null;
-                            MethodInfo Method = GetType().GetMethod(MethodName);
-                            if(Line.Contains("()"))
-                            {
-                                Objects = new Object[0];
-                            }
-                            else
-                            {
-                                string[] Parameters = Definition.Split(',');
-
-                                Int32 Order = 0;
-                                Objects = new Object[Parameters.Length];
-                                foreach(string Parameter in Parameters)
-                                {
-                                    string Processed = Parameter.Trim();
-                                    if(Parameter.Contains("\""))
-                                    {
-                                        Processed = Processed.Replace("\"", "");
-                                        Objects[Order] = Processed;
-                                    }
-                                    else
-                                    {
-                                        Objects[Order] = Int32.Parse(Processed);
-                                    }
-                                    Order++;
-                                }
-                            }
-                            Method.Invoke(this, Objects);
-                        }
-                    }
-                    Count++;
-                }
-            }
+            DrawChart(Raw);
         });
 
         WaitForTask(WorkThread);

@@ -354,7 +354,14 @@ public partial class Monitor: Form
 
         Application.ApplicationExit += OnExit;
 
-        wipe();
+        if(File.Exists(GLOBAL.workspace +"//.portauth//"+"index.html"))
+        {
+            DrawChart(File.ReadAllText(GLOBAL.workspace +"//.portauth//"+"index.html"));
+        }
+        else
+        {
+            wipe();
+        }
 
         Panel.DrawImage(new Bitmap("icons/selected.png"), 0.0f, BUTTON_SIZE*1, new RectangleF(0.0f, 0.0f, BUTTON_SIZE, BUTTON_SIZE), GraphicsUnit.Pixel);
         Panel.DrawImage(new Bitmap("icons/category.png"), 0.0f, BUTTON_SIZE*1, new RectangleF(0.0f, 0.0f, BUTTON_SIZE, BUTTON_SIZE), GraphicsUnit.Pixel);
