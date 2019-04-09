@@ -56,6 +56,7 @@ public partial class Monitor: Form
 
     private TextBox Path       = new TextBox();
     private PictureBox Chart   = new PictureBox();
+    private Label Key          = new Label();
     public static void Main(String[] Args)
     {
         Application.Run(new Monitor());
@@ -115,7 +116,14 @@ public partial class Monitor: Form
                             ListBox Navigator = (ListBox)Controls.Find("Navigator", true)[0];
                             Navigator.Items.Clear();
                             Path.Clear();
-                            wipe();
+                            if(File.Exists(GLOBAL.workspace +"//.portauth//"+"index.html"))
+                            {
+                                DrawChart(File.ReadAllText(GLOBAL.workspace +"//.portauth//"+"index.html"));
+                            }
+                            else
+                            {
+                                wipe();
+                            }
                             AddTargets(Navigator);
                             ApplicationMap.Clear();
                             foreach(Assignment A in PROJECT.assignments)
@@ -274,6 +282,33 @@ public partial class Monitor: Form
         Path.BorderStyle = BorderStyle.None;
         Controls.Add(Path);
 
+/*
+<font color="red">datamov</font></br>
+<font color="orange">arith</font></br>
+<font color="yellow">logical</font></br>
+<font color="green">bit</font></br>
+<font color="blue">branch</font></br>
+<font color="indigo">control</font></br>
+<font color="violet">stack</font></br>
+<font color="white">conver</font></br>
+<font color="silver">binary</font></br>
+<font color="gray">decimal</font></br>
+<font color="black">shftrot</font></br>
+<font color="maroon">cond</font></br>
+<font color="olive">break</font></br>
+<font color="lime">string</font></br>
+<font color="aqua">inout</font></br>
+<font color="fuchsia">flgctrl</font></br>
+<font color="purple">segreg</font></br>
+ */
+
+        Key.Font = new Font(UNIVERSAL_FONT, 16, FontStyle.Regular, GraphicsUnit.Pixel);
+        Key.Location = new Point(FileButton.Width + BufferX, BufferY+512);
+        Key.BorderStyle = BorderStyle.None;
+        Key.Text = "datamov";
+        Key.ForeColor = Color.Red;
+        Controls.Add(Key);
+
         LinkItems(new Control[]{FileButton, Path}, "Path");
 
         Int32 Count = SCREEN_HEIGHT/BUTTON_SIZE;
@@ -363,7 +398,48 @@ public partial class Monitor: Form
             wipe();
         }
 
+        ToolTip Percentage = new ToolTip();
+        Percentage.Popup += new PopupEventHandler(HandlePopup);
+        Percentage.SetToolTip(Chart, "Result");
+
         Panel.DrawImage(new Bitmap("icons/selected.png"), 0.0f, BUTTON_SIZE*1, new RectangleF(0.0f, 0.0f, BUTTON_SIZE, BUTTON_SIZE), GraphicsUnit.Pixel);
         Panel.DrawImage(new Bitmap("icons/category.png"), 0.0f, BUTTON_SIZE*1, new RectangleF(0.0f, 0.0f, BUTTON_SIZE, BUTTON_SIZE), GraphicsUnit.Pixel);
+    }
+
+    private void HandlePopup(object sender, PopupEventArgs e)
+    {
+        Point Current = PointToClient(Cursor.Position);
+
+        Bitmap Image = new Bitmap(CHART_SIZE, CHART_SIZE);
+        Graphics Source = Graphics.FromImage(Image);
+
+        Point Left = Location;
+        Left.X += 448;
+        Left.Y += 62;
+
+        if(Left.X > 1000 || Left.Y > 550)
+        {
+            e.Cancel = true;
+            return;
+        }
+
+        try
+        {
+            Source.CopyFromScreen(Left, Point.Empty, Chart.Size);
+
+            Current.X -= 448;
+            Current.Y -= 32;
+
+            Key.ForeColor = Image.GetPixel(Current.X, Current.Y);
+        }
+        catch(Exception)
+        {
+        }
+        finally
+        {
+            Point Position = System.Windows.Forms.Cursor.Position;
+            System.Windows.Forms.Cursor.Position = new Point(0,0);
+            System.Windows.Forms.Cursor.Position = Position;
+        }
     }
 }

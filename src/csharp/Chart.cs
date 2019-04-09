@@ -14,7 +14,7 @@ public partial class Monitor
     public void wipe()
     {
         PreviousFill = 0;
-        Chart.Image = new Bitmap(CHART_SIZE,CHART_SIZE, PixelFormat.Format32bppPArgb);
+        Chart.Image = new Bitmap(CHART_SIZE, CHART_SIZE, PixelFormat.Format32bppPArgb);
 
         addRange(100, "gray");
         PreviousFill = 0;
