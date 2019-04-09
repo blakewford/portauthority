@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Windows.Forms;
 
 #pragma warning disable 618
@@ -67,6 +68,10 @@ public partial class Monitor
             if(!ApplicationMap.ContainsKey(Target))
             {
                 ApplicationMap.Add(Target, "");
+            }
+            if(Directory.Exists(GLOBAL.workspace))
+            {
+                Directory.CreateDirectory(GLOBAL.workspace +"/.portauth/" + Target);
             }
         } 
     }

@@ -79,9 +79,9 @@ public partial class Monitor: Form
 
         if(Directory.Exists(GLOBAL.workspace))
         {
-            Directory.CreateDirectory(GLOBAL.workspace +"//.portauth");
+            Directory.CreateDirectory(GLOBAL.workspace +"/.portauth");
             string ProjectJson = Serializer.Serialize(PROJECT);
-            File.WriteAllText(GLOBAL.workspace +"//.portauth//"+"settings.json", ProjectJson);
+            File.WriteAllText(GLOBAL.workspace +"/.portauth/"+"settings.json", ProjectJson);
         }
     }
 
@@ -109,16 +109,16 @@ public partial class Monitor: Form
                         OnExit(null, null);
                         GLOBAL.workspace = Dialog.SelectedPath;
 
-                        if(File.Exists(GLOBAL.workspace + "//.portauth//" + "settings.json"))
+                        if(File.Exists(GLOBAL.workspace + "/.portauth/" + "settings.json"))
                         {
                             var Deserializer = new JavaScriptSerializer();
-                            PROJECT = Deserializer.Deserialize<Project>(File.ReadAllText(GLOBAL.workspace + "//.portauth//" + "settings.json"));
+                            PROJECT = Deserializer.Deserialize<Project>(File.ReadAllText(GLOBAL.workspace + "/.portauth/" + "settings.json"));
                             ListBox Navigator = (ListBox)Controls.Find("Navigator", true)[0];
                             Navigator.Items.Clear();
                             Path.Clear();
-                            if(File.Exists(GLOBAL.workspace +"//.portauth//"+"index.html"))
+                            if(File.Exists(GLOBAL.workspace +"/.portauth/"+"index.html"))
                             {
-                                DrawChart(File.ReadAllText(GLOBAL.workspace +"//.portauth//"+"index.html"));
+                                DrawChart(File.ReadAllText(GLOBAL.workspace +"/.portauth/"+"index.html"));
                             }
                             else
                             {
@@ -182,8 +182,18 @@ public partial class Monitor: Form
     void TargetSelectionChanged(object Sender, EventArgs e)
     {
         ListBox Navigator = (ListBox)Controls.Find("Navigator", true)[0];
-        string Target = ApplicationMap[((string)Navigator.Items[Navigator.SelectedIndex]).Trim()];
-        Path.Text = Target;
+        string Target = ((string)Navigator.Items[Navigator.SelectedIndex]).Trim();
+        string TargetPath = ApplicationMap[Target];
+        Path.Text = TargetPath;
+
+        if(File.Exists(GLOBAL.workspace +"/.portauth/"+Target+"/index.html"))
+        {
+            DrawChart(File.ReadAllText(GLOBAL.workspace +"/.portauth/"+Target+"/index.html"));
+        }
+        else
+        {
+            wipe();
+        }
     }
 
     private static string[] GetTargetList(string WorkingDirectory)
@@ -254,10 +264,10 @@ public partial class Monitor: Form
             GLOBAL = Deserializer.Deserialize<Settings>(File.ReadAllText("settings.json"));
         }
 
-        if(File.Exists(GLOBAL.workspace + "//.portauth//" + "settings.json"))
+        if(File.Exists(GLOBAL.workspace + "/.portauth/" + "settings.json"))
         {
             var Deserializer = new JavaScriptSerializer();
-            PROJECT = Deserializer.Deserialize<Project>(File.ReadAllText(GLOBAL.workspace + "//.portauth//" + "settings.json"));
+            PROJECT = Deserializer.Deserialize<Project>(File.ReadAllText(GLOBAL.workspace + "/.portauth/" + "settings.json"));
         }
 
         BackColor = Default.WorkspaceColor;
@@ -389,9 +399,9 @@ public partial class Monitor: Form
 
         Application.ApplicationExit += OnExit;
 
-        if(File.Exists(GLOBAL.workspace +"//.portauth//"+"index.html"))
+        if(File.Exists(GLOBAL.workspace +"/.portauth/"+"index.html"))
         {
-            DrawChart(File.ReadAllText(GLOBAL.workspace +"//.portauth//"+"index.html"));
+            DrawChart(File.ReadAllText(GLOBAL.workspace +"/.portauth/"+"index.html"));
         }
         else
         {

@@ -118,7 +118,14 @@ public partial class Monitor
             Debug.WaitForExit();
 
             Raw = Debug.StandardOutput.ReadToEnd();
-            File.WriteAllText(GLOBAL.workspace +"//.portauth//"+"index.html", Raw);
+            File.WriteAllText(GLOBAL.workspace +"/.portauth/"+"index.html", Raw);
+            ListBox Navigator = (ListBox)Controls.Find("Navigator", true)[0];
+            string Target = ((string)Navigator.Items[Navigator.SelectedIndex]).Trim();
+            if(Directory.Exists(GLOBAL.workspace))
+            {
+                Directory.CreateDirectory(GLOBAL.workspace +"/.portauth/" + Target);
+                File.WriteAllText(GLOBAL.workspace +"/.portauth/"+Target+"/index.html", Raw);
+            }
 
             DrawChart(Raw);
         });
