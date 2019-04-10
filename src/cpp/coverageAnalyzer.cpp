@@ -30,7 +30,7 @@ public:
 
     virtual void report()
     {
-        printf("<div><font style=\"font-family: courier;font-size:20px\" color=\"gray\">%.2f%c Coverage</font><br/><br/></div>\n", (m_bytes/(double)m_textSize)*100, '%');
+        printf("<div id=\"coverage\"><font style=\"font-family: courier;font-size:20px\" color=\"gray\">%.2f%c Coverage</font><br/><br/></div>\n", (m_bytes/(double)m_textSize)*100, '%');
     }
 
     virtual void console()

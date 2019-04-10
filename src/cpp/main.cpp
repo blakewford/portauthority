@@ -484,7 +484,7 @@ int main(int argc, char** argv)
             int32_t RUNTIME_BIAS = 0;
             if(machine == EM_AVR)
             {
-                RUNTIME_BIAS = 0x3154;
+                RUNTIME_BIAS = 0x600;
             }
             else
             {

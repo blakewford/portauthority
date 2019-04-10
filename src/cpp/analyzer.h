@@ -57,12 +57,12 @@ void analyzer::header(const char* executable, bool native, int32_t machine, uint
             break;
     }
 
-    printf("<html>\n<body bgcolor=\"#ccecfc\">\n<div><br/><font style=\"font-family: courier;font-size:20px\" color=\"gray\">%s<br/>%s<br/>%s<br/>Instruction count: %u ", arch, data, executable, instructionCount);
+    printf("<html>\n<body bgcolor=\"#ccecfc\">\n<div><div id=\"header\"><br/><font style=\"font-family: courier;font-size:20px\" color=\"gray\">%s<br/>%s<br/>%s<br/>Instruction count: %u ", arch, data, executable, instructionCount);
     if(instructionCount != cycleCount)
     {
         printf("Cycle count: %lu\n", cycleCount);
     }
-    printf("<br/><br/></font>");
+    printf("<br/><br/></font></div>");
 }
 
 void analyzer::footer()
