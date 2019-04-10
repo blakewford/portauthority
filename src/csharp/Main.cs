@@ -292,31 +292,10 @@ public partial class Monitor: Form
         Path.BorderStyle = BorderStyle.None;
         Controls.Add(Path);
 
-/*
-<font color="red">datamov</font></br>
-<font color="orange">arith</font></br>
-<font color="yellow">logical</font></br>
-<font color="green">bit</font></br>
-<font color="blue">branch</font></br>
-<font color="indigo">control</font></br>
-<font color="violet">stack</font></br>
-<font color="white">conver</font></br>
-<font color="silver">binary</font></br>
-<font color="gray">decimal</font></br>
-<font color="black">shftrot</font></br>
-<font color="maroon">cond</font></br>
-<font color="olive">break</font></br>
-<font color="lime">string</font></br>
-<font color="aqua">inout</font></br>
-<font color="fuchsia">flgctrl</font></br>
-<font color="purple">segreg</font></br>
- */
-
-        Key.Font = new Font(UNIVERSAL_FONT, 16, FontStyle.Regular, GraphicsUnit.Pixel);
+        Key.Font = new Font(UNIVERSAL_FONT, 24, FontStyle.Regular, GraphicsUnit.Pixel);
         Key.Location = new Point(FileButton.Width + BufferX, BufferY+512);
         Key.BorderStyle = BorderStyle.None;
-        Key.Text = "datamov";
-        Key.ForeColor = Color.Red;
+        Key.Height = 32;
         Controls.Add(Key);
 
         LinkItems(new Control[]{FileButton, Path}, "Path");
@@ -441,6 +420,78 @@ public partial class Monitor: Form
             Current.Y -= 32;
 
             Key.ForeColor = Image.GetPixel(Current.X, Current.Y);
+            if(Key.ForeColor.R == 255 && Key.ForeColor.G == 0 && Key.ForeColor.B == 0 && Key.ForeColor.A == 255)
+            {
+                Key.Text = "datamov";
+            }
+            else if(Key.ForeColor.R == 255 && Key.ForeColor.G == 165 && Key.ForeColor.B == 0 && Key.ForeColor.A == 255)
+            {
+                Key.Text = "arith";
+            }
+            else if(Key.ForeColor.R == 255 && Key.ForeColor.G == 255 && Key.ForeColor.B == 0 && Key.ForeColor.A == 255)
+            {
+                Key.Text = "logical";
+            }
+            else if(Key.ForeColor.R == 0 && Key.ForeColor.G == 128 && Key.ForeColor.B == 0 && Key.ForeColor.A == 255)
+            {
+                Key.Text = "bit";
+            }
+            else if(Key.ForeColor.R == 0 && Key.ForeColor.G == 0 && Key.ForeColor.B == 255 && Key.ForeColor.A == 255)
+            {
+                Key.Text = "branch";
+            }
+            else if(Key.ForeColor.R == 75 && Key.ForeColor.G == 0 && Key.ForeColor.B == 130 && Key.ForeColor.A == 255)
+            {
+                Key.Text = "control";
+            }
+            else if(Key.ForeColor.R == 238 && Key.ForeColor.G == 130 && Key.ForeColor.B == 238 && Key.ForeColor.A == 255)
+            {
+                Key.Text = "stack";
+            }
+            else if(Key.ForeColor.R == 255 && Key.ForeColor.G == 255 && Key.ForeColor.B == 255 && Key.ForeColor.A == 255)
+            {
+                Key.Text = "conver";
+            }
+            else if(Key.ForeColor.R == 192 && Key.ForeColor.G == 192 && Key.ForeColor.B == 192 && Key.ForeColor.A == 255)
+            {
+                Key.Text = "binary";
+            }
+            else if(Key.ForeColor.R == 128 && Key.ForeColor.G == 128 && Key.ForeColor.B == 128 && Key.ForeColor.A == 255)
+            {
+                Key.Text = "decimal";
+            }
+            else if(Key.ForeColor.R == 0 && Key.ForeColor.G == 0 && Key.ForeColor.B == 0 && Key.ForeColor.A == 255)
+            {
+                Key.Text = "shftrot";
+            }
+            else if(Key.ForeColor.R == 128 && Key.ForeColor.G == 0 && Key.ForeColor.B == 0 && Key.ForeColor.A == 255)
+            {
+                Key.Text = "cond";
+            }
+            else if(Key.ForeColor.R == 128 && Key.ForeColor.G == 128 && Key.ForeColor.B == 0 && Key.ForeColor.A == 255)
+            {
+                Key.Text = "break";
+            }
+            else if(Key.ForeColor.R == 0 && Key.ForeColor.G == 255 && Key.ForeColor.B == 0 && Key.ForeColor.A == 255)
+            {
+                Key.Text = "string";
+            }
+            else if(Key.ForeColor.R == 0 && Key.ForeColor.G == 255 && Key.ForeColor.B == 255 && Key.ForeColor.A == 255)
+            {
+                Key.Text = "inout";
+            }
+            else if(Key.ForeColor.R == 255 && Key.ForeColor.G == 0 && Key.ForeColor.B == 255 && Key.ForeColor.A == 255)
+            {
+                Key.Text = "flgctrl";
+            }
+            else if(Key.ForeColor.R == 128 && Key.ForeColor.G == 0 && Key.ForeColor.B == 128 && Key.ForeColor.A == 255)
+            {
+                Key.Text = "segreg";
+            }
+            else
+            {
+                Key.Text = "";
+            }
         }
         catch(Exception)
         {

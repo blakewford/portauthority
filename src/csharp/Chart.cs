@@ -16,8 +16,10 @@ public partial class Monitor
         PreviousFill = 0;
         Chart.Image = new Bitmap(CHART_SIZE, CHART_SIZE, PixelFormat.Format32bppPArgb);
 
-        addRange(100, "gray");
+        addRange(100, "darkgray");
         PreviousFill = 0;
+
+        Key.Text = "";
     }
 
     public void addRange(Int32 Percentage, string Fill)
