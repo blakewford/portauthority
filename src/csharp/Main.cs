@@ -286,7 +286,7 @@ public partial class Monitor: Form
         FileButton.BackColor = Color.LightGray;
         Controls.Add(FileButton);
 
-        Path.Width = 512;
+        Path.Width = 432;
         Path.Font = new Font(UNIVERSAL_FONT, 16, FontStyle.Regular, GraphicsUnit.Pixel);
         Path.Location = new Point(FileButton.Width + BufferX, BufferY);
         Path.BorderStyle = BorderStyle.None;
