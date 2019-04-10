@@ -72,23 +72,23 @@ public:
         printf("</script>\n\n");
 
         //key
-        printf("<font color=\"red\">%s</font></br>\n",     gCategories[0]);
-        printf("<font color=\"orange\">%s</font></br>\n",  gCategories[1]);
-        printf("<font color=\"yellow\">%s</font></br>\n",  gCategories[2]);
-        printf("<font color=\"green\">%s</font></br>\n",   gCategories[3]);
-        printf("<font color=\"blue\">%s</font></br>\n",    gCategories[4]);
-        printf("<font color=\"indigo\">%s</font></br>\n",  gCategories[5]);
-        printf("<font color=\"violet\">%s</font></br>\n",  gCategories[6]);
-        printf("<font color=\"white\">%s</font></br>\n",   gCategories[7]);
-        printf("<font color=\"silver\">%s</font></br>\n",  gCategories[8]);
-        printf("<font color=\"gray\">%s</font></br>\n",    gCategories[9]);
-        printf("<font color=\"black\">%s</font></br>\n",   gCategories[10]);
-        printf("<font color=\"maroon\">%s</font></br>\n",  gCategories[11]);
-        printf("<font color=\"olive\">%s</font></br>\n",   gCategories[12]);
-        printf("<font color=\"lime\">%s</font></br>\n",    gCategories[13]);
-        printf("<font color=\"aqua\">%s</font></br>\n",    gCategories[14]);
-        printf("<font color=\"fuchsia\">%s</font></br>\n", gCategories[15]);
-        printf("<font color=\"purple\">%s</font></br>\n",  gCategories[16]);
+        printf("<font style=\"font-family: courier\" color=\"red\">%s</font></br>\n",     gCategories[0]);
+        printf("<font style=\"font-family: courier\" color=\"orange\">%s</font></br>\n",  gCategories[1]);
+        printf("<font style=\"font-family: courier\" color=\"yellow\">%s</font></br>\n",  gCategories[2]);
+        printf("<font style=\"font-family: courier\" color=\"green\">%s</font></br>\n",   gCategories[3]);
+        printf("<font style=\"font-family: courier\" color=\"blue\">%s</font></br>\n",    gCategories[4]);
+        printf("<font style=\"font-family: courier\" color=\"indigo\">%s</font></br>\n",  gCategories[5]);
+        printf("<font style=\"font-family: courier\" color=\"violet\">%s</font></br>\n",  gCategories[6]);
+        printf("<font style=\"font-family: courier\" color=\"white\">%s</font></br>\n",   gCategories[7]);
+        printf("<font style=\"font-family: courier\" color=\"silver\">%s</font></br>\n",  gCategories[8]);
+        printf("<font style=\"font-family: courier\" color=\"gray\">%s</font></br>\n",    gCategories[9]);
+        printf("<font style=\"font-family: courier\" color=\"black\">%s</font></br>\n",   gCategories[10]);
+        printf("<font style=\"font-family: courier\" color=\"maroon\">%s</font></br>\n",  gCategories[11]);
+        printf("<font style=\"font-family: courier\" color=\"olive\">%s</font></br>\n",   gCategories[12]);
+        printf("<font style=\"font-family: courier\" color=\"lime\">%s</font></br>\n",    gCategories[13]);
+        printf("<font style=\"font-family: courier\" color=\"aqua\">%s</font></br>\n",    gCategories[14]);
+        printf("<font style=\"font-family: courier\" color=\"fuchsia\">%s</font></br>\n", gCategories[15]);
+        printf("<font style=\"font-family: courier\" color=\"purple\">%s</font></br>\n",  gCategories[16]);
     }
 
     virtual void console()
