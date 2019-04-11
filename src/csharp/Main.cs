@@ -56,6 +56,7 @@ public partial class Monitor: Form
 
     private TextBox Path       = new TextBox();
     private TextBox Coverage   = new TextBox();
+    private TextBox Header     = new TextBox();
     private PictureBox Chart   = new PictureBox();
     private Label Key          = new Label();
     public static void Main(String[] Args)
@@ -293,9 +294,19 @@ public partial class Monitor: Form
         Path.BorderStyle = BorderStyle.None;
         Controls.Add(Path);
 
+        Header.Width = 768;
+        Header.Height += 64;
+        Header.Multiline = true;
+        Header.Font = new Font(UNIVERSAL_FONT, 16, FontStyle.Regular, GraphicsUnit.Pixel);
+        Header.Location = new Point(952, BufferY);
+        Header.BorderStyle = BorderStyle.None;
+        Header.ForeColor = Color.White;
+        Header.BackColor = Default.WorkspaceColor;
+        Controls.Add(Header);
+
         Coverage.Width = 384;
         Coverage.Font = new Font(UNIVERSAL_FONT, 16, FontStyle.Regular, GraphicsUnit.Pixel);
-        Coverage.Location = new Point(1080, BufferY);
+        Coverage.Location = new Point(952, BufferY + 96);
         Coverage.BorderStyle = BorderStyle.None;
         Coverage.ForeColor = Color.White;
         Coverage.BackColor = Default.WorkspaceColor;

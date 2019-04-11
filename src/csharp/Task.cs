@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
 using System.Xml;
+using System.Text.RegularExpressions;
 
 #pragma warning disable 618
 public partial class Monitor
@@ -100,10 +101,23 @@ public partial class Monitor
         {
             for(Int32 Ndx = 0; Ndx < Element.Attributes.Count; Ndx++)
             {
+                if(Element.Attributes[Ndx].Name.Equals("id") && Element.Attributes[Ndx].Value.Equals("header"))
+                {
+                    Header.Text = Element.OuterXml;
+                    Header.Text = Header.Text.Replace("<br />", "\n");
+                    XmlDocument Partial = new XmlDocument();
+                    Partial.LoadXml(Header.Text);
+                    Header.Text = Partial.FirstChild.FirstChild.InnerXml;
+                    string[] Lines = Header.Text.Split('\n');
+                    Header.Text = String.Empty;
+                    foreach(string Line in Lines)
+                    {
+                        Header.Text += Regex.Replace(Line, @"\s+", " ") + "\n";
+                    }
+                }
                 if(Element.Attributes[Ndx].Name.Equals("id") && Element.Attributes[Ndx].Value.Equals("coverage"))
                 {
                     Coverage.Text = Element.FirstChild.InnerXml;
-                    break;
                 }
             }
         }

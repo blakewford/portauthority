@@ -20,6 +20,7 @@ public partial class Monitor
         PreviousFill = 0;
 
         Key.Text = "";
+        Header.Text = "";
         Coverage.Text = "";
     }
 
