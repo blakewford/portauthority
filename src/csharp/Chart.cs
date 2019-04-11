@@ -20,6 +20,7 @@ public partial class Monitor
         PreviousFill = 0;
 
         Key.Text = "";
+        Coverage.Text = "";
     }
 
     public void addRange(Int32 Percentage, string Fill)

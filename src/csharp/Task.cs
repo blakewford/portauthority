@@ -95,6 +95,18 @@ public partial class Monitor
                 Count++;
             }
         }
+        NodeList = Doc.GetElementsByTagName("div");
+        foreach(XmlElement Element in NodeList)
+        {
+            for(Int32 Ndx = 0; Ndx < Element.Attributes.Count; Ndx++)
+            {
+                if(Element.Attributes[Ndx].Name.Equals("id") && Element.Attributes[Ndx].Value.Equals("coverage"))
+                {
+                    Coverage.Text = Element.FirstChild.InnerXml;
+                    break;
+                }
+            }
+        }
     }
 
     void Categorize()
