@@ -485,7 +485,7 @@ public partial class Monitor: Form
             if(Key.ForeColor.R == 255 && Key.ForeColor.G == 0 && Key.ForeColor.B == 0 && Key.ForeColor.A == 255)
             {
                 Key.Text = "datamov";
-                Description.Text = DefaultDescription;
+                Description.Text = DataMovDescription;
             }
             else if(Key.ForeColor.R == 255 && Key.ForeColor.G == 165 && Key.ForeColor.B == 0 && Key.ForeColor.A == 255)
             {
@@ -505,17 +505,17 @@ public partial class Monitor: Form
             else if(Key.ForeColor.R == 0 && Key.ForeColor.G == 0 && Key.ForeColor.B == 255 && Key.ForeColor.A == 255)
             {
                 Key.Text = "branch";
-                Description.Text = DefaultDescription;
+                Description.Text = BranchDescription;
             }
             else if(Key.ForeColor.R == 75 && Key.ForeColor.G == 0 && Key.ForeColor.B == 130 && Key.ForeColor.A == 255)
             {
                 Key.Text = "control";
-                Description.Text = DefaultDescription;
+                Description.Text = ControlDescription;
             }
             else if(Key.ForeColor.R == 238 && Key.ForeColor.G == 130 && Key.ForeColor.B == 238 && Key.ForeColor.A == 255)
             {
                 Key.Text = "stack";
-                Description.Text = DefaultDescription;
+                Description.Text = StackDescription;
             }
             else if(Key.ForeColor.R == 255 && Key.ForeColor.G == 255 && Key.ForeColor.B == 255 && Key.ForeColor.A == 255)
             {
