@@ -138,6 +138,37 @@ public partial class Monitor: Form
 
                 FileItem.MenuItems.Add(Workspace);
 
+                MenuItem Export = new MenuItem("Export");
+                Export.Click += delegate(object Item, EventArgs Args)
+                {
+                    ListBox Navigator = (ListBox)Controls.Find("Navigator", true)[0];
+                    if(Navigator.SelectedIndex >= 0)
+                    {
+                        string Target = ((string)Navigator.Items[Navigator.SelectedIndex]).Trim();
+                        string TargetPath = ApplicationMap[Target];
+                        Path.Text = TargetPath;
+
+                        if(File.Exists(GLOBAL.workspace +"/.portauth/"+Target+"/index.html"))
+                        {
+                            SaveFileDialog Dialog = new SaveFileDialog();
+                            Dialog.Filter = "web page (*.html)|*.html"  ;
+                            //Dialog.FilterIndex = 2 ;
+                            Dialog.InitialDirectory = GLOBAL.workspace;
+                            DialogResult Result = Dialog.ShowDialog();
+                            if(Result == DialogResult.OK)
+                            {
+                                File.Copy(GLOBAL.workspace +"/.portauth/"+Target+"/index.html", Dialog.FileName, true);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        MessageBox.Show("No report selected.");
+                    }
+                };
+
+                FileItem.MenuItems.Add(Export);
+
                 MenuItem ExitItem = new MenuItem("Exit");
                 ExitItem.Click += delegate(object Item, EventArgs Args){ Close(); };
                 FileItem.MenuItems.Add(ExitItem);
