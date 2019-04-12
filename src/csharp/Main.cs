@@ -59,6 +59,8 @@ public partial class Monitor: Form
     private TextBox Header     = new TextBox();
     private PictureBox Chart   = new PictureBox();
     private Label Key          = new Label();
+
+    private TextBox Description  = new TextBox();
     public static void Main(String[] Args)
     {
         Application.Run(new Monitor());
@@ -151,8 +153,7 @@ public partial class Monitor: Form
                         if(File.Exists(GLOBAL.workspace +"/.portauth/"+Target+"/index.html"))
                         {
                             SaveFileDialog Dialog = new SaveFileDialog();
-                            Dialog.Filter = "web page (*.html)|*.html"  ;
-                            //Dialog.FilterIndex = 2 ;
+                            Dialog.Filter = "web page (*.html)|*.html";
                             Dialog.InitialDirectory = GLOBAL.workspace;
                             DialogResult Result = Dialog.ShowDialog();
                             if(Result == DialogResult.OK)
@@ -349,6 +350,16 @@ public partial class Monitor: Form
         Key.Height = 32;
         Controls.Add(Key);
 
+        Description.Font = new Font(UNIVERSAL_FONT, 16, FontStyle.Regular, GraphicsUnit.Pixel);
+        Description.Location = new Point(BufferX, BufferY+576);
+        Description.Multiline = true;
+        Description.BorderStyle = BorderStyle.None;
+        Description.Height = 318;
+        Description.Width = 1080;
+        Description.ForeColor = Color.White;
+        Description.BackColor = Default.WorkspaceColor;
+        Controls.Add(Description);
+
         LinkItems(new Control[]{FileButton, Path}, "Path");
 
         Int32 Count = SCREEN_HEIGHT/BUTTON_SIZE;
@@ -474,74 +485,92 @@ public partial class Monitor: Form
             if(Key.ForeColor.R == 255 && Key.ForeColor.G == 0 && Key.ForeColor.B == 0 && Key.ForeColor.A == 255)
             {
                 Key.Text = "datamov";
+                Description.Text = DefaultDescription;
             }
             else if(Key.ForeColor.R == 255 && Key.ForeColor.G == 165 && Key.ForeColor.B == 0 && Key.ForeColor.A == 255)
             {
                 Key.Text = "arith";
+                Description.Text = DefaultDescription;
             }
             else if(Key.ForeColor.R == 255 && Key.ForeColor.G == 255 && Key.ForeColor.B == 0 && Key.ForeColor.A == 255)
             {
                 Key.Text = "logical";
+                Description.Text = DefaultDescription;
             }
             else if(Key.ForeColor.R == 0 && Key.ForeColor.G == 128 && Key.ForeColor.B == 0 && Key.ForeColor.A == 255)
             {
                 Key.Text = "bit";
+                Description.Text = DefaultDescription;
             }
             else if(Key.ForeColor.R == 0 && Key.ForeColor.G == 0 && Key.ForeColor.B == 255 && Key.ForeColor.A == 255)
             {
                 Key.Text = "branch";
+                Description.Text = DefaultDescription;
             }
             else if(Key.ForeColor.R == 75 && Key.ForeColor.G == 0 && Key.ForeColor.B == 130 && Key.ForeColor.A == 255)
             {
                 Key.Text = "control";
+                Description.Text = DefaultDescription;
             }
             else if(Key.ForeColor.R == 238 && Key.ForeColor.G == 130 && Key.ForeColor.B == 238 && Key.ForeColor.A == 255)
             {
                 Key.Text = "stack";
+                Description.Text = DefaultDescription;
             }
             else if(Key.ForeColor.R == 255 && Key.ForeColor.G == 255 && Key.ForeColor.B == 255 && Key.ForeColor.A == 255)
             {
                 Key.Text = "conver";
+                Description.Text = DefaultDescription;
             }
             else if(Key.ForeColor.R == 192 && Key.ForeColor.G == 192 && Key.ForeColor.B == 192 && Key.ForeColor.A == 255)
             {
                 Key.Text = "binary";
+                Description.Text = DefaultDescription;
             }
             else if(Key.ForeColor.R == 128 && Key.ForeColor.G == 128 && Key.ForeColor.B == 128 && Key.ForeColor.A == 255)
             {
                 Key.Text = "decimal";
+                Description.Text = DefaultDescription;
             }
             else if(Key.ForeColor.R == 0 && Key.ForeColor.G == 0 && Key.ForeColor.B == 0 && Key.ForeColor.A == 255)
             {
                 Key.Text = "shftrot";
+                Description.Text = DefaultDescription;
             }
             else if(Key.ForeColor.R == 128 && Key.ForeColor.G == 0 && Key.ForeColor.B == 0 && Key.ForeColor.A == 255)
             {
                 Key.Text = "cond";
+                Description.Text = DefaultDescription;
             }
             else if(Key.ForeColor.R == 128 && Key.ForeColor.G == 128 && Key.ForeColor.B == 0 && Key.ForeColor.A == 255)
             {
                 Key.Text = "break";
+                Description.Text = DefaultDescription;
             }
             else if(Key.ForeColor.R == 0 && Key.ForeColor.G == 255 && Key.ForeColor.B == 0 && Key.ForeColor.A == 255)
             {
                 Key.Text = "string";
+                Description.Text = DefaultDescription;
             }
             else if(Key.ForeColor.R == 0 && Key.ForeColor.G == 255 && Key.ForeColor.B == 255 && Key.ForeColor.A == 255)
             {
                 Key.Text = "inout";
+                Description.Text = DefaultDescription;
             }
             else if(Key.ForeColor.R == 255 && Key.ForeColor.G == 0 && Key.ForeColor.B == 255 && Key.ForeColor.A == 255)
             {
                 Key.Text = "flgctrl";
+                Description.Text = DefaultDescription;
             }
             else if(Key.ForeColor.R == 128 && Key.ForeColor.G == 0 && Key.ForeColor.B == 128 && Key.ForeColor.A == 255)
             {
                 Key.Text = "segreg";
+                Description.Text = DefaultDescription;
             }
             else
             {
                 Key.Text = "";
+                Description.Text = "";
             }
         }
         catch(Exception)
