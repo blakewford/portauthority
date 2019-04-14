@@ -183,9 +183,11 @@ public partial class Monitor: Form
                 Main.MenuItems.Add(Edit);
 
                 MenuItem Attach = new MenuItem("Attach to Running Process");
+                MenuItem Detach = new MenuItem("Detach");
                 MenuItem Start = new MenuItem("Start Profile");
                 MenuItem Profile = new MenuItem("Profile");
                 Profile.MenuItems.Add(Attach);
+                Profile.MenuItems.Add(Detach);
                 Profile.MenuItems.Add(Start);
                 Start.Click += delegate(object Item, EventArgs Args){ Categorize(); };
                 Main.MenuItems.Add(Profile);
@@ -428,10 +430,12 @@ public partial class Monitor: Form
         PictureBox TrimBar = new PictureBox();
         TrimBar.ClientSize = new Size(SCREEN_WIDTH, SCREEN_HEIGHT);
         TrimBar.Image = new Bitmap(SCREEN_WIDTH, BUTTON_SIZE, PixelFormat.Format32bppPArgb);
-        TrimBar.Padding = new System.Windows.Forms.Padding(0, SCREEN_HEIGHT-Diff-BUTTON_SIZE, 0, 0);
+        TrimBar.Padding = new System.Windows.Forms.Padding(0, SCREEN_HEIGHT-Diff-BUTTON_SIZE-1, 0, 0);
         Controls.Add(TrimBar);
 
-        Graphics.FromImage(TrimBar.Image).Clear(Default.StatusColor);
+        Graphics Trim = Graphics.FromImage(TrimBar.Image);
+        Trim.Clear(Default.StatusColor);
+        Trim.DrawImage(new Bitmap("icons/play.png"), OffsetX, 0.0f, new RectangleF(0.0f, 0.0f, BUTTON_SIZE, BUTTON_SIZE), GraphicsUnit.Pixel);
 
         Control Window = new Control();
         Window.BackColor = Color.White;
