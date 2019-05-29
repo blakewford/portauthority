@@ -198,7 +198,7 @@ uint32_t profileGdb(const char* executable, uint8_t machine, uint64_t profilerAd
             if(machine == EM_AVR)
             {
                 packetWrite(fd, opcode, buffer);
-                ndx = instructionSet.find(decode(opcode));
+                ndx = instructionSet.find(avr_decode(opcode));
             }
             if(ndx != -1)
             {

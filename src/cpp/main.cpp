@@ -37,6 +37,8 @@ struct sectionInfo
     bool stringTable;
 };
 
+#include "disavr.cpp"
+#include "disarm64.cpp"
 #include "dumpbin.cpp"
 
 struct sections
@@ -71,7 +73,6 @@ struct lineInfo
 std::map<uint64_t, lineInfo*> gAddressToLineTable;
 #include "energyAnalyzer.cpp"
 #include "native.cpp"
-#include "disavr.cpp"
 #include "gdb.cpp"
 
 extern "C"

@@ -8,7 +8,7 @@ void handleUnimplemented()
     //printf("Warning unimplemented\n");
 }
 
-const char* decode(uint32_t opcode)
+const char* avr_decode(uint32_t opcode)
 {
     uint8_t opcode0 = (opcode & 0xFF00) >> 8;
     uint8_t opcode1 = opcode & 0xFF;

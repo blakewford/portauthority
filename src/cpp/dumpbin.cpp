@@ -104,6 +104,10 @@ void dumpbin(const uint8_t* binary, bool amd64, uint8_t machine, uint64_t entryA
         while(size > 0)
         {
             addresses.push_back(address);
+            uint32_t instruction = *(uint32_t*)binary;
+
+            arm64_decode(instruction);
+
             address += 4;
             binary += 4;
             size -= 4;
