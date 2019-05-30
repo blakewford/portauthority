@@ -29,7 +29,6 @@ ASR
 ASRV
 AT
 B.cond
-ADDS
 ANDS
 B
 BFI
@@ -157,7 +156,8 @@ YIELD
 
 const uint32_t FILTER0 = 0x7FE0FC00;
 const uint32_t FILTER1 = 0x7FE00000;
-const uint32_t FILTER2 = 0x7FE20000;
+const uint32_t FILTER2 = 0x7F200000;
+const uint32_t FILTER3 = 0x7F000000;
 
 const char* arm64_decode(uint32_t opcode)
 {
@@ -184,6 +184,10 @@ const char* arm64_decode(uint32_t opcode)
             {
                 return "ADD";
             }
+            else if((opcode & FILTER3) == 0x31000000)
+            {
+                return "ADDS";
+            }
             break;
         case 10:
         case 11:
@@ -199,6 +203,14 @@ const char* arm64_decode(uint32_t opcode)
             else if((opcode & FILTER2) == 0x0B000000)
             {
                 return "ADD";
+            }
+            else if((opcode & FILTER1) == 0x2B200000)
+            {
+                return "ADDS";
+            }
+            else if((opcode & FILTER2) == 0x2B000000)
+            {
+                return "ADDS";
             }
             break;
         case 7:
