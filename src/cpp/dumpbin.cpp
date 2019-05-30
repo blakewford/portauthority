@@ -106,7 +106,13 @@ void dumpbin(const uint8_t* binary, bool amd64, uint8_t machine, uint64_t entryA
             addresses.push_back(address);
             uint32_t instruction = *(uint32_t*)binary;
 
-            arm64_decode(instruction);
+            bool invalid = true;
+            const char* test = arm64_decode(instruction);
+            invalid = strcmp(test, "invalid") == 0;
+            if(!invalid)
+            {
+                printf("%s\n", test);
+            }
 
             address += 4;
             binary += 4;
