@@ -156,6 +156,7 @@ const uint32_t FILTER1 = 0x7FE00000;
 const uint32_t FILTER2 = 0x7F200000;
 const uint32_t FILTER3 = 0x7F000000;
 const uint32_t FILTER4 = 0x9F000000;
+const uint32_t FILTER5 = 0x7F800000;
 
 const char* arm64_decode(uint32_t opcode)
 {
@@ -185,6 +186,10 @@ const char* arm64_decode(uint32_t opcode)
             else if((opcode & FILTER3) == 0x31000000)
             {
                 return "ADDS";
+            }
+            else if((opcode & FILTER5) == 0x52800000)
+            {
+                return "MOV";
             }
             else if((opcode & FILTER4) == 0x10000000)
             {
