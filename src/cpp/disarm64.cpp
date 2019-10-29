@@ -160,6 +160,7 @@ const uint32_t FILTER5 = 0x7F800000;
 const uint32_t FILTER6 = 0x7FE0FFE0;
 const uint32_t FILTER7 = 0xBFC00000;
 const uint32_t FILTER8 = 0xBFD00C00;
+const uint32_t FILTER9 = 0xFC000000;
 
 const char* arm64_decode(uint32_t opcode)
 {
@@ -218,6 +219,10 @@ const char* arm64_decode(uint32_t opcode)
         case 10:
         case 11:
 //            printf("Branch, exception, system\n");
+            if((opcode & FILTER9) == 0x94000000)
+            {
+                return "BL";
+            }
             break;
         case 5:
         case 13:
