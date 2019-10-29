@@ -158,6 +158,8 @@ const uint32_t FILTER3 = 0x7F000000;
 const uint32_t FILTER4 = 0x9F000000;
 const uint32_t FILTER5 = 0x7F800000;
 const uint32_t FILTER6 = 0x7FE0FFE0;
+const uint32_t FILTER7 = 0xBFC00000;
+const uint32_t FILTER8 = 0xBFD00C00;
 
 const char* arm64_decode(uint32_t opcode)
 {
@@ -176,6 +178,18 @@ const char* arm64_decode(uint32_t opcode)
         case 12:
         case 14:
 //            printf("Load and store\n");
+            if((opcode & FILTER7) == 0xB9400000)
+            {
+                return "LDR";
+            }
+            else if((opcode & FILTER8) == 0xB8400C00)
+            {
+                return "LDR";
+            }
+            else if((opcode & FILTER8) == 0xB8400800)
+            {
+                return "LDR";
+            }
             break;
         case 8:
         case 9:
