@@ -50,16 +50,27 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
     ud_set_syntax(&u, UD_SYN_ATT);
     while(WIFSTOPPED(status))
     {
+#ifdef __aarch64__
+        ptrace(PTRACE_GETREGSET, pid, NULL, &registers);
+        if(registers.pc == 0)
+#else
         ptrace(PTRACE_GETREGS, pid, NULL, &registers);
         if(registers.rip == 0)
+#endif
         {
             //natural program termination
             break;
         }
         //need better protections here for code that does not exit cleanly, without exit()
+#ifdef __aarch64__
+        if(registers.pc < moduleBound)
+        {
+            uint64_t value = ptrace(PTRACE_PEEKDATA, pid, registers.pc, NULL);
+#else
         if(registers.rip < moduleBound)
         {
             uint64_t value = ptrace(PTRACE_PEEKDATA, pid, registers.rip, NULL);
+#endif
             //printf("%llx\n", registers.rip);
             for(int32_t i = 0; i < INSTRUCTION_LENGTH_MAX; i++)
             {
@@ -94,7 +105,11 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
                 modified.m_size = byte;
                 while(count--)
                 {
+#ifdef __aarch64__
+                    analyzers[count]->analyze(registers.pc, &modified);
+#else
                     analyzers[count]->analyze(registers.rip, &modified);
+#endif
                 }
             }
             else

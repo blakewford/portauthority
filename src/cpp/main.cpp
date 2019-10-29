@@ -60,13 +60,13 @@ struct lineInfoHeader
     int8_t   lineBase;
     uint8_t  lineRange;
     uint8_t  opBase;
-    uint8_t  opLength[11];     
+    uint8_t  opLength[11];
 };
 #pragma pack(pop)
 
 struct lineInfo
 {
-    char fileName[256];    
+    char fileName[256];
     int32_t lineNumber;
 };
 
@@ -132,7 +132,7 @@ int32_t readULEB(uint8_t*& binary)
     int32_t value = 0;
     while(true)
     {
-        uint8_t byte = *binary;        
+        uint8_t byte = *binary;
         value |= (byte & 0x7F) << shift;
         binary++;
         if((byte & 0x80) == 0)
@@ -160,21 +160,21 @@ void runLineNumberProgram(uint8_t*& binary, const sectionInfo& debugLine, int32_
     char* files = ++includePaths;
     uint8_t* values = (uint8_t*)files;
     while(*values != '\0')
-    { 
+    {
         values += strlen(files)+1;
         //directory
         value = readULEB(values);
-        //modification time        
+        //modification time
         value = readULEB(values);
-        //file size        
+        //file size
         value = readULEB(values);
-    } 
+    }
     int32_t line = 1;
     uint8_t* previous;
     uint64_t lineAddress = 0;
-    uint8_t* program = (uint8_t*)++values; 
+    uint8_t* program = (uint8_t*)++values;
     uint8_t opcode = program[0];
- /*         
+ /*
     while(true)
     {
         uint64_t offset = 0;
@@ -188,9 +188,9 @@ void runLineNumberProgram(uint8_t*& binary, const sectionInfo& debugLine, int32_
                        lineAddress = *(uint64_t*)program;
                        break;
                    default:
-                       assert(0); 
+                       assert(0);
                }
-               program += (value-1); 
+               program += (value-1);
                break;
            case 5:
                value = readULEB(++program);
@@ -203,7 +203,7 @@ void runLineNumberProgram(uint8_t*& binary, const sectionInfo& debugLine, int32_
     }
 */
     char command[256];
-    memset(command, '\0', 256);    
+    memset(command, '\0', 256);
     sprintf(command, "readelf --debug-dump=decodedline %s > /tmp/decodedline", cachedArgv[argument]);
     int32_t error = system(command );
 
@@ -229,8 +229,8 @@ void runLineNumberProgram(uint8_t*& binary, const sectionInfo& debugLine, int32_
             lineAddress = (int32_t)strtol(token.c_str(), nullptr, 0);
             if(lineAddress != 0)
             {
-                gAddressToLineTable.insert(std::make_pair(lineAddress, pInfo)); 
-            }               
+                gAddressToLineTable.insert(std::make_pair(lineAddress, pInfo));
+            }
         }
     }
 }
