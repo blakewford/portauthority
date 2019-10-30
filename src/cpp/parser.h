@@ -238,4 +238,8 @@ struct avr_isa: public normal
 public:
     virtual void populate_specific(container_object* obj);
 };
+
+struct aarch64_isa: public normal
+{
+};
 #endif

@@ -21,9 +21,13 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
     size_t read = fread(binary, 1, size, reopen);
     if(read != size) return 0;
 
-    bool amd64 = binary[4] == 0x2;
+    bool arch64 = binary[4] == 0x2;
 
+#ifdef __aarch64__
+    return 0;
+#else
     posix_spawn(&pid, executable, NULL, NULL, NULL, NULL);
+#endif
     ptrace(PTRACE_ATTACH, pid, NULL, NULL);
     waitpid(pid, &status, WSTOPPED);
     profilerAddress -= (sizeof(uint64_t));
@@ -46,7 +50,7 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
 
     ud_t u;
     ud_init(&u);
-    ud_set_mode(&u, amd64 ? 64: 32);
+    ud_set_mode(&u, arch64 ? 64: 32);
     ud_set_syntax(&u, UD_SYN_ATT);
     while(WIFSTOPPED(status))
     {

@@ -271,7 +271,7 @@ int main(int argc, char** argv)
         argument++;
     }
 
-    bool amd64 = false;
+    bool arch64 = false;
     bool useGdb = false;
     uint8_t machine = 0;
     uint64_t textSize = 0;
@@ -294,13 +294,13 @@ int main(int argc, char** argv)
         size_t read = fread(binary, 1, size, executable);
         if(read != size) return -1;
 
-        amd64 = binary[4] == 0x2;
+        arch64 = binary[4] == 0x2;
         uint64_t offset = 0;
         uint16_t headerSize = 0;
         uint16_t numHeaders = 0;
         uint64_t entryAddress = 0;
         uint16_t stringsIndex = 0;
-        if(amd64)
+        if(arch64)
         {
             Elf64_Ehdr* header = (Elf64_Ehdr*)binary;
             headerSize = header->e_shentsize;
@@ -321,15 +321,24 @@ int main(int argc, char** argv)
             entryAddress = header->e_entry;
         }
 
-        useGdb = machine == EM_AVR || machine == EM_ARM || machine == EM_AARCH64;
-        const char* FUNCTION_NAME = useGdb ? "__vectors": "main";
+        useGdb = machine == EM_AVR || machine == EM_ARM;
+        const char* FUNCTION_NAME = machine == EM_AVR ? "__vectors": "main";
 
         char* json = nullptr;
         FILE* library = nullptr;
-        if(useGdb)
+        if(machine == EM_AVR)
         {
             library = fopen("avr.json", "r");
             instructionSet = new avr_isa();
+        }
+        else if(machine == EM_ARM)
+        {
+
+        }
+        else if(machine == EM_AARCH64)
+        {
+            library = fopen("aarch64.json", "r");
+            instructionSet = new aarch64_isa();
         }
         else
         {
@@ -409,7 +418,7 @@ int main(int argc, char** argv)
 
         if(dump)
         {
-            dumpbin(binary, amd64, machine, entryAddress, &sect.si[textIndex], gAddresses);
+            dumpbin(binary, arch64, machine, entryAddress, &sect.si[textIndex], gAddresses);
         }
 
         textSize = sect.si[textIndex].size;
@@ -557,4 +566,3 @@ int main(int argc, char** argv)
 
     fclose(executable);
 }
-
