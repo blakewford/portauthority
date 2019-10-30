@@ -116,7 +116,7 @@ void dumpbin(const uint8_t* binary, bool amd64, uint8_t machine, uint64_t entryA
             {
                 std::string clean(test);
                 std::transform(clean.begin(), clean.end(), clean.begin(),[](unsigned char c){ return std::tolower(c); });
-                printf("     %llx:	%llx 	%s\n", address, instruction, clean.c_str());
+                printf("     %" PRIu64 ":	%u 	%s\n", address, instruction, clean.c_str());
             }
 
             address += 4;
