@@ -3,8 +3,13 @@
 #include <sys/user.h>
 #include <sys/wait.h>
 #include <sys/ptrace.h>
+#include <sys/signal.h>
 
+#ifdef __aarch64__
+#define BREAK 0xD4200000 //aarch64 breakpoint instruction
+#else
 #define BREAK 0xCC00000000000000 //x86 breakpoint instruction
+#endif
 
 uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_t moduleBound, isa* arch, analyzer** analyzers)
 {
@@ -18,13 +23,30 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
     uint8_t binary[8];
 
     FILE* reopen = fopen(executable, "r");
-    size_t read = fread(binary, 1, size, reopen);
-    if(read != size) return 0;
+    if(fread(binary, 1, size, reopen) != size) return 0;
 
     bool arch64 = binary[4] == 0x2;
 
 #ifdef __aarch64__
-    return 0;
+    FILE* process = popen("./suspend.sh ~/ID-15-Shadow-Runner/runner", "r");
+
+    char pidStr[6];
+    memset(pidStr, '\0', 6);
+    char* cursor = pidStr;
+
+    int fd = fileno(process);
+    int flags = fcntl(fd, F_GETFL, 0);
+    fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+
+    ssize_t bytes = 0;
+    while(bytes >= 0)
+    {
+        usleep(1000*100);
+        bytes = read(fd, cursor, 1);
+        cursor++;
+    }
+
+    pid = atoi(pidStr);
 #else
     posix_spawn(&pid, executable, NULL, NULL, NULL, NULL);
 #endif
@@ -32,9 +54,16 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
     waitpid(pid, &status, WSTOPPED);
     profilerAddress -= (sizeof(uint64_t));
     profilerAddress++;
+
     long data = ptrace(PTRACE_PEEKDATA, pid, profilerAddress, NULL);
+
     //set our starting breakpoint
+#ifdef __aarch64__
+    ptrace(PTRACE_POKEDATA, pid, profilerAddress, BREAK);
+#else
     ptrace(PTRACE_POKEDATA, pid, profilerAddress, (data&0x00FFFFFFFFFFFFFF) | BREAK);
+#endif
+
     ptrace(PTRACE_CONT, pid, NULL, NULL);
     //_start causes the process to stop
     waitpid(pid, &status, WSTOPPED);
