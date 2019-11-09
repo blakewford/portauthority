@@ -13,18 +13,19 @@
 
 uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_t moduleBound, isa* arch, analyzer** analyzers)
 {
-    x86_isa& instructionSet = (x86_isa&)(*arch);
-
     pid_t pid = 0;
     int32_t status = 0;
     user_regs_struct registers;
 
 #ifdef __aarch64__
+    aarch64_isa& instructionSet = (aarch64_isa&)(*arch);
+
     iovec buffer;
     buffer.iov_base = &registers;
     buffer.iov_len = sizeof(registers);
     iovec* registerBuffer = &buffer;
 #else
+    x86_isa& instructionSet = (x86_isa&)(*arch);
     user_regs_struct* registerBuffer = &registers;
 #endif
 
@@ -107,11 +108,16 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
         if(registers.pc < moduleBound)
         {
             uint64_t value = ptrace(PTRACE_PEEKDATA, pid, registers.pc, NULL);
+            const char* disasm = arm64_decode((uint32_t)value);
+
+            char mnem[16];
+            int byte = strlen(disasm);
+            memset(mnem, '\0', 16);
+            strcpy(mnem, disasm);
 #else
         if(registers.rip < moduleBound)
         {
             uint64_t value = ptrace(PTRACE_PEEKDATA, pid, registers.rip, NULL);
-#endif
             //printf("%llx\n", registers.rip);
             for(int32_t i = 0; i < INSTRUCTION_LENGTH_MAX; i++)
             {
@@ -137,6 +143,7 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
                 mnem[byte++] = c;
                 c = disasm[byte];
             }
+#endif
             long ndx = instructionSet.find(mnem);
             if(ndx != -1)
             {
