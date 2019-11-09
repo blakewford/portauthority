@@ -19,6 +19,15 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
     int32_t status = 0;
     user_regs_struct registers;
 
+#ifdef __aarch64__
+    iovec buffer;
+    buffer.iov_base = &registers;
+    buffer.iov_len = sizeof(registers);
+    iovec* registerBuffer = &buffer;
+#else
+    user_regs_struct* registerBuffer = &registers;
+#endif
+
     size_t size = 8;
     uint8_t binary[8];
 
@@ -49,11 +58,11 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
     pid = atoi(pidStr);
 #else
     posix_spawn(&pid, executable, NULL, NULL, NULL, NULL);
+    profilerAddress -= (sizeof(uint64_t));
+    profilerAddress++;
 #endif
     ptrace(PTRACE_ATTACH, pid, NULL, NULL);
     waitpid(pid, &status, WSTOPPED);
-    profilerAddress -= (sizeof(uint64_t));
-    profilerAddress++;
 
     long data = ptrace(PTRACE_PEEKDATA, pid, profilerAddress, NULL);
 
@@ -74,7 +83,6 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
     ptrace(PTRACE_POKEDATA, pid, profilerAddress, data);
     const int32_t INSTRUCTION_LENGTH_MAX = 7;
     uint8_t instructions[INSTRUCTION_LENGTH_MAX];
-
     uint32_t instructionCount = 0;
 
     ud_t u;
@@ -84,10 +92,10 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
     while(WIFSTOPPED(status))
     {
 #ifdef __aarch64__
-        ptrace(PTRACE_GETREGSET, pid, NULL, &registers);
+        ptrace(PTRACE_GETREGSET, pid, NT_PRSTATUS, registerBuffer);
         if(registers.pc == 0)
 #else
-        ptrace(PTRACE_GETREGS, pid, NULL, &registers);
+        ptrace(PTRACE_GETREGS, pid, NULL, registerBuffer);
         if(registers.rip == 0)
 #endif
         {
