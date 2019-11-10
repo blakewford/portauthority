@@ -162,6 +162,12 @@ const uint32_t FILTER7 = 0xBFC00000;
 const uint32_t FILTER8 = 0xBFD00C00;
 const uint32_t FILTER9 = 0xFC000000;
 const uint32_t FILTERA = 0xFFFFFC1F;
+const uint32_t FILTERB = 0xFF200000;
+const uint32_t FILTERC = 0x7FE0001F;
+const uint32_t FILTERD = 0x7F00001F;
+const uint32_t FILTERE = 0x7F20001F;
+const uint32_t FILTERF = 0xFF000010;
+const uint32_t FILTER10 = 0x7F807C00;
 
 const char* arm64_decode(uint32_t opcode)
 {
@@ -216,6 +222,18 @@ const char* arm64_decode(uint32_t opcode)
             {
                 return "ADRP";
             }
+            else if((opcode & FILTER3) == 0x51000000)
+            {
+                return "SUB";
+            }
+            else if((opcode & FILTERD) == 0x7100001F)
+            {
+                return "CMP";
+            }
+            else if((opcode & FILTER10) == 0x13007C00)
+            {
+                return "ASR";
+            }
             break;
         case 10:
         case 11:
@@ -223,6 +241,10 @@ const char* arm64_decode(uint32_t opcode)
             if((opcode & FILTER9) == 0x94000000)
             {
                 return "BL";
+            }
+            else if((opcode & FILTER9) == 0x14000000)
+            {
+                return "B";
             }
             else if((opcode & FILTERA) == 0xD65F0000)
             {
@@ -236,6 +258,14 @@ const char* arm64_decode(uint32_t opcode)
             {
                 return "CBZ";
             }
+            else if((opcode & FILTERA) == 0xD61F0000)
+            {
+                return "BR";
+            }
+            else if((opcode & FILTERF) == 0x54000000)
+            {
+                return "B.cond";
+            }
             break;
         case 5:
         case 13:
@@ -243,6 +273,10 @@ const char* arm64_decode(uint32_t opcode)
             if((opcode & FILTER1) == 0x1B200000)
             {
                 return "ADD";
+            }
+            else if((opcode & FILTER1) == 0x4B200000)
+            {
+                return "SUB";
             }
             else if((opcode & FILTER2) == 0x0B000000)
             {
@@ -260,6 +294,22 @@ const char* arm64_decode(uint32_t opcode)
             {
                 return "MOV";
             }
+            else if((opcode & FILTER2) == 0x4B000000)
+            {
+                return "SUB";
+            }
+            else if((opcode & FILTERC) == 0x6B20001F)
+            {
+                return "CMP";
+            }
+            else if((opcode & FILTERE) == 0x6B00001F)
+            {
+                return "CMP";
+            }
+            else if((opcode & FILTER0) == 0x1AC02800)
+            {
+                return "ASR";
+            }
             break;
         case 7:
         case 15:
@@ -271,6 +321,10 @@ const char* arm64_decode(uint32_t opcode)
             else if((opcode & FILTER0) == 0x3A000000)
             {
                 return "ADCS";
+            }
+            else if((opcode & FILTERB) == 0x7E200000)
+            {
+                return "SUB";
             }
             break;
         default:
