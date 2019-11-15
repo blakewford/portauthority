@@ -168,6 +168,15 @@ const uint32_t FILTERD = 0x7F00001F;
 const uint32_t FILTERE = 0x7F20001F;
 const uint32_t FILTERF = 0xFF000010;
 const uint32_t FILTER10 = 0x7F807C00;
+const uint32_t FILTER11 = 0x7FC00000;
+const uint32_t FILTER12 = 0x3FC00000;
+const uint32_t FILTER13 = 0xBFE00C00;
+const uint32_t FILTER14 = 0x3FE00C00;
+const uint32_t FILTER15 = 0x3F600C00;
+const uint32_t FILTER16 = 0xFFE00C00;
+const uint32_t FILTER17 = 0xFFC00000;
+const uint32_t FILTER18 = 0xFFFFFC00;
+const uint32_t FILTER19 = 0x7F30FC00;
 
 const char* arm64_decode(uint32_t opcode)
 {
@@ -198,11 +207,75 @@ const char* arm64_decode(uint32_t opcode)
             {
                 return "LDR";
             }
+            else if((opcode & FILTER11) == 0x28800000 || (opcode & FILTER11) == 0x29800000 || (opcode & FILTER11) == 0x29000000)
+            {
+                return "STP";
+            }
+            else if((opcode & FILTER12) == 0x2C800000 || (opcode & FILTER12) == 0x2C900000 || (opcode & FILTER12) == 0x2C000000)
+            {
+                return "STP";
+            }
+            else if((opcode & FILTER14) == 0x3C000400 || (opcode & FILTER14) == 0x3C000C00)
+            {
+                return "STR";
+            }
+            else if((opcode & FILTER15) == 0x3C000C00)
+            {
+                return "STR";
+            }
+            else if((opcode & FILTER13) == 0xB8000400 || (opcode & FILTER13) == 0xB8000C00)
+            {
+                return "STR";
+            }
+            else if((opcode & FILTER7) == 0xB9000000)
+            {
+                return "STR";
+            } 
+            else if((opcode & FILTER14) == 0x3C200800)
+            {
+                return "STR";
+            }
+            else if((opcode & FILTER13) == 0xB8200800)
+            {
+                return "STR";
+            }
+            else if((opcode & FILTER11) == 0x28C00000 || (opcode & FILTER11) == 0x29C00000 || (opcode & FILTER11) == 0x29400000)
+            {
+                return "LDP";
+            } 
+            else if((opcode & FILTER12) == 0x2CC00000 || (opcode & FILTER12) == 0x2DC00000 || (opcode & FILTER12) == 0x2D400000)
+            {
+                return "LDP";
+            }
+            else if((opcode & FILTER16) == 0x38400C00 || (opcode & FILTER16) == 0x38400400)
+            {
+                return "LDRB";
+            }
+            else if((opcode & FILTER17) == 0x39400000)
+            {
+                return "LDRB";
+            }
+            else if((opcode & FILTER16) == 0x38600800)
+            {
+                return "LDRB";
+            }            
+            else if((opcode & FILTER16) == 0x38000400 || (opcode & FILTER16) == 0x38000C00)
+            {
+                return "STRB";
+            }
+            else if((opcode & FILTER17) == 0x39000000)
+            {
+                return "STRB";
+            }                                                                                                                                                                     
             break;
         case 8:
         case 9:
 //            printf("Data processing - immediate\n");
-            if((opcode & FILTER1) == 0x11000000)
+            if((opcode & FILTER19) == 0x11000000)
+            {
+                return "MOV";
+            }
+            else if((opcode & FILTER1) == 0x11000000)
             {
                 return "ADD";
             }
@@ -230,10 +303,18 @@ const char* arm64_decode(uint32_t opcode)
             {
                 return "CMP";
             }
+            else if((opcode & FILTER18) == 0x93407C00)
+            {
+                return "SXTW";
+            }            
             else if((opcode & FILTER10) == 0x13007C00)
             {
                 return "ASR";
             }
+            else if((opcode & FILTER18) == 0x53001C00)
+            {
+                return "UXTB";
+            }                        
             break;
         case 10:
         case 11:
@@ -266,6 +347,10 @@ const char* arm64_decode(uint32_t opcode)
             {
                 return "B.cond";
             }
+            else if((opcode & FILTERA) == 0xD63F0000)
+            {
+                return "BLR";
+            }            
             break;
         case 5:
         case 13:
