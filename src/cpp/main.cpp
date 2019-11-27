@@ -143,7 +143,7 @@ int32_t readULEB(uint8_t*& binary)
     return value;
 }
 
-void runLineNumberProgram(uint8_t*& binary, const sectionInfo& debugLine, int32_t argument)
+void runLineNumberProgram(uint8_t*& binary, const sectionInfo& debugLine, const char* binaryPath)
 {
     void* lineData = (binary + debugLine.offset);
     lineInfoHeader* lines = (lineInfoHeader*)lineData;
@@ -204,7 +204,7 @@ void runLineNumberProgram(uint8_t*& binary, const sectionInfo& debugLine, int32_
 */
     char command[256];
     memset(command, '\0', 256);
-    sprintf(command, "readelf --debug-dump=decodedline %s > /tmp/decodedline", cachedArgv[argument]);
+    sprintf(command, "readelf --debug-dump=decodedline %s > /tmp/decodedline", binaryPath);
     int32_t error = system(command );
 
     std::string l;
@@ -249,26 +249,58 @@ int main(int argc, char** argv)
 
     isa* instructionSet = nullptr;
 
-    int32_t argument = 1;
+    const char* binaryPath;
+    const char* replayPath;
+
     bool dump = false;
     bool replay = false;
+    bool execute = false;
     bool createReport = false;
-    if(cachedArgc > 1 && !strcmp(cachedArgv[1], "--report"))
+
+    int32_t runtimeBias = 0;
+    const char* functionName = "";
+
+    int32_t arg = cachedArgc;
+    while(arg--)
     {
-        createReport = true;
-        argument++;
+        if(!strcmp(cachedArgv[arg], "--report"))
+        {
+            createReport = true;
+        }
+        else if(!strcmp(cachedArgv[arg], "--dumpbin"))
+        {
+            dump = true;
+        }
+        else if(!strcmp(cachedArgv[arg], "--replay"))
+        {
+            replay = true;
+            replayPath = cachedArgv[arg+1];
+        }
+        else if(!strcmp(cachedArgv[arg], "--execute"))
+        {
+            execute = true;
+            binaryPath = cachedArgv[arg+1];
+        }
+        else if(!strcmp(cachedArgv[arg], "--function"))
+        {
+            functionName = cachedArgv[arg+1];
+        }
+        else if(!strcmp(cachedArgv[arg], "--bias"))
+        {
+            runtimeBias = atoi(cachedArgv[arg+1]);
+        }
     }
 
-    if(cachedArgc > 1 && !strcmp(cachedArgv[1], "--dumpbin"))
+    if((!replay && !execute) || (replay && execute))
     {
-        dump = true;
-        argument++;
+        printf("Either --replay or --execute argument required!\n");
+        return -1;
     }
 
-    if(cachedArgc > 1 && !strcmp(cachedArgv[1], "--replay"))
+    if(dump && !execute)
     {
-        replay = true;
-        argument++;
+        printf("Using --dumpbin requires --execute argument!\n");
+        return -1;
     }
 
     bool arch64 = false;
@@ -279,12 +311,7 @@ int main(int argc, char** argv)
     uint64_t moduleBound = 0;
     uint64_t profilerAddress = 0;
 
-    FILE* executable = 0;
-    if(replay)
-    {
-        argument++;
-    }
-    if(cachedArgc > 1) executable = fopen(cachedArgv[argument], "r");
+    FILE* executable = fopen(binaryPath, "r");
     if(executable)
     {
         fseek(executable, 0, SEEK_END);
@@ -322,7 +349,13 @@ int main(int argc, char** argv)
         }
 
         useGdb = machine == EM_AVR || machine == EM_ARM;
-        const char* FUNCTION_NAME = machine == EM_AVR ? "__vectors": "main";
+        if(functionName == "")
+        {
+            const char* warning = "\e[93mUsing default entry point\e[0m\n";
+            fwrite(warning, strlen(warning), 1, stderr);
+
+            functionName =  machine == EM_AVR ? "__vectors": "main";
+        }
 
         char* json = nullptr;
         FILE* library = nullptr;
@@ -424,7 +457,7 @@ int main(int argc, char** argv)
         textSize = sect.si[textIndex].size;
         textStart = sect.si[textIndex].address;
         profilerAddress = textStart; //reasonable default
-        runLineNumberProgram(binary, sect.si[debugLineIndex], argument);
+        runLineNumberProgram(binary, sect.si[debugLineIndex], binaryPath);
 
         ndx = 0;
 
@@ -460,7 +493,7 @@ int main(int argc, char** argv)
                 highestAddress = highestAddress < address ? address: highestAddress;
                 highestAddress += symbolSize;
                 getStringForIndex(binary, sect.si[stringTableIndex], name, buffer, 256);
-                if(!strcmp(FUNCTION_NAME, buffer))
+                if(!strcmp(functionName, buffer))
                 {
                     profilerAddress = address;
                 }
@@ -487,30 +520,18 @@ int main(int argc, char** argv)
     //profilerAddress = 0x8049a6d;
 
     uint32_t instructionCount = 0;
-    if(!replay)
+    if(execute)
     {
+        coverage.adjustCount(runtimeBias);
         if(useGdb)
         {
-            int32_t RUNTIME_BIAS = 0;
-            if(machine == EM_AVR)
-            {
-                RUNTIME_BIAS = 0x600;
-            }
-            else
-            {
-                RUNTIME_BIAS = 560; //TODO This is flexible based on running project. Adjust to be dynamic.
-            }
-            coverage.adjustCount(RUNTIME_BIAS);
-            instructionCount = profileGdb(cachedArgv[argument], machine, profilerAddress, moduleBound, instructionSet, analyzers);
-            instructionCount += RUNTIME_BIAS;
+            instructionCount = profileGdb(binaryPath, machine, profilerAddress, moduleBound, instructionSet, analyzers);
         }
         else
         {
-            const int32_t RUNTIME_BIAS = 360;
-            coverage.adjustCount(RUNTIME_BIAS);
-            instructionCount = profileNative(cachedArgv[argument], profilerAddress, moduleBound, instructionSet, analyzers);
-            instructionCount += RUNTIME_BIAS;
+            instructionCount = profileNative(binaryPath, profilerAddress, moduleBound, instructionSet, analyzers);
         }
+        instructionCount += runtimeBias;
     }
     else if(replay)
     {
@@ -521,7 +542,7 @@ int main(int argc, char** argv)
         std::string group;
         std::string subgroup;
         std::ifstream replay;
-        replay.open(cachedArgv[--argument]);
+        replay.open(replayPath);
 
         while(!replay.eof())
         {
@@ -551,7 +572,7 @@ int main(int argc, char** argv)
 
     if(createReport)
     {
-        analyzer::header(cachedArgv[argument], !useGdb, machine, instructionCount, coverage.getCycleCount());
+        analyzer::header(binaryPath, !useGdb, machine, instructionCount, coverage.getCycleCount());
         energy.report();
         coverage.report();
         division.report();
@@ -565,4 +586,5 @@ int main(int argc, char** argv)
     }
 
     fclose(executable);
+    return 0;
 }
