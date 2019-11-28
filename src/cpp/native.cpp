@@ -8,7 +8,7 @@
 #ifdef __aarch64__
 #define BREAK 0xD4200000 //aarch64 breakpoint instruction
 #else
-#define BREAK 0xCC00000000000000 //x86 breakpoint instruction
+#define BREAK 0xCC //x86 breakpoint instruction
 #endif
 
 uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_t moduleBound, isa* arch, analyzer** analyzers)
@@ -59,11 +59,34 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
     pid = atoi(pidStr);
 #else
     posix_spawn(&pid, executable, NULL, NULL, NULL, NULL);
-    profilerAddress -= (sizeof(uint64_t));
-    profilerAddress++;
 #endif
+
     ptrace(PTRACE_ATTACH, pid, NULL, NULL);
     waitpid(pid, &status, WSTOPPED);
+
+#ifndef __aarch64__
+    ud_t u;
+    ud_init(&u);
+    ud_set_mode(&u, arch64 ? 64: 32);
+    ud_set_syntax(&u, UD_SYN_ATT);
+
+    const int32_t INSTRUCTION_LENGTH_MAX = 7;
+    uint8_t instructions[INSTRUCTION_LENGTH_MAX];
+
+    uint64_t value = ptrace(PTRACE_PEEKDATA, pid, profilerAddress, NULL);
+
+    memcpy(instructions, &value, INSTRUCTION_LENGTH_MAX);
+
+    int byte = 0;
+    bool invalid = true;
+    while(invalid && (byte <= INSTRUCTION_LENGTH_MAX))
+    {
+        byte++;
+        ud_set_input_buffer(&u, &instructions[byte-1], byte);
+        ud_disassemble(&u);
+        invalid = strcmp(ud_insn_asm(&u), "invalid ") == 0;
+    }
+#endif
 
     long data = ptrace(PTRACE_PEEKDATA, pid, profilerAddress, NULL);
 
@@ -71,7 +94,10 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
 #ifdef __aarch64__
     ptrace(PTRACE_POKEDATA, pid, profilerAddress, BREAK);
 #else
-    ptrace(PTRACE_POKEDATA, pid, profilerAddress, (data&0x00FFFFFFFFFFFFFF) | BREAK);
+    uint8_t bytes[sizeof(long)];
+    memset(bytes, '\0', sizeof(long));
+    bytes[byte-1] = BREAK;
+    ptrace(PTRACE_POKEDATA, pid, profilerAddress, *bytes);
 #endif
 
     ptrace(PTRACE_CONT, pid, NULL, NULL);
@@ -80,16 +106,17 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
     //run to break
     ptrace(PTRACE_CONT, pid, NULL, NULL);
     waitpid(pid, &status, WSTOPPED);
+
     //replace instruction
     ptrace(PTRACE_POKEDATA, pid, profilerAddress, data);
-    const int32_t INSTRUCTION_LENGTH_MAX = 7;
-    uint8_t instructions[INSTRUCTION_LENGTH_MAX];
-    uint32_t instructionCount = 0;
 
-    ud_t u;
-    ud_init(&u);
-    ud_set_mode(&u, arch64 ? 64: 32);
-    ud_set_syntax(&u, UD_SYN_ATT);
+#ifndef __aarch64__
+    ptrace(PTRACE_GETREGS, pid, NULL, registerBuffer);
+    registerBuffer->rip = profilerAddress;
+    ptrace(PTRACE_SETREGS, pid, NULL, registerBuffer);
+#endif
+
+    uint32_t instructionCount = 0;
     while(WIFSTOPPED(status))
     {
 #ifdef __aarch64__
