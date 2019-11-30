@@ -77,7 +77,7 @@ bool packetWrite(int fd, uint32_t& address, const char* replay)
     return packetRead(fd, address);
 }
 
-uint32_t profileGdb(const char* executable, uint8_t machine, uint64_t profilerAddress, uint64_t moduleBound, isa* arch, analyzer** analyzers)
+uint32_t profileGdb(const char* executable, uint8_t machine, uint64_t profilerAddress, uint64_t moduleBound, uint64_t exitAddress, isa* arch, analyzer** analyzers)
 {
     avr_isa& instructionSet = (avr_isa&)(*arch);
 

@@ -11,7 +11,7 @@
 #define BREAK 0xCC //x86 breakpoint instruction
 #endif
 
-uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_t moduleBound, isa* arch, analyzer** analyzers)
+uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_t moduleBound, uint64_t exitAddress, isa* arch, analyzer** analyzers)
 {
     pid_t pid = 0;
     int32_t status = 0;
@@ -121,10 +121,10 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
     {
 #ifdef __aarch64__
         ptrace(PTRACE_GETREGSET, pid, NT_PRSTATUS, registerBuffer);
-        if(registers.pc == 0)
+        if(registers.pc == exitAddress)
 #else
         ptrace(PTRACE_GETREGS, pid, NULL, registerBuffer);
-        if(registers.rip == 0)
+        if(registers.rip == exitAddress)
 #endif
         {
             //natural program termination

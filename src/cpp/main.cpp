@@ -260,7 +260,8 @@ int main(int argc, char** argv)
     bool createReport = false;
 
     int32_t runtimeBias = 0;
-    const char* functionName = "";
+    const char* breakFunction = "";
+    const char* endFunction = "";
 
     int32_t arg = cachedArgc;
     while(arg--)
@@ -283,9 +284,13 @@ int main(int argc, char** argv)
             execute = true;
             binaryPath = cachedArgv[arg+1];
         }
-        else if(!strcmp(cachedArgv[arg], "--function"))
+        else if(!strcmp(cachedArgv[arg], "--break"))
         {
-            functionName = cachedArgv[arg+1];
+            breakFunction = cachedArgv[arg+1];
+        }
+        else if(!strcmp(cachedArgv[arg], "--end"))
+        {
+            endFunction = cachedArgv[arg+1];
         }
         else if(!strcmp(cachedArgv[arg], "--bias"))
         {
@@ -312,6 +317,7 @@ int main(int argc, char** argv)
     uint64_t textStart = 0;
     uint64_t moduleBound = 0;
     uint64_t profilerAddress = 0;
+    uint64_t exitAddress = 0;
 
     FILE* executable = fopen(binaryPath, "r");
     if(executable)
@@ -351,12 +357,19 @@ int main(int argc, char** argv)
         }
 
         useGdb = machine == EM_AVR || machine == EM_ARM;
-        if(functionName == "")
+        if(breakFunction == "")
         {
             const char* warning = "\e[93mUsing default entry point\e[0m\n";
             fwrite(warning, strlen(warning), 1, stderr);
 
-            functionName =  machine == EM_AVR ? "__vectors": "main";
+            breakFunction =  machine == EM_AVR ? "__vectors": "main";
+        }
+        if(endFunction == "")
+        {
+            const char* warning = "\e[93mUsing default exit point\e[0m\n";
+            fwrite(warning, strlen(warning), 1, stderr);
+
+            endFunction =  machine == EM_AVR ? "__stop_program": "_fini";
         }
 
         char* json = nullptr;
@@ -495,9 +508,13 @@ int main(int argc, char** argv)
                 highestAddress = highestAddress < address ? address: highestAddress;
                 highestAddress += symbolSize;
                 getStringForIndex(binary, sect.si[stringTableIndex], name, buffer, 256);
-                if(!strcmp(functionName, buffer))
+                if(!strcmp(breakFunction, buffer))
                 {
                     profilerAddress = address;
+                }
+                if(!strcmp(endFunction, buffer))
+                {
+                    exitAddress = address;
                 }
             }
             ndx++;
@@ -527,11 +544,11 @@ int main(int argc, char** argv)
         coverage.adjustCount(runtimeBias);
         if(useGdb)
         {
-            instructionCount = profileGdb(binaryPath, machine, profilerAddress, moduleBound, instructionSet, analyzers);
+            instructionCount = profileGdb(binaryPath, machine, profilerAddress, moduleBound, exitAddress, instructionSet, analyzers);
         }
         else
         {
-            instructionCount = profileNative(binaryPath, profilerAddress, moduleBound, instructionSet, analyzers);
+            instructionCount = profileNative(binaryPath, profilerAddress, moduleBound, exitAddress, instructionSet, analyzers);
         }
         instructionCount += runtimeBias;
     }
