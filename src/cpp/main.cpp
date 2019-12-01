@@ -24,6 +24,10 @@ int32_t cachedArgc = 0;
 char argvStorage[1024];
 char* cachedArgv[64];
 
+int32_t subprocessCachedArgc = 0;
+char subprocessArgvStorage[1024];
+char* subprocessCachedArgv[64];
+
 struct sectionInfo
 {
     uint32_t type;
@@ -265,6 +269,7 @@ int main(int argc, char** argv)
     uint64_t breakAddress = 0;
     uint64_t endAddress = 0;
 
+    char* subprocessStoragePointer = subprocessArgvStorage;
     int32_t arg = cachedArgc;
     while(arg--)
     {
@@ -305,6 +310,34 @@ int main(int argc, char** argv)
         else if(!strcmp(cachedArgv[arg], "--bias"))
         {
             runtimeBias = atoi(cachedArgv[arg+1]);
+        }
+        else if(!strcmp(cachedArgv[arg], "--arg"))
+        {
+            subprocessCachedArgv[subprocessCachedArgc] = subprocessStoragePointer;
+            int32_t length = strlen(cachedArgv[arg+1]);
+            strcat(subprocessStoragePointer, cachedArgv[arg+1]);
+            subprocessStoragePointer+=(length+1);
+            subprocessCachedArgc++;
+        }
+    }
+
+    if(execute)
+    {
+        subprocessCachedArgv[subprocessCachedArgc] = subprocessStoragePointer;
+        int32_t length = strlen(binaryPath);
+        strcat(subprocessStoragePointer, binaryPath);
+        subprocessStoragePointer+=(length+1);
+        subprocessCachedArgc++;
+
+        int32_t i = 0;
+        int32_t j = subprocessCachedArgc-1;
+        while(i < j)
+        {
+            auto temp = subprocessCachedArgv[i];
+            subprocessCachedArgv[i] = subprocessCachedArgv[j];
+            subprocessCachedArgv[j] = temp;
+            i++;
+            j--;
         }
     }
 

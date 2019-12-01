@@ -66,7 +66,7 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
 
     pid = atoi(pidStr);
 #else
-    posix_spawn(&pid, executable, NULL, NULL, NULL, NULL);
+    posix_spawn(&pid, executable, NULL, NULL, subprocessCachedArgv, NULL);
 #endif
 
     microseconds startProfile = duration_cast<microseconds>(high_resolution_clock::now().time_since_epoch());
