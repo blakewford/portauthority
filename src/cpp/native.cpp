@@ -5,6 +5,9 @@
 #include <sys/ptrace.h>
 #include <sys/signal.h>
 
+#include <chrono>
+using namespace std::chrono;
+
 #ifdef __aarch64__
 #define BREAK 0xD4200000 //aarch64 breakpoint instruction
 #else
@@ -13,6 +16,11 @@
 
 uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_t moduleBound, uint64_t exitAddress, isa* arch, analyzer** analyzers)
 {
+    bool transition = false;
+    microseconds untracked = microseconds{0};
+    microseconds startTransition = duration_cast<microseconds>(high_resolution_clock::now().time_since_epoch());
+    microseconds endTransition = startTransition;
+
     pid_t pid = 0;
     int32_t status = 0;
     user_regs_struct registers;
@@ -60,6 +68,8 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
 #else
     posix_spawn(&pid, executable, NULL, NULL, NULL, NULL);
 #endif
+
+    microseconds startProfile = duration_cast<microseconds>(high_resolution_clock::now().time_since_epoch());
 
     ptrace(PTRACE_ATTACH, pid, NULL, NULL);
     waitpid(pid, &status, WSTOPPED);
@@ -146,6 +156,15 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
         {
             uint64_t value = ptrace(PTRACE_PEEKDATA, pid, registers.rip, NULL);
             //printf("%llx\n", registers.rip);
+            if(!transition)
+            {
+                if(startTransition != endTransition)
+                {
+                    endTransition = duration_cast<microseconds>(high_resolution_clock::now().time_since_epoch());
+                    untracked += endTransition-startTransition;
+                }
+            }
+            transition = true;
             for(int32_t i = 0; i < INSTRUCTION_LENGTH_MAX; i++)
             {
                 instructions[i] = value&0xFF;
@@ -193,10 +212,22 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
             }
             instructionCount++;
         }
+        else
+        {
+            if(transition)
+            {
+                startTransition = duration_cast<microseconds>(high_resolution_clock::now().time_since_epoch());
+            }
+            transition = false;
+        }
+
         ptrace(PTRACE_SINGLESTEP, pid, NULL, NULL);
         waitpid(pid, &status, WSTOPPED);
     }
     kill(pid, SIGKILL);
+
+    microseconds endProfile = duration_cast<microseconds>(high_resolution_clock::now().time_since_epoch());
+    //printf("Runtime (ms): %ld Untracked: %ld\n", duration_cast<milliseconds>(endProfile-startProfile).count(), duration_cast<milliseconds>(untracked).count());
 
     return instructionCount;
 }

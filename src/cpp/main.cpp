@@ -262,6 +262,8 @@ int main(int argc, char** argv)
     int32_t runtimeBias = 0;
     const char* breakFunction = "";
     const char* endFunction = "";
+    uint64_t breakAddress = 0;
+    uint64_t endAddress = 0;
 
     int32_t arg = cachedArgc;
     while(arg--)
@@ -291,6 +293,14 @@ int main(int argc, char** argv)
         else if(!strcmp(cachedArgv[arg], "--end"))
         {
             endFunction = cachedArgv[arg+1];
+        }
+        else if(!strcmp(cachedArgv[arg], "--break-at-address"))
+        {
+            breakAddress = strtol(cachedArgv[arg+1], NULL, 16);
+        }
+        else if(!strcmp(cachedArgv[arg], "--end-at-address"))
+        {
+            endAddress = strtol(cachedArgv[arg+1], NULL, 16);
         }
         else if(!strcmp(cachedArgv[arg], "--bias"))
         {
@@ -357,14 +367,14 @@ int main(int argc, char** argv)
         }
 
         useGdb = machine == EM_AVR || machine == EM_ARM;
-        if(breakFunction == "")
+        if(breakFunction == "" && breakAddress == 0)
         {
             const char* warning = "\e[93mUsing default entry point\e[0m\n";
             fwrite(warning, strlen(warning), 1, stderr);
 
             breakFunction =  machine == EM_AVR ? "__vectors": "main";
         }
-        if(endFunction == "")
+        if(endFunction == "" && endAddress == 0)
         {
             const char* warning = "\e[93mUsing default exit point\e[0m\n";
             fwrite(warning, strlen(warning), 1, stderr);
@@ -508,17 +518,20 @@ int main(int argc, char** argv)
                 highestAddress = highestAddress < address ? address: highestAddress;
                 highestAddress += symbolSize;
                 getStringForIndex(binary, sect.si[stringTableIndex], name, buffer, 256);
-                if(!strcmp(breakFunction, buffer))
+                if(breakAddress == 0 && !strcmp(breakFunction, buffer))
                 {
                     profilerAddress = address;
                 }
-                if(!strcmp(endFunction, buffer))
+                if(endAddress == 0 && !strcmp(endFunction, buffer))
                 {
                     exitAddress = address;
                 }
             }
             ndx++;
         }
+
+        if(breakAddress != 0) profilerAddress = breakAddress;
+        if(endAddress != 0) exitAddress = endAddress;
 
         if(highestAddress == 0) highestAddress = ~0;
         moduleBound = highestAddress;
