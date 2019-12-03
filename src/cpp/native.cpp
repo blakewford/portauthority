@@ -16,6 +16,9 @@ using namespace std::chrono;
 
 uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_t moduleBound, uint64_t exitAddress, isa* arch, analyzer** analyzers)
 {
+    uint64_t moduleLow = 0;
+    uint64_t moduleHigh = 0;
+
     bool transition = false;
     microseconds untracked = microseconds{0};
     microseconds startTransition = duration_cast<microseconds>(high_resolution_clock::now().time_since_epoch());
@@ -135,6 +138,37 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
     ptrace(PTRACE_SETREGS, pid, NULL, registerBuffer);
 #endif
 
+    char modulesPath[32];
+    sprintf(modulesPath,"/proc/%d/maps", pid);
+
+    char* line = nullptr;
+    FILE* modules = fopen(modulesPath, "r");
+    if(modules)
+    {
+        size_t length = 0;
+        while(getline(&line, &length, modules) != -1)
+        {
+            string module(line);
+            if(module.find("libopencv_core") != -1)
+            {
+                char* token = strtok(line, " ");
+                token = strtok(nullptr, " ");
+                if(strchr(token, 'x') != nullptr) //executable permission
+                {
+                    char range[64];
+                    token = strtok(line, " ");
+                    strcpy(range, token);
+                    range[strlen(token)] = '\0';
+                    token = strtok(range, "-");
+                    moduleLow = strtoll(token, nullptr, 16);
+                    token = strtok(nullptr, "-");
+                    moduleHigh = strtoll(token, nullptr, 16);
+                    break;
+                }
+            }
+        }
+    }
+
     uint32_t instructionCount = 0;
     while(WIFSTOPPED(status))
     {
@@ -228,6 +262,14 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
                 startTransition = duration_cast<microseconds>(high_resolution_clock::now().time_since_epoch());
             }
             transition = false;
+
+#ifdef __aarch64__
+            if(registers.pc >= moduleLow && registers.pc <= moduleHigh)
+#else
+            if(registers.rip >= moduleLow && registers.rip <= moduleHigh)
+#endif
+            {
+            }
         }
 
         ptrace(PTRACE_SINGLESTEP, pid, NULL, NULL);
