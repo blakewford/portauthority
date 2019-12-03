@@ -46,7 +46,16 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
     bool arch64 = binary[4] == 0x2;
 
 #ifdef __aarch64__
-    FILE* process = popen("./suspend.sh ~/ID-15-Shadow-Runner/runner", "r");
+    int32_t arg = 0;
+    std::string command;
+    command += "./suspend.sh";
+    while(arg < subprocessCachedArgc)
+    {
+        command += " ";
+        command += subprocessCachedArgv[arg++];
+    }
+
+    FILE* process = popen(command.c_str(), "r");
 
     char pidStr[6];
     memset(pidStr, '\0', 6);
