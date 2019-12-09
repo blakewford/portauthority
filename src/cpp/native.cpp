@@ -14,7 +14,7 @@ using namespace std::chrono;
 #define BREAK 0xCC //x86 breakpoint instruction
 #endif
 
-uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_t moduleBound, uint64_t exitAddress, isa* arch, analyzer** analyzers)
+uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_t moduleBound, uint64_t exitAddress, uint64_t pltStart, uint64_t pltEnd, isa* arch, analyzer** analyzers)
 {
     uint64_t moduleLow = 0;
     uint64_t moduleHigh = 0;
@@ -119,7 +119,7 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
     uint8_t bytes[sizeof(long)];
     memset(bytes, '\0', sizeof(long));
     bytes[byte-1] = BREAK;
-    ptrace(PTRACE_POKEDATA, pid, profilerAddress, *bytes);
+    ptrace(PTRACE_POKEDATA, pid, profilerAddress, *(long*)bytes);
 #endif
 
     ptrace(PTRACE_CONT, pid, NULL, NULL);
@@ -169,36 +169,28 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
         }
     }
 
+    uint64_t next = 0;
     uint32_t instructionCount = 0;
     while(WIFSTOPPED(status))
     {
+        uint64_t instructionAddress = 0;
 #ifdef __aarch64__
         ptrace(PTRACE_GETREGSET, pid, NT_PRSTATUS, registerBuffer);
-        if(registers.pc == exitAddress)
+        instructionAddress = registers.pc;
 #else
         ptrace(PTRACE_GETREGS, pid, NULL, registerBuffer);
-        if(registers.rip == exitAddress)
+        instructionAddress = registers.rip;
 #endif
+        if(instructionAddress == exitAddress)
         {
             //natural program termination
             break;
         }
         //need better protections here for code that does not exit cleanly, without exit()
-#ifdef __aarch64__
-        if(registers.pc < moduleBound)
+        if(instructionAddress < moduleBound)
         {
-            uint64_t value = ptrace(PTRACE_PEEKDATA, pid, registers.pc, NULL);
-            const char* disasm = arm64_decode((uint32_t)value);
-
-            char mnem[16];
-            int byte = strlen(disasm);
-            memset(mnem, '\0', 16);
-            strcpy(mnem, disasm);
-#else
-        if(registers.rip < moduleBound)
-        {
-            uint64_t value = ptrace(PTRACE_PEEKDATA, pid, registers.rip, NULL);
-            //printf("%llx\n", registers.rip);
+            uint64_t value = ptrace(PTRACE_PEEKDATA, pid, instructionAddress, nullptr);
+            //printf("%llx\n", instructionAddress);
             if(!transition)
             {
                 if(startTransition != endTransition)
@@ -208,6 +200,39 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
                 }
             }
             transition = true;
+
+            if(next != 0 && (instructionAddress >= pltStart && instructionAddress <= pltEnd))
+            {
+                uint64_t value = ptrace(PTRACE_PEEKDATA, pid, next, nullptr);
+                memcpy(instructions, &value, INSTRUCTION_LENGTH_MAX);
+
+                uint8_t bytes[sizeof(long)];
+                memset(bytes, BREAK, sizeof(long));
+                ptrace(PTRACE_POKEDATA, pid, next, *(long*)bytes);
+
+                //run to break
+                ptrace(PTRACE_CONT, pid, NULL, NULL);
+                waitpid(pid, &status, WSTOPPED);
+
+                //replace instruction
+                ptrace(PTRACE_POKEDATA, pid, next, value);
+
+#ifndef __aarch64__
+                ptrace(PTRACE_GETREGS, pid, NULL, registerBuffer);
+                registerBuffer->rip = next;
+                ptrace(PTRACE_SETREGS, pid, NULL, registerBuffer);
+#endif
+            }
+
+#ifdef __aarch64__
+            const char* disasm = arm64_decode((uint32_t)value);
+
+            char mnem[16];
+            int byte = strlen(disasm);
+            memset(mnem, '\0', 16);
+            strcpy(mnem, disasm);
+            next = instructionAddress + 4;
+#else
             for(int32_t i = 0; i < INSTRUCTION_LENGTH_MAX; i++)
             {
                 instructions[i] = value&0xFF;
@@ -222,6 +247,8 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
                 ud_disassemble(&u);
                 invalid = strcmp(ud_insn_asm(&u), "invalid ") == 0;
             }
+            next = instructionAddress + byte;
+
             char mnem[16];
             memset(mnem, '\0', 16);
             const char* disasm = ud_insn_asm(&u);
@@ -242,11 +269,7 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
                 modified.m_size = byte;
                 while(count--)
                 {
-#ifdef __aarch64__
-                    analyzers[count]->analyze(registers.pc, &modified);
-#else
-                    analyzers[count]->analyze(registers.rip, &modified);
-#endif
+                    analyzers[count]->analyze(instructionAddress, &modified);
                 }
             }
             else
@@ -263,11 +286,7 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
             }
             transition = false;
 
-#ifdef __aarch64__
-            if(registers.pc >= moduleLow && registers.pc <= moduleHigh)
-#else
-            if(registers.rip >= moduleLow && registers.rip <= moduleHigh)
-#endif
+            if(instructionAddress >= moduleLow && instructionAddress <= moduleHigh)
             {
             }
         }

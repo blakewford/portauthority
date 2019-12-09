@@ -35,6 +35,7 @@ struct sectionInfo
     uint64_t address;
     uint64_t offset;
     uint64_t size;
+    bool plt;
     bool text;
     bool symbols;
     bool debugLine;
@@ -356,6 +357,8 @@ int main(int argc, char** argv)
     bool arch64 = false;
     bool useGdb = false;
     uint8_t machine = 0;
+    uint64_t pltSize = 0;
+    uint64_t pltStart = 0;
     uint64_t textSize = 0;
     uint64_t textStart = 0;
     uint64_t moduleBound = 0;
@@ -479,6 +482,7 @@ int main(int argc, char** argv)
             ndx++;
         }
 
+        int32_t pltIndex = 0;
         int32_t textIndex = 0;
         int32_t symbolsIndex = 0;
         int32_t debugLineIndex = 0;
@@ -486,13 +490,19 @@ int main(int argc, char** argv)
 
         ndx = 0;
         numHeaders = totalHeaders;
+        int32_t init        = getIndexForString(binary, sect.si[stringsIndex], ".init");
         int32_t text        = getIndexForString(binary, sect.si[stringsIndex], ".text");
         int32_t debugLine   = getIndexForString(binary, sect.si[stringsIndex], ".debug_line");
         int32_t symbolTable = getIndexForString(binary, sect.si[stringsIndex], ".symtab");
         int32_t stringTable = getIndexForString(binary, sect.si[stringsIndex], ".strtab");
         while(numHeaders--)
         {
-            sect.si[ndx].text   = sect.si[ndx].index == text;
+            if(sect.si[ndx].index == init)
+            {
+                pltIndex = ndx+1;
+                sect.si[pltIndex].plt = true;
+            }
+            sect.si[ndx].text        = sect.si[ndx].index == text;
             sect.si[ndx].debugLine   = sect.si[ndx].index == debugLine;
             sect.si[ndx].symbols     = sect.si[ndx].index == symbolTable;
             sect.si[ndx].stringTable = sect.si[ndx].index == stringTable;
@@ -512,6 +522,8 @@ int main(int argc, char** argv)
             dumpbin(binary, arch64, machine, entryAddress, &sect.si[textIndex], gAddresses);
         }
 
+        pltSize = sect.si[pltIndex].size;
+        pltStart = sect.si[pltIndex].address;
         textSize = sect.si[textIndex].size;
         textStart = sect.si[textIndex].address;
         profilerAddress = textStart; //reasonable default
@@ -594,7 +606,7 @@ int main(int argc, char** argv)
         }
         else
         {
-            instructionCount = profileNative(binaryPath, profilerAddress, moduleBound, exitAddress, instructionSet, analyzers);
+            instructionCount = profileNative(binaryPath, profilerAddress, moduleBound, exitAddress, pltStart, pltStart + pltSize, instructionSet, analyzers);
         }
         instructionCount += runtimeBias;
     }
