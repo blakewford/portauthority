@@ -204,12 +204,15 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
             if(next != 0 && (instructionAddress >= pltStart && instructionAddress <= pltEnd))
             {
                 uint64_t value = ptrace(PTRACE_PEEKDATA, pid, next, nullptr);
+#ifdef __aarch64__
+                ptrace(PTRACE_POKEDATA, pid, next, BREAK);
+#else
                 memcpy(instructions, &value, INSTRUCTION_LENGTH_MAX);
 
                 uint8_t bytes[sizeof(long)];
                 memset(bytes, BREAK, sizeof(long));
                 ptrace(PTRACE_POKEDATA, pid, next, *(long*)bytes);
-
+#endif
                 //run to break
                 ptrace(PTRACE_CONT, pid, NULL, NULL);
                 waitpid(pid, &status, WSTOPPED);
