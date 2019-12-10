@@ -136,6 +136,10 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
     ptrace(PTRACE_GETREGS, pid, NULL, registerBuffer);
     registerBuffer->rip = profilerAddress;
     ptrace(PTRACE_SETREGS, pid, NULL, registerBuffer);
+#else
+    ptrace(PTRACE_GETREGSET, pid, NT_PRSTATUS, registerBuffer);
+    registers.pc = profilerAddress;
+    ptrace(PTRACE_SETREGSET, pid, NULL, registerBuffer);
 #endif
 
     char modulesPath[32];
@@ -170,6 +174,7 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
     }
 
     uint64_t next = 0;
+    bool fromBranch = false;
     uint32_t instructionCount = 0;
     while(WIFSTOPPED(status))
     {
@@ -203,6 +208,10 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
 
             if(next != 0 && (instructionAddress >= pltStart && instructionAddress <= pltEnd))
             {
+                if(fromBranch)
+                {
+                    next = registers.regs[30];
+                }
                 uint64_t value = ptrace(PTRACE_PEEKDATA, pid, next, nullptr);
 #ifdef __aarch64__
                 ptrace(PTRACE_POKEDATA, pid, next, BREAK);
@@ -224,6 +233,10 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
                 ptrace(PTRACE_GETREGS, pid, NULL, registerBuffer);
                 registerBuffer->rip = next;
                 ptrace(PTRACE_SETREGS, pid, NULL, registerBuffer);
+#else
+                ptrace(PTRACE_GETREGSET, pid, NT_PRSTATUS, registerBuffer);
+                registers.pc = next;
+                ptrace(PTRACE_SETREGSET, pid, NULL, registerBuffer);
 #endif
             }
 
@@ -234,6 +247,7 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
             int byte = strlen(disasm);
             memset(mnem, '\0', 16);
             strcpy(mnem, disasm);
+            fromBranch = strstr("BLR", mnem) != nullptr;
             next = instructionAddress + 4;
 #else
             for(int32_t i = 0; i < INSTRUCTION_LENGTH_MAX; i++)
@@ -288,6 +302,21 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
                 startTransition = duration_cast<microseconds>(high_resolution_clock::now().time_since_epoch());
             }
             transition = false;
+
+            if(fromBranch)
+            {
+                uint64_t lr = registers.regs[30];
+                uint64_t value = ptrace(PTRACE_PEEKDATA, pid, lr, nullptr);
+                ptrace(PTRACE_POKEDATA, pid, lr, BREAK);
+
+                //run to break
+                ptrace(PTRACE_CONT, pid, NULL, NULL);
+                waitpid(pid, &status, WSTOPPED);
+
+                //replace instruction
+                ptrace(PTRACE_POKEDATA, pid, lr, value);
+                fromBranch = false;
+            }
 
             if(instructionAddress >= moduleLow && instructionAddress <= moduleHigh)
             {
