@@ -177,6 +177,8 @@ const uint32_t FILTER16 = 0xFFE00C00;
 const uint32_t FILTER17 = 0xFFC00000;
 const uint32_t FILTER18 = 0xFFFFFC00;
 const uint32_t FILTER19 = 0x7F30FC00;
+const uint32_t FILTER1A = 0xBFFFFC00;
+const uint32_t FILTER1B = 0xBFE0FC00;
 
 const char* arm64_decode(uint32_t opcode)
 {
@@ -230,7 +232,7 @@ const char* arm64_decode(uint32_t opcode)
             else if((opcode & FILTER7) == 0xB9000000)
             {
                 return "STR";
-            } 
+            }
             else if((opcode & FILTER14) == 0x3C200800)
             {
                 return "STR";
@@ -242,7 +244,7 @@ const char* arm64_decode(uint32_t opcode)
             else if((opcode & FILTER11) == 0x28C00000 || (opcode & FILTER11) == 0x29C00000 || (opcode & FILTER11) == 0x29400000)
             {
                 return "LDP";
-            } 
+            }
             else if((opcode & FILTER12) == 0x2CC00000 || (opcode & FILTER12) == 0x2DC00000 || (opcode & FILTER12) == 0x2D400000)
             {
                 return "LDP";
@@ -258,7 +260,7 @@ const char* arm64_decode(uint32_t opcode)
             else if((opcode & FILTER16) == 0x38600800)
             {
                 return "LDRB";
-            }            
+            }
             else if((opcode & FILTER16) == 0x38000400 || (opcode & FILTER16) == 0x38000C00)
             {
                 return "STRB";
@@ -266,7 +268,15 @@ const char* arm64_decode(uint32_t opcode)
             else if((opcode & FILTER17) == 0x39000000)
             {
                 return "STRB";
-            }                                                                                                                                                                     
+            }
+            else if((opcode & FILTER1A) == 0x885FFC00)
+            {
+                return "LDAXR";
+            }
+            else if((opcode & FILTER1B) == 0x8800FC00)
+            {
+                return "STLXR";
+            }
             break;
         case 8:
         case 9:
@@ -306,7 +316,7 @@ const char* arm64_decode(uint32_t opcode)
             else if((opcode & FILTER18) == 0x93407C00)
             {
                 return "SXTW";
-            }            
+            }
             else if((opcode & FILTER10) == 0x13007C00)
             {
                 return "ASR";
@@ -314,7 +324,7 @@ const char* arm64_decode(uint32_t opcode)
             else if((opcode & FILTER18) == 0x53001C00)
             {
                 return "UXTB";
-            }                        
+            }
             break;
         case 10:
         case 11:
