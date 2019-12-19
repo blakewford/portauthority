@@ -5,6 +5,8 @@
 #include <sys/ptrace.h>
 #include <sys/signal.h>
 
+#include "native.h"
+
 #include <chrono>
 using namespace std::chrono;
 
@@ -14,7 +16,7 @@ using namespace std::chrono;
 #define BREAK 0xCC //x86 breakpoint instruction
 #endif
 
-uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_t moduleBound, uint64_t exitAddress, uint64_t pltStart, uint64_t pltEnd, isa* arch, analyzer** analyzers)
+uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_t moduleBound, uint64_t exitAddress, uint64_t pltStart, uint64_t pltEnd, normal* arch, analyzer** analyzers)
 {
     uint64_t moduleLow = 0;
     uint64_t moduleHigh = 0;
@@ -29,14 +31,11 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
     user_regs_struct registers;
 
 #ifdef __aarch64__
-    aarch64_isa& instructionSet = (aarch64_isa&)(*arch);
-
     iovec buffer;
     buffer.iov_base = &registers;
     buffer.iov_len = sizeof(registers);
     iovec* registerBuffer = &buffer;
 #else
-    x86_isa& instructionSet = (x86_isa&)(*arch);
     user_regs_struct* registerBuffer = &registers;
 #endif
 
@@ -48,38 +47,7 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
 
     bool arch64 = binary[4] == 0x2;
 
-#ifdef __aarch64__
-    int32_t arg = 0;
-    std::string command;
-    command += "./suspend.sh";
-    while(arg < subprocessCachedArgc)
-    {
-        command += " ";
-        command += subprocessCachedArgv[arg++];
-    }
-
-    FILE* process = popen(command.c_str(), "r");
-
-    char pidStr[6];
-    memset(pidStr, '\0', 6);
-    char* cursor = pidStr;
-
-    int fd = fileno(process);
-    int flags = fcntl(fd, F_GETFL, 0);
-    fcntl(fd, F_SETFL, flags | O_NONBLOCK);
-
-    ssize_t bytes = 0;
-    while(bytes >= 0)
-    {
-        usleep(1000*100);
-        bytes = read(fd, cursor, 1);
-        cursor++;
-    }
-
-    pid = atoi(pidStr);
-#else
-    posix_spawn(&pid, executable, NULL, NULL, subprocessCachedArgv, NULL);
-#endif
+    spawnProcess(&pid, executable);
 
     microseconds startProfile = duration_cast<microseconds>(high_resolution_clock::now().time_since_epoch());
 
@@ -273,11 +241,11 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
                 c = disasm[byte];
             }
 #endif
-            long ndx = instructionSet.find(mnem);
+            long ndx = arch->find(mnem);
             if(ndx != -1)
             {
                 uint8_t count = NUM_ANALYZERS;
-                const isa_instr* instruction = instructionSet.get_instr(ndx);
+                const isa_instr* instruction = arch->get_instr(ndx);
                 isa_instr modified = *instruction;
                 modified.m_size = byte;
                 while(count--)

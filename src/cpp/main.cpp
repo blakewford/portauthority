@@ -606,7 +606,7 @@ int main(int argc, char** argv)
         }
         else
         {
-            instructionCount = profileNative(binaryPath, profilerAddress, moduleBound, exitAddress, pltStart, pltStart + pltSize, instructionSet, analyzers);
+            instructionCount = profileNative(binaryPath, profilerAddress, moduleBound, exitAddress, pltStart, pltStart + pltSize, (normal*)instructionSet, analyzers);
         }
         instructionCount += runtimeBias;
     }
