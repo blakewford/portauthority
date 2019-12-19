@@ -137,8 +137,7 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
             }
             transition = true;
 
-            const char* test = arm64_decode((uint32_t)value);
-            if(next != 0 && ((instructionAddress >= pltStart && instructionAddress <= pltEnd) || !strcmp(test, "LDAXR") || !strcmp(test, "STLXR")))
+            if(shouldSkip(instructionAddress, next, pltStart, pltEnd))
             {
                 uint64_t value = setBreakInstruction(pid, next);
 
@@ -149,42 +148,11 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
                 clearBreakInstruction(pid, next, value);
             }
 
-#ifdef __aarch64__
-            const char* disasm = arm64_decode((uint32_t)value);
-
-            char mnem[16];
-            int byte = strlen(disasm);
-            memset(mnem, '\0', 16);
-            strcpy(mnem, disasm);
-            next = instructionAddress + 4;
-#else
-            for(int32_t i = 0; i < INSTRUCTION_LENGTH_MAX; i++)
-            {
-                instructions[i] = value&0xFF;
-                value >>= 8;
-            }
-            int byte = 0;
-            bool invalid = true;
-            while(invalid && (byte <= INSTRUCTION_LENGTH_MAX))
-            {
-                byte++;
-                ud_set_input_buffer(&u, instructions, byte);
-                ud_disassemble(&u);
-                invalid = strcmp(ud_insn_asm(&u), "invalid ") == 0;
-            }
+            const int32_t size = 16;
+            char mnem[size];
+            uint8_t byte = disassemble(mnem, size, value, arch64);
             next = instructionAddress + byte;
 
-            char mnem[16];
-            memset(mnem, '\0', 16);
-            const char* disasm = ud_insn_asm(&u);
-            byte = 0;
-            char c = disasm[0];
-            while(c != '\0' && c != ' ')
-            {
-                mnem[byte++] = c;
-                c = disasm[byte];
-            }
-#endif
             long ndx = arch->find(mnem);
             if(ndx != -1)
             {
