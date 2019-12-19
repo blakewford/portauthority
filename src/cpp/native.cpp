@@ -54,61 +54,17 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
     ptrace(PTRACE_ATTACH, pid, NULL, NULL);
     waitpid(pid, &status, WSTOPPED);
 
-#ifndef __aarch64__
-    ud_t u;
-    ud_init(&u);
-    ud_set_mode(&u, arch64 ? 64: 32);
-    ud_set_syntax(&u, UD_SYN_ATT);
-
-    const int32_t INSTRUCTION_LENGTH_MAX = 7;
-    uint8_t instructions[INSTRUCTION_LENGTH_MAX];
-
-    uint64_t value = ptrace(PTRACE_PEEKDATA, pid, profilerAddress, NULL);
-
-    memcpy(instructions, &value, INSTRUCTION_LENGTH_MAX);
-
-    int byte = 0;
-    bool invalid = true;
-    while(invalid && (byte <= INSTRUCTION_LENGTH_MAX))
-    {
-        byte++;
-        ud_set_input_buffer(&u, &instructions[byte-1], byte);
-        ud_disassemble(&u);
-        invalid = strcmp(ud_insn_asm(&u), "invalid ") == 0;
-    }
-#endif
-
-    long data = ptrace(PTRACE_PEEKDATA, pid, profilerAddress, NULL);
-
-    //set our starting breakpoint
-#ifdef __aarch64__
-    ptrace(PTRACE_POKEDATA, pid, profilerAddress, BREAK);
-#else
-    uint8_t bytes[sizeof(long)];
-    memset(bytes, '\0', sizeof(long));
-    bytes[byte-1] = BREAK;
-    ptrace(PTRACE_POKEDATA, pid, profilerAddress, *(long*)bytes);
-#endif
-
     ptrace(PTRACE_CONT, pid, NULL, NULL);
     //_start causes the process to stop
     waitpid(pid, &status, WSTOPPED);
+
+    long data = setBreakInstruction(pid, profilerAddress);
+
     //run to break
     ptrace(PTRACE_CONT, pid, NULL, NULL);
     waitpid(pid, &status, WSTOPPED);
 
-    //replace instruction
-    ptrace(PTRACE_POKEDATA, pid, profilerAddress, data);
-
-#ifndef __aarch64__
-    ptrace(PTRACE_GETREGS, pid, NULL, registerBuffer);
-    registerBuffer->rip = profilerAddress;
-    ptrace(PTRACE_SETREGS, pid, NULL, registerBuffer);
-#else
-    ptrace(PTRACE_GETREGSET, pid, NT_PRSTATUS, registerBuffer);
-    registers.pc = profilerAddress;
-    ptrace(PTRACE_SETREGSET, pid, NULL, registerBuffer);
-#endif
+    clearBreakInstruction(pid, profilerAddress, data);
 
     char modulesPath[32];
     sprintf(modulesPath,"/proc/%d/maps", pid);
@@ -140,6 +96,13 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
             }
         }
     }
+
+    ud_t u;
+    ud_init(&u);
+    ud_set_syntax(&u, UD_SYN_ATT);
+    ud_set_mode(&u, arch64 ? 64: 32);
+    const int32_t INSTRUCTION_LENGTH_MAX = 7;
+    uint8_t instructions[INSTRUCTION_LENGTH_MAX];
 
     uint64_t next = 0;
     bool fromBranch = false;
@@ -177,32 +140,13 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
             const char* test = arm64_decode((uint32_t)value);
             if(next != 0 && ((instructionAddress >= pltStart && instructionAddress <= pltEnd) || !strcmp(test, "LDAXR") || !strcmp(test, "STLXR")))
             {
-                uint64_t value = ptrace(PTRACE_PEEKDATA, pid, next, nullptr);
-#ifdef __aarch64__
-                ptrace(PTRACE_POKEDATA, pid, next, BREAK);
-#else
-                memcpy(instructions, &value, INSTRUCTION_LENGTH_MAX);
+                uint64_t value = setBreakInstruction(pid, next);
 
-                uint8_t bytes[sizeof(long)];
-                memset(bytes, BREAK, sizeof(long));
-                ptrace(PTRACE_POKEDATA, pid, next, *(long*)bytes);
-#endif
                 //run to break
                 ptrace(PTRACE_CONT, pid, NULL, NULL);
                 waitpid(pid, &status, WSTOPPED);
 
-                //replace instruction
-                ptrace(PTRACE_POKEDATA, pid, next, value);
-
-#ifndef __aarch64__
-                ptrace(PTRACE_GETREGS, pid, NULL, registerBuffer);
-                registerBuffer->rip = next;
-                ptrace(PTRACE_SETREGS, pid, NULL, registerBuffer);
-#else
-                ptrace(PTRACE_GETREGSET, pid, NT_PRSTATUS, registerBuffer);
-                registers.pc = next;
-                ptrace(PTRACE_SETREGSET, pid, NULL, registerBuffer);
-#endif
+                clearBreakInstruction(pid, next, value);
             }
 
 #ifdef __aarch64__
