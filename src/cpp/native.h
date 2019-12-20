@@ -19,7 +19,7 @@ register_buffer* setupRegisters(user_regs_struct* registers)
     iovec* buffer = new iovec();
     buffer->iov_base = registers;
     buffer->iov_len = sizeof(user_regs_struct);
-    iovec* registerBuffer = &buffer;
+    iovec* registerBuffer = buffer;
 #else
     user_regs_struct* registerBuffer = registers;
 #endif
@@ -106,7 +106,7 @@ void clearBreakInstruction(pid_t pid, uint64_t address, long data)
     ptrace(PTRACE_GETREGSET, pid, NT_PRSTATUS, registerBuffer);
     registers.pc = address;
     ptrace(PTRACE_SETREGSET, pid, NULL, registerBuffer);
-#endif 
+#endif
 
     releaseRegisters(&registerBuffer);
 }
@@ -115,9 +115,7 @@ int8_t disassemble(char* mnem, int32_t size, uint64_t value, bool arch64)
 {
     int32_t byte = 0;
 #ifdef __aarch64__
-    const char* disasm = arm64_decode((uint32_t)value);    
-
-    int byte = strlen(disasm);
+    const char* disasm = arm64_decode((uint32_t)value);
     memset(mnem, '\0', size);
     strcpy(mnem, disasm);
     byte = 4;
@@ -158,7 +156,7 @@ int8_t disassemble(char* mnem, int32_t size, uint64_t value, bool arch64)
     return byte;
 }
 
-bool shouldSkip(uint64_t instructionAddress, uint64_t next, uint64_t pltStart, uint64_t pltEnd)
+bool shouldSkip(uint64_t instructionAddress, uint64_t next, uint64_t value, uint64_t pltStart, uint64_t pltEnd)
 {
     bool skip = false;
 #ifdef __aarch64__

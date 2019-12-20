@@ -137,7 +137,7 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
             }
             transition = true;
 
-            if(shouldSkip(instructionAddress, next, pltStart, pltEnd))
+            if(shouldSkip(instructionAddress, next, value, pltStart, pltEnd))
             {
                 uint64_t value = setBreakInstruction(pid, next);
 
