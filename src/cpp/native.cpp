@@ -152,6 +152,7 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
             char mnem[size];
             uint8_t byte = disassemble(mnem, size, value, arch64);
             next = instructionAddress + byte;
+            fromBranch = strstr("BLR", mnem) != nullptr;
 
             long ndx = arch->find(mnem);
             if(ndx != -1)
@@ -178,6 +179,17 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
                 startTransition = duration_cast<microseconds>(high_resolution_clock::now().time_since_epoch());
             }
             transition = false;
+
+            if(fromBranch)
+            {
+                uint64_t value = setBreakInstruction(pid, next);
+
+                //run to break
+                ptrace(PTRACE_CONT, pid, NULL, NULL);
+                waitpid(pid, &status, WSTOPPED);
+
+                clearBreakInstruction(pid, next, value);
+            }
 
             if(instructionAddress >= moduleLow && instructionAddress <= moduleHigh)
             {
