@@ -181,6 +181,7 @@ const uint32_t FILTER1A = 0xBFFFFC00;
 const uint32_t FILTER1B = 0xBFE0FC00;
 const uint32_t FILTER1C = 0x7FE07C00;
 const uint32_t FILTER1D = 0xFF20FC00;
+const uint32_t FILTER1E = 0xFF201FE0;
 
 const char* arm64_decode(uint32_t opcode)
 {
@@ -454,6 +455,10 @@ const char* arm64_decode(uint32_t opcode)
             else if((opcode & FILTER1D) == 0x1E202800)
             {
                 return "FADD";
+            }
+            else if((opcode & FILTER1E) == 0x1E201000)
+            {
+                return "FMOV";
             }
             break;
         default:
