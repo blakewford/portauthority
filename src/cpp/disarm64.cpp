@@ -277,6 +277,14 @@ const char* arm64_decode(uint32_t opcode)
             {
                 return "STLXR";
             }
+            else if((opcode & FILTER13) == 0xB8000000)
+            {
+                return "STUR";
+            }
+            else if((opcode & FILTER13) == 0xB8400000)
+            {
+                return "LDUR";
+            }
             break;
         case 8:
         case 9:
@@ -324,6 +332,10 @@ const char* arm64_decode(uint32_t opcode)
             else if((opcode & FILTER18) == 0x53001C00)
             {
                 return "UXTB";
+            }
+            else if((opcode & FILTER17) == 0x71000000)
+            {
+                return "SUBS";
             }
             break;
         case 10:
