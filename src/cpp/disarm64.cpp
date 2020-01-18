@@ -287,6 +287,14 @@ const char* arm64_decode(uint32_t opcode)
             {
                 return "LDUR";
             }
+            else if((opcode & FILTER16) == 0xB8800400 || (opcode & FILTER16) == 0xB8800C00)
+            {
+                return "LDRSW";
+            }
+            else if((opcode & FILTER17) == 0xB9800000)
+            {
+                return "LDRSW";
+            }
             break;
         case 8:
         case 9:
