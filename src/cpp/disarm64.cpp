@@ -179,6 +179,8 @@ const uint32_t FILTER18 = 0xFFFFFC00;
 const uint32_t FILTER19 = 0x7F30FC00;
 const uint32_t FILTER1A = 0xBFFFFC00;
 const uint32_t FILTER1B = 0xBFE0FC00;
+const uint32_t FILTER1C = 0x7FE07C00;
+const uint32_t FILTER1D = 0xFF20FC00;
 
 const char* arm64_decode(uint32_t opcode)
 {
@@ -337,6 +339,10 @@ const char* arm64_decode(uint32_t opcode)
             {
                 return "SUBS";
             }
+            else if((opcode & FILTER5) == 0x72800000)
+            {
+                return "MOVK";
+            }
             break;
         case 10:
         case 11:
@@ -417,6 +423,10 @@ const char* arm64_decode(uint32_t opcode)
             {
                 return "ASR";
             }
+            else if((opcode & FILTER1C) == 0x1B007C00)
+            {
+                return "MUL";
+            }
             break;
         case 7:
         case 15:
@@ -432,6 +442,10 @@ const char* arm64_decode(uint32_t opcode)
             else if((opcode & FILTERB) == 0x7E200000)
             {
                 return "SUB";
+            }
+            else if((opcode & FILTER1D) == 0x1E202800)
+            {
+                return "FADD";
             }
             break;
         default:
