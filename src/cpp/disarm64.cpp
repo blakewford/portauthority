@@ -182,6 +182,7 @@ const uint32_t FILTER1B = 0xBFE0FC00;
 const uint32_t FILTER1C = 0x7FE07C00;
 const uint32_t FILTER1D = 0xFF20FC00;
 const uint32_t FILTER1E = 0xFF201FE0;
+const uint32_t FILTER1F = 0xBF80FC00;
 
 const char* arm64_decode(uint32_t opcode)
 {
@@ -352,6 +353,14 @@ const char* arm64_decode(uint32_t opcode)
             {
                 return "MOVK";
             }
+            else if((opcode & FILTER10) == 0x53007C00)
+            {
+                return "LSR";
+            }
+            else if((opcode & FILTER5) == 0x32000000)
+            {
+                return "ORR";
+            }
             break;
         case 10:
         case 11:
@@ -387,7 +396,11 @@ const char* arm64_decode(uint32_t opcode)
             else if((opcode & FILTERA) == 0xD63F0000)
             {
                 return "BLR";
-            }            
+            }
+            else if((opcode & FILTER3) == 0x37000000)
+            {
+                return "TBNZ";
+            }
             break;
         case 5:
         case 13:
@@ -436,6 +449,14 @@ const char* arm64_decode(uint32_t opcode)
             {
                 return "MUL";
             }
+            else if((opcode & FILTER0) == 0x1AC02400)
+            {
+                return "LSR";
+            }
+            else if((opcode & FILTER3) == 0x2A000000)
+            {
+                return "ORR";
+            }
             break;
         case 7:
         case 15:
@@ -459,6 +480,14 @@ const char* arm64_decode(uint32_t opcode)
             else if((opcode & FILTER1E) == 0x1E201000)
             {
                 return "FMOV";
+            }
+            else if((opcode & FILTER16) == 0x5E000400)
+            {
+                return "DUP";
+            }
+            else if((opcode & FILTER1F) == 0x0F00A400)
+            {
+                return "SXTL";
             }
             break;
         default:
