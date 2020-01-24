@@ -326,6 +326,18 @@ const char* arm64_decode(uint32_t opcode)
             {
                 return "LDR";
             }
+            else if((opcode & FILTER11) == 0x28800000)
+            {
+                return "STP";
+            }
+            else if((opcode & FILTER11) == 0x29800000)
+            {
+                return "STP";
+            }
+            else if((opcode & FILTER11) == 0x29000000)
+            {
+                return "STP";
+            }
             break;
         case 8:
         case 9:
@@ -429,6 +441,10 @@ const char* arm64_decode(uint32_t opcode)
             else if((opcode & FILTER3) == 0x37000000)
             {
                 return "TBNZ";
+            }
+            else if((opcode & FILTER3) == 0x35000000)
+            {
+                return "CBNZ";
             }
             break;
         case 5:
