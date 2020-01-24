@@ -305,7 +305,7 @@ const char* arm64_decode(uint32_t opcode)
             {
                 return "MOV";
             }
-            else if((opcode & FILTER1) == 0x11000000)
+            else if((opcode & FILTER3) == 0x11000000)
             {
                 return "ADD";
             }
@@ -405,7 +405,7 @@ const char* arm64_decode(uint32_t opcode)
         case 5:
         case 13:
 //            printf("Data processing - register\n");
-            if((opcode & FILTER1) == 0x1B200000)
+            if((opcode & FILTER1) == 0x0B200000)
             {
                 return "ADD";
             }
@@ -413,7 +413,7 @@ const char* arm64_decode(uint32_t opcode)
             {
                 return "SUB";
             }
-            else if((opcode & FILTER2) == 0x0B000000)
+            else if((opcode & FILTER3) == 0x0B000000)
             {
                 return "ADD";
             }
