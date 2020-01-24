@@ -183,6 +183,7 @@ const uint32_t FILTER1C = 0x7FE07C00;
 const uint32_t FILTER1D = 0xFF20FC00;
 const uint32_t FILTER1E = 0xFF201FE0;
 const uint32_t FILTER1F = 0xBF80FC00;
+const uint32_t FILTER20 = 0xBF000000;
 
 const char* arm64_decode(uint32_t opcode)
 {
@@ -296,6 +297,34 @@ const char* arm64_decode(uint32_t opcode)
             else if((opcode & FILTER17) == 0xB9800000)
             {
                 return "LDRSW";
+            }
+            else if((opcode & FILTER14) == 0x3C400400 || (opcode & FILTER14) == 0x3C400C00)
+            {
+                return "LDR";
+            }
+            else if((opcode & FILTER12) == 0x3D400000)
+            {
+                return "LDR";
+            }
+            else if((opcode & FILTER13) == 0xB8400400 || (opcode & FILTER13) == 0xB8400C00)
+            {
+                return "LDR";
+            }
+            else if((opcode & FILTER20) == 0x1C000000)
+            {
+                return "LDR";
+            }
+            else if((opcode & FILTER20) == 0x18000000)
+            {
+                return "LDR";
+            }
+            else if((opcode & FILTER14) == 0x3C600800)
+            {
+                return "LDR";
+            }
+            else if((opcode & FILTER13) == 0xB8600800)
+            {
+                return "LDR";
             }
             break;
         case 8:
