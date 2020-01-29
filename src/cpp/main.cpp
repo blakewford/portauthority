@@ -263,6 +263,7 @@ int main(int argc, char** argv)
     bool replay = false;
     bool execute = false;
     bool createReport = false;
+    bool statistics = false;
 
     int32_t runtimeBias = 0;
     const char* breakFunction = "";
@@ -278,6 +279,10 @@ int main(int argc, char** argv)
         {
             createReport = true;
         }
+        else if(!strcmp(cachedArgv[arg], "--statistics"))
+        {
+            statistics = true;
+        }        
         else if(!strcmp(cachedArgv[arg], "--dumpbin"))
         {
             dump = true;
@@ -654,6 +659,13 @@ int main(int argc, char** argv)
         coverage.report();
         division.report();
         analyzer::footer();
+    }
+    else if(statistics)
+    {
+        printf(" %d\n", instructionCount);
+        energy.statistics();
+        coverage.statistics();
+        division.statistics();        
     }
     else
     {

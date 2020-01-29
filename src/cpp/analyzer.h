@@ -9,6 +9,7 @@ public:
     static  void footer();
 
     virtual void report() = 0;
+    virtual void statistics() = 0;
     virtual void console() = 0;
     virtual void analyze(uint64_t address, const isa_instr* instruction) = 0;
 };

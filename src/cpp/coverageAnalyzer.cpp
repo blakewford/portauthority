@@ -33,6 +33,10 @@ public:
         printf("<div id=\"coverage\"><font style=\"font-family: courier;font-size:20px\" color=\"gray\">%.2f%c Coverage</font><br/><br/></div>\n", (m_bytes/(double)m_textSize)*100, '%');
     }
 
+    virtual void statistics()
+    {
+    }    
+
     virtual void console()
     {
         for(auto iter = m_addresses.begin(); iter != m_addresses.end(); iter++)

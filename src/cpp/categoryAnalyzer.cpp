@@ -91,6 +91,15 @@ public:
         printf("<font style=\"font-family: courier\" color=\"purple\">%s</font></br>\n",  gCategories[16]);
     }
 
+    virtual void statistics()
+    {
+        int32_t count = sizeof(gCategories)/sizeof(const char*);
+        while(count--)
+        {
+            printf("%s %.2f\n", gCategories[count], gCategoryCount[count]/(double)m_total);
+        }
+    }
+
     virtual void console()
     {
     }

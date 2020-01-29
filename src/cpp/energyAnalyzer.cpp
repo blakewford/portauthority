@@ -20,6 +20,10 @@ public:
     {
     }
 
+    virtual void statistics()
+    {
+    }    
+
     virtual void console()
     {
         std::map<std::string, int32_t> output;
