@@ -5,7 +5,7 @@
 
 struct format
 {
-    std::string name;
+    char name[128];
     float segreg;
     float flgctrl;
     float inout;
@@ -23,6 +23,11 @@ struct format
     float logical;
     float arith;
     float datamov;
+
+    format()
+    {
+        memset(name, '\0', 128);
+    }
 };
 
 #define FORMAT_SIZE 18
@@ -62,7 +67,7 @@ int32_t main()
                 switch(i)
                 {
                     case 0:
-                        f->name = line;
+                        strcpy(f->name, line.c_str());
                         break;                                              
                     default:
                         strtok((char*)line.c_str(), " ");
@@ -94,7 +99,7 @@ int32_t main()
         int32_t size = FORMAT_COUNT;
         while(size--)
         {
-            delete formats[count][size];
+//            delete formats[count][size];
         } 
     }   
 
