@@ -3,9 +3,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#pragma pack(push)
+#pragma pack(1)
 struct format
 {
-    char name[128];
     float segreg;
     float flgctrl;
     float inout;
@@ -23,12 +24,15 @@ struct format
     float logical;
     float arith;
     float datamov;
+    char name[128];
+    float count;
 
     format()
     {
         memset(name, '\0', 128);
     }
 };
+#pragma pack(pop)
 
 #define FORMAT_SIZE 18
 #define FORMAT_COUNT 90
@@ -64,14 +68,24 @@ int32_t main()
                     current++;
     
                 std::string line(prev, current);
+                std::string name = strtok((char*)line.c_str(), " ");
+                float value = atof(strtok(nullptr, " "));
                 switch(i)
                 {
                     case 0:
-                        strcpy(f->name, line.c_str());
+                        strcpy(f->name, name.c_str());
+                        f->count = value;
                         break;                                              
                     default:
-                        strtok((char*)line.c_str(), " ");
-                        atof(strtok(nullptr, " "));
+                        switch(i)
+                        {
+                            case 1:
+                               f->segreg = value;
+                               break;
+                            case 17:
+                               f->datamov = value;
+                               break;
+                        }
                         break;
                 }
     
