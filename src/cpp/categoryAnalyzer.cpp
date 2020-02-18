@@ -93,6 +93,7 @@ public:
 
     virtual void statistics()
     {
+        printf(" %.2f\n", (double)m_total);
         int32_t count = sizeof(gCategories)/sizeof(const char*);
         while(count--)
         {

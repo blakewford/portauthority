@@ -662,7 +662,6 @@ int main(int argc, char** argv)
     }
     else if(statistics)
     {
-        printf(" %d\n", instructionCount);
         energy.statistics();
         coverage.statistics();
         division.statistics();        
