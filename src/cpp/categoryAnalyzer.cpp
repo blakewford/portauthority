@@ -93,12 +93,13 @@ public:
 
     virtual void statistics()
     {
-        printf(" %.2f\n", (double)m_total);
+        printf(" %.2f", (double)m_total);
         int32_t count = sizeof(gCategories)/sizeof(const char*);
         while(count--)
         {
-            printf("%s %.2f\n", gCategories[count], gCategoryCount[count]/(double)m_total);
+            printf(" %.2f", gCategoryCount[count]/(double)m_total);
         }
+        printf("\n");
     }
 
     virtual void console()
