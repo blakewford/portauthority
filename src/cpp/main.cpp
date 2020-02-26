@@ -45,6 +45,7 @@ struct sectionInfo
 #include "disavr.cpp"
 #include "disarm64.cpp"
 #include "dumpbin.cpp"
+#include "profile.cpp"
 
 struct sections
 {
@@ -253,6 +254,8 @@ int main(int argc, char** argv)
         strcat(storagePointer, argv[argc]);
         storagePointer+=(length+1);
     }
+
+    loadProfiles();
 
     isa* instructionSet = nullptr;
 
@@ -675,5 +678,7 @@ int main(int argc, char** argv)
     }
 
     fclose(executable);
+    unloadProfiles();
+
     return 0;
 }
