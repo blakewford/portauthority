@@ -422,6 +422,8 @@ int main(int argc, char** argv)
             machine = header->e_machine;
             entryAddress = header->e_entry;
         }
+#else
+        machine = EM_AARCH64;
 #endif
 
         useGdb = machine == EM_AVR || machine == EM_ARM;
@@ -513,11 +515,21 @@ int main(int argc, char** argv)
 
         ndx = 0;
         numHeaders = totalHeaders;
+ 
+#ifdef __linux__
         int32_t init        = getIndexForString(binary, sect.si[stringsIndex], ".init");
         int32_t text        = getIndexForString(binary, sect.si[stringsIndex], ".text");
         int32_t debugLine   = getIndexForString(binary, sect.si[stringsIndex], ".debug_line");
         int32_t symbolTable = getIndexForString(binary, sect.si[stringsIndex], ".symtab");
         int32_t stringTable = getIndexForString(binary, sect.si[stringsIndex], ".strtab");
+#else
+        int32_t init        = 0;
+        int32_t text        = 0;
+        int32_t debugLine   = 0;
+        int32_t symbolTable = 0;
+        int32_t stringTable = 0;
+#endif
+
         while(numHeaders--)
         {
             if(sect.si[ndx].index == init)
@@ -545,12 +557,14 @@ int main(int argc, char** argv)
             dumpbin(binary, arch64, machine, entryAddress, &sect.si[textIndex], gAddresses);
         }
 
+#ifdef __linux__
         pltSize = sect.si[pltIndex].size;
         pltStart = sect.si[pltIndex].address;
         textSize = sect.si[textIndex].size;
         textStart = sect.si[textIndex].address;
         profilerAddress = textStart; //reasonable default
         runLineNumberProgram(binary, sect.si[debugLineIndex], binaryPath);
+#endif
 
         ndx = 0;
 
@@ -609,7 +623,9 @@ int main(int argc, char** argv)
         if(highestAddress == 0) highestAddress = ~0;
         moduleBound = highestAddress;
 
+#ifdef __linux__
         free(sect.si);
+#endif
         free(binary);
     }
     
