@@ -1,7 +1,21 @@
 #include <string>
 #include <spawn.h>
 
-#ifdef __aarch64__
+#ifndef __linux__
+    #define PTRACE_ATTACH PT_ATTACH
+    #define PTRACE_CONT PT_CONTINUE
+//    #define PTRACE_GETREGS PT_GETREGS
+    #define PTRACE_GETREGS 12
+//    #define PTRACE_SETREGS PT_SETREGS
+    #define PTRACE_SETREGS 13
+    #define PTRACE_PEEKDATA PT_READ_D
+    #define PTRACE_POKEDATA PT_WRITE_D
+    #define PTRACE_SINGLESTEP PT_STEP
+
+    struct user_regs_struct{};
+#endif
+
+#if defined( __aarch64__) && defined(__linux__)
 typedef iovec register_buffer;
 #else
 typedef user_regs_struct register_buffer;
@@ -15,7 +29,7 @@ typedef user_regs_struct register_buffer;
 
 register_buffer* setupRegisters(user_regs_struct* registers)
 {
-#ifdef __aarch64__
+#if defined(__aarch64__) && defined(__linux__)
     iovec* buffer = new iovec();
     buffer->iov_base = registers;
     buffer->iov_len = sizeof(user_regs_struct);
@@ -73,7 +87,11 @@ void spawnProcess(pid_t* pid, const char* executable)
 
 long setBreakInstruction(pid_t pid, uint64_t address)
 {
+#if __linux__
     long data = ptrace(PTRACE_PEEKDATA, pid, address, NULL);
+#else
+    long data = ptrace(PTRACE_PEEKDATA, pid, (caddr_t)&address, NULL);
+#endif
 
 #ifndef __aarch64__
     const int32_t INSTRUCTION_LENGTH_MAX = 7;
@@ -83,8 +101,10 @@ long setBreakInstruction(pid_t pid, uint64_t address)
     uint8_t bytes[sizeof(long)];
     memset(bytes, BREAK, sizeof(long));
     ptrace(PTRACE_POKEDATA, pid, address, *(long*)bytes);
-#else
+#elif __linux__
     ptrace(PTRACE_POKEDATA, pid, address, BREAK);
+#else
+    ptrace(PTRACE_POKEDATA, pid, (caddr_t)&address, BREAK);
 #endif
 
     return data;
@@ -96,16 +116,24 @@ void clearBreakInstruction(pid_t pid, uint64_t address, long data)
     register_buffer* registerBuffer = setupRegisters(&registers);
 
     //replace instruction
+#if __linux__
     ptrace(PTRACE_POKEDATA, pid, address, data);
+#else
+    ptrace(PTRACE_POKEDATA, pid, (caddr_t)&address, data);
+#endif
 
 #ifndef __aarch64__
     ptrace(PTRACE_GETREGS, pid, NULL, registerBuffer);
     registerBuffer->rip = address;
     ptrace(PTRACE_SETREGS, pid, NULL, registerBuffer);
-#else
+#elif defined(__linux__)
     ptrace(PTRACE_GETREGSET, pid, NT_PRSTATUS, registerBuffer);
     registers.pc = address;
     ptrace(PTRACE_SETREGSET, pid, NULL, registerBuffer);
+#else
+    ptrace(PTRACE_GETREGS, pid, NULL, NULL);
+//  struct reg
+    ptrace(PTRACE_SETREGS, pid, NULL, NULL);
 #endif
 
     releaseRegisters(&registerBuffer);
@@ -168,4 +196,3 @@ bool shouldSkip(uint64_t instructionAddress, uint64_t next, uint64_t value, uint
 
     return skip;
 }
-

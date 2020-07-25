@@ -1,7 +1,16 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
+
+#ifdef __linux__
 #include <byteswap.h>
+#else
+long bswap_32(long value)
+{
+    return value;
+}
+#endif
+
 #include <sys/socket.h>
 #include <netinet/in.h>
 

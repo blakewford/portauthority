@@ -5,9 +5,20 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
-
 #include <deque>
+
+#ifdef __linux__
 #include <libelf.h>
+#else
+#include <sys/types.h>
+#include <sys/ptrace.h>
+#define EM_ARM 40
+#define EM_X86_64 62
+#define EM_AVR 83
+#define EM_AARCH64 183
+#define EM_386 3
+#endif
+
 std::deque<uint64_t> gAddresses;
 #include "parser.cpp"
 #include "categoryAnalyzer.cpp"
@@ -389,6 +400,8 @@ int main(int argc, char** argv)
         uint16_t numHeaders = 0;
         uint64_t entryAddress = 0;
         uint16_t stringsIndex = 0;
+
+#ifdef __linux__
         if(arch64)
         {
             Elf64_Ehdr* header = (Elf64_Ehdr*)binary;
@@ -409,6 +422,7 @@ int main(int argc, char** argv)
             machine = header->e_machine;
             entryAddress = header->e_entry;
         }
+#endif
 
         useGdb = machine == EM_AVR || machine == EM_ARM;
         if(breakFunction == "" && breakAddress == 0)
@@ -467,6 +481,7 @@ int main(int argc, char** argv)
         sect.si = (sectionInfo*)malloc(sizeof(sectionInfo)*numHeaders);
         while(numHeaders--)
         {
+#ifdef __linux__
             if(headerSize == sizeof(Elf64_Shdr))
             {
                 Elf64_Shdr* section = (Elf64_Shdr*)(binary + offset);
@@ -485,7 +500,7 @@ int main(int argc, char** argv)
                 sect.si[ndx].offset = section->sh_offset;
                 sect.si[ndx].size = section->sh_size;
             }
-    
+#endif    
             offset += headerSize;
             ndx++;
         }
@@ -544,11 +559,16 @@ int main(int argc, char** argv)
         uint64_t symbolSize = 0;
         uint64_t address = 0;
         uint64_t highestAddress = 0;
-        int32_t symbols = sect.si[symbolsIndex].size / (headerSize == sizeof(Elf64_Shdr) ? sizeof(Elf64_Sym): sizeof(Elf32_Sym));  
 
+#ifdef __linux__
+        int32_t symbols = sect.si[symbolsIndex].size / (headerSize == sizeof(Elf64_Shdr) ? sizeof(Elf64_Sym): sizeof(Elf32_Sym));  
+#else
+        int32_t symbols = 0;
+#endif
         char buffer[256];
         while(symbols--)
         {
+#ifdef __linux__
             if(headerSize == sizeof(Elf64_Shdr))
             {
                 Elf64_Sym* symbols = (Elf64_Sym*)(binary + sect.si[symbolsIndex].offset);
@@ -565,7 +585,7 @@ int main(int argc, char** argv)
                 symbolSize = symbols[ndx].st_size;
                 address = symbols[ndx].st_value;
             } 
-
+#endif
             if(type == 2) //function
             {
                 highestAddress = highestAddress < address ? address: highestAddress;

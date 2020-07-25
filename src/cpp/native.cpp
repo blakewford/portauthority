@@ -110,12 +110,14 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
     while(WIFSTOPPED(status))
     {
         uint64_t instructionAddress = 0;
-#ifdef __aarch64__
+#if defined( __aarch64__) && defined(__linux__)
         ptrace(PTRACE_GETREGSET, pid, NT_PRSTATUS, registerBuffer);
         instructionAddress = registers.pc;
-#else
+#elif defined (__linux__)
         ptrace(PTRACE_GETREGS, pid, NULL, registerBuffer);
         instructionAddress = registers.rip;
+#else
+        ptrace(PTRACE_GETREGS, pid, NULL, NULL); // struct regs
 #endif
         if(instructionAddress == exitAddress)
         {
@@ -125,7 +127,12 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
         //need better protections here for code that does not exit cleanly, without exit()
         if(instructionAddress < moduleBound)
         {
+
+#ifdef __linux__
             uint64_t value = ptrace(PTRACE_PEEKDATA, pid, instructionAddress, nullptr);
+#else
+            uint64_t value = ptrace(PTRACE_PEEKDATA, pid, (caddr_t)&instructionAddress, NULL);
+#endif
             //printf("%llx\n", instructionAddress);
             if(!transition)
             {
@@ -199,7 +206,10 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
         ptrace(PTRACE_SINGLESTEP, pid, NULL, NULL);
         waitpid(pid, &status, WSTOPPED);
     }
+
+#ifdef __linux__
     kill(pid, SIGKILL);
+#endif
 
     microseconds endProfile = duration_cast<microseconds>(high_resolution_clock::now().time_since_epoch());
     //printf("Runtime (ms): %ld Untracked: %ld\n", duration_cast<milliseconds>(endProfile-startProfile).count(), duration_cast<milliseconds>(untracked).count());
