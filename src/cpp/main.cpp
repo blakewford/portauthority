@@ -646,9 +646,12 @@ int main(int argc, char** argv)
 
     //profilerAddress = 0x8049a6d;
 
+
+    const char* reportPath;
     uint32_t instructionCount = 0;
     if(execute)
     {
+        reportPath = binaryPath;
         coverage.adjustCount(runtimeBias);
         if(useGdb)
         {
@@ -662,6 +665,7 @@ int main(int argc, char** argv)
     }
     else if(replay)
     {
+        reportPath = replayPath;
         std::string empty;
         std::string addressStr;
         std::string instructionStr;
@@ -702,7 +706,7 @@ int main(int argc, char** argv)
 
     if(createReport)
     {
-        analyzer::header(binaryPath, !useGdb, machine, instructionCount, coverage.getCycleCount());
+        analyzer::header(reportPath, !useGdb, machine, instructionCount, coverage.getCycleCount());
         energy.report();
         coverage.report();
         division.report();
