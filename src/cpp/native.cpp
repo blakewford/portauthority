@@ -45,7 +45,18 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
     FILE* reopen = fopen(executable, "r");
     if(fread(binary, 1, size, reopen) != size) return 0;
 
+    int machine = EM_AARCH64;
     bool arch64 = binary[4] == 0x2;
+#ifndef __aarch64__
+    if(arch64)
+    {
+        machine = EM_X86_64;
+    }
+    else
+    {
+        machine = EM_386;
+    }
+#endif
 
     spawnProcess(&pid, executable);
 
@@ -157,7 +168,7 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
 
             const int32_t size = 16;
             char mnem[size];
-            uint8_t byte = disassemble(mnem, size, value, arch64);
+            uint8_t byte = disassemble(mnem, size, value, machine);
             next = instructionAddress + byte;
             fromBranch = strstr("BLR", mnem) != nullptr;
 
