@@ -142,7 +142,7 @@ void clearBreakInstruction(pid_t pid, uint64_t address, long data)
 int8_t disassemble(char* mnem, int32_t size, uint64_t value, int machine)
 {
     int32_t byte = 0;
-    if(machine = EM_AARCH64)
+    if(machine == EM_AARCH64)
     {
         const char* disasm = arm64_decode((uint32_t)value);
         memset(mnem, '\0', size);
