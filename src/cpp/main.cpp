@@ -675,16 +675,25 @@ int main(int argc, char** argv)
         while(!replay.eof())
         {
             replay >> addressStr;
-            replay >> empty;    
+            replay >> empty;
             replay >> instructionStr;
     
             uint64_t instructionAddress = strtol(addressStr.c_str(), nullptr, 16);
+            if(machine == EM_AARCH64)
+            {
+                instructionStr = instructionStr.substr(0,10);
+            }
+            else
+            {
+                instructionStr = instructionStr.substr(0,16);
+            }
+
             uint64_t instruction = strtol(instructionStr.c_str(), nullptr, 16);
+            instruction = bswap_32(instruction);
 
             const int32_t size = 16;
             char mnem[size];
             uint8_t byte = disassemble(mnem, size, instruction, machine);
-
             long ndx = ((normal*)instructionSet)->find(mnem);
             if(ndx != -1)
             {
