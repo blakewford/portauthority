@@ -14,5 +14,5 @@ def steploop(debugger, unused0, unused1, unused2):
       error = lldb.SBError()
       bytes = process.ReadMemory(value.GetValueAsUnsigned(), 8, error)
       thread.StepInstruction( True )
-      print(hex(value.GetValueAsUnsigned())[2:] + ":" + str(binascii.hexlify(bytes))[2:-1])
+      print(hex(value.GetValueAsUnsigned()) + " : 0x" + str(binascii.hexlify(bytes))[2:-1])
     
