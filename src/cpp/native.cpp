@@ -4,6 +4,7 @@
 #include <sys/wait.h>
 #include <sys/ptrace.h>
 #include <sys/signal.h>
+#include <byteswap.h>
 
 #include "native.h"
 
@@ -144,7 +145,7 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
 #else
             uint64_t value = ptrace(PTRACE_PEEKDATA, pid, (caddr_t)&instructionAddress, NULL);
 #endif
-            //printf("%llx\n", instructionAddress);
+//            printf("0x%llx : 0x%llx\n", instructionAddress, bswap_32(value));
             if(!transition)
             {
                 if(startTransition != endTransition)
