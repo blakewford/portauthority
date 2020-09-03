@@ -423,6 +423,10 @@ const char* arm64_decode(uint32_t opcode)
             {
                 return "LSL";
             }
+            else if((opcode & FILTER5) == 0x12000000)
+            {
+                return "AND";
+            }
             break;
         case 10:
         case 11:
@@ -522,6 +526,10 @@ const char* arm64_decode(uint32_t opcode)
             else if((opcode & FILTER3) == 0x2A000000)
             {
                 return "ORR";
+            }
+            else if((opcode & FILTER2) == 0x0A000000)
+            {
+                return "AND";
             }
             break;
         case 7:

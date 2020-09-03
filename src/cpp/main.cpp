@@ -726,7 +726,7 @@ int main(int argc, char** argv)
         printf(" %d", instructionCount);
         energy.statistics();
         coverage.statistics();
-        division.statistics();        
+        division.statistics();
     }
     else
     {
