@@ -363,6 +363,10 @@ const char* arm64_decode(uint32_t opcode)
             {
                 return "STRH";
             }
+            else if((opcode & FILTER16) == 0x38400000)
+            {
+                return "LDURB";
+            }
             break;
         case 8:
         case 9:
