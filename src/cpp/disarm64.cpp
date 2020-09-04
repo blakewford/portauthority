@@ -355,6 +355,14 @@ const char* arm64_decode(uint32_t opcode)
             {
                 return "STRB";
             }
+            else if((opcode & FILTER16) == 0x78200800)
+            {
+                return "STRH";
+            }
+            else if((opcode & FILTER17) == 0x79000000)
+            {
+                return "STRH";
+            }
             break;
         case 8:
         case 9:
