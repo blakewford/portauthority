@@ -371,6 +371,10 @@ const char* arm64_decode(uint32_t opcode)
             {
                 return "STURB";
             }
+            else if((opcode & FILTER16) == 0x78000000)
+            {
+                return "STURH";
+            }
             break;
         case 8:
         case 9:
