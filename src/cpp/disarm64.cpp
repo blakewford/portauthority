@@ -367,6 +367,10 @@ const char* arm64_decode(uint32_t opcode)
             {
                 return "LDURB";
             }
+            else if((opcode & FILTER16) == 0x38000000)
+            {
+                return "STURB";
+            }
             break;
         case 8:
         case 9:
