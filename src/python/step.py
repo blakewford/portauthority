@@ -21,9 +21,9 @@ def steploop(debugger, unused0, unused1, unused2):
       error = lldb.SBError()
       address = value.GetValueAsUnsigned()
       bytes = process.ReadMemory(address, 8, error)
-      mnem = target.GetInstructions(lldb.SBAddress(value.GetLoadAddress(), target), bytes).GetInstructionAtIndex(0).GetMnemonic(target)
-      replay += hex(value.GetValueAsUnsigned()) + " : 0x" + str(binascii.hexlify(bytes))[:-1]
-      replay += " " + str(mnem)
+      instr = target.GetInstructions(lldb.SBAddress(value.GetLoadAddress(), target), bytes).GetInstructionAtIndex(0)
+      replay += hex(value.GetValueAsUnsigned()) + " : 0x" + str(binascii.hexlify(bytes))[:instr.GetByteSize()*2]
+      replay += " " + str(instr.GetMnemonic(target))
       replay += "\n"
       if (address >= tableAddress) and (address <= tableAddress + linkTable.GetByteSize()):
         thread.StepOut()
