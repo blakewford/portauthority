@@ -11,6 +11,7 @@ def steploop(debugger, unused0, unused1, unused2):
   linkTable = module.FindSection(".plt")
   tableAddress = linkTable.GetFileAddress()
 
+  mnem = ""
   value = ""
   replay = ""
   while str(value) != "No value":
@@ -20,7 +21,10 @@ def steploop(debugger, unused0, unused1, unused2):
       error = lldb.SBError()
       address = value.GetValueAsUnsigned()
       bytes = process.ReadMemory(address, 8, error)
-      replay += hex(value.GetValueAsUnsigned()) + " : 0x" + str(binascii.hexlify(bytes))[:-1] + "\n"
+      mnem = target.GetInstructions(lldb.SBAddress(value.GetLoadAddress(), target), bytes).GetInstructionAtIndex(0).GetMnemonic(target)
+      replay += hex(value.GetValueAsUnsigned()) + " : 0x" + str(binascii.hexlify(bytes))[:-1]
+      replay += " " + str(mnem)
+      replay += "\n"
       if (address >= tableAddress) and (address <= tableAddress + linkTable.GetByteSize()):
         thread.StepOut()
       else:
