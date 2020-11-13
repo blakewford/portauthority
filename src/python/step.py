@@ -13,7 +13,8 @@ def steploop(debugger, unused0, unused1, unused2):
 
   mnem = ""
   value = ""
-  replay = ""
+  triple = target.GetPlatform().GetTriple()
+  replay = "{\"triple\":\""+ triple +"\",\"size\":" + str(module.FindSection(".text").GetByteSize()) + ",\"run\":["
   while str(value) != "No value":
     frame = thread.GetFrameAtIndex(0)
     value = frame.FindRegister("pc")
@@ -22,14 +23,18 @@ def steploop(debugger, unused0, unused1, unused2):
       address = value.GetValueAsUnsigned()
       bytes = process.ReadMemory(address, 8, error)
       instr = target.GetInstructions(lldb.SBAddress(value.GetLoadAddress(), target), bytes).GetInstructionAtIndex(0)
-      replay += hex(value.GetValueAsUnsigned()) + " : 0x" + str(binascii.hexlify(bytes))[:instr.GetByteSize()*2]
-      replay += " " + str(instr.GetMnemonic(target))
-      replay += "\n"
+
+      hexAddress = str(hex(value.GetValueAsUnsigned()))
+      opcode = str(binascii.hexlify(bytes))[:instr.GetByteSize()*2]
+      mnem = str(instr.GetMnemonic(target))
+      replay += "{\"address\":\"" + hexAddress + "\",\"opcode\":\"0x" + opcode +"\",\"mnem\":\"" + mnem +"\"},"
       if (address >= tableAddress) and (address <= tableAddress + linkTable.GetByteSize()):
         thread.StepOut()
       else:
         thread.StepInstruction(False)
 
+  ndx = replay.rfind(",")
+  replay = replay[:ndx] + "]}"
   f = open(str(datetime.now()).replace(' ',''), "w")
   f.write(replay)
   f.close()
