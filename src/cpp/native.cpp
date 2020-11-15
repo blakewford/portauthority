@@ -145,7 +145,6 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
 #else
             uint64_t value = ptrace(PTRACE_PEEKDATA, pid, (caddr_t)&instructionAddress, NULL);
 #endif
-//            printf("0x%llx : 0x%llx\n", instructionAddress, bswap_32(value));
             if(!transition)
             {
                 if(startTransition != endTransition)
@@ -176,6 +175,8 @@ uint32_t profileNative(const char* executable, uint64_t profilerAddress, uint64_
             long ndx = arch->find(mnem);
             if(ndx != -1)
             {
+                printf("{\address\":\"0x%llx\",\"opcode\":\"0x%llx\",\"mnem\":%s},", instructionAddress, bswap_32(value), mnem);
+
                 uint8_t count = NUM_ANALYZERS;
                 const isa_instr* instruction = arch->get_instr(ndx);
                 isa_instr modified = *instruction;

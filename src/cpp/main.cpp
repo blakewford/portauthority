@@ -646,6 +646,7 @@ int main(int argc, char** argv)
 
     //profilerAddress = 0x8049a6d;
 
+    printf("{\"triple\":\"x86_64-pc-linux-gnu\",\"size\":970668,\"run\":[");
 
     const char* reportPath;
     uint32_t instructionCount = 0;
@@ -709,6 +710,8 @@ int main(int argc, char** argv)
         }
         replay.close();
     }
+
+    printf("]}");
 
     delete instructionSet;
     instructionSet = nullptr;
